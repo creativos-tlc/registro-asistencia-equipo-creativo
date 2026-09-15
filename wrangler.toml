@@ -1,0 +1,7 @@
+name = "registro-asistencia"
+type = "javascript"
+
+[env.production]
+routes = [
+  { pattern = "registro-asistencia.danielgamflo.workers.dev", zone_name = "example.com" }
+]
