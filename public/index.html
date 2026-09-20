@@ -385,14 +385,16 @@
             background: var(--surface-3);
             border: 1px solid var(--border-strong);
             border-radius: var(--radius-md);
-            max-height: 0;
+            max-height: 300px;
             overflow: hidden auto;
             opacity: 0;
-            transition: max-height var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
+            transform: scaleY(0.95);
+            transform-origin: top;
+            transition: transform var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
             box-shadow: var(--shadow-lg);
             z-index: 20;
         }
-        .custom-select-options.open { max-height: 280px; opacity: 1; }
+        .custom-select-options.open { opacity: 1; transform: scaleY(1); }
 
         .custom-select-option {
             padding: 12px 14px;
@@ -872,7 +874,7 @@
                     <p>Equipo Creativo · TLC</p>
                 </div>
             </div>
-            <a href="https://creativos-tlc.github.io/reuniones-equipo-creativo/calendario-juntas-creativas.html" target="_blank" rel="noopener" class="calendar-link" aria-label="Ir al calendario 2026" title="Calendario 2026">
+            <a href="https://creativos-tlc.github.io/Equipo-Creativo/calendario-2026" target="_blank" rel="noopener" class="calendar-link" aria-label="Ir al calendario 2026" title="Calendario 2026">
                 <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
             </a>
         </header>
@@ -1094,6 +1096,15 @@
                 <button type="button" id="btnExportarJSON" class="secondary block">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>
                     Descargar JSON
+                </button>
+            </div>
+
+            <div class="card" style="margin-top:var(--space-6);border-color:var(--danger-border);background:rgba(239,90,47,0.08);">
+                <h2 style="color:var(--danger);">Cerrar sesión</h2>
+                <p class="card-hint">Borra todos los datos guardados localmente y reinicia la app.</p>
+                <button type="button" id="btnLogout" class="danger block">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                    Cerrar sesión
                 </button>
             </div>
         </div>
@@ -2011,6 +2022,12 @@
         document.getElementById('btnExportarCSV').addEventListener('click', exportarCSV);
         document.getElementById('btnImportarCSV').addEventListener('click', importarCSV);
         document.getElementById('btnExportarJSON').addEventListener('click', exportarJSON);
+        document.getElementById('btnLogout').addEventListener('click', () => {
+            if (confirm('¿Estás seguro? Se borrarán todos los datos guardados.')) {
+                localStorage.clear();
+                location.reload();
+            }
+        });
 
         function exportarCSV() {
             let csv = 'Evento,Fecha,Voluntario,Asistio\n';
