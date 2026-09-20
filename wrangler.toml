@@ -1,0 +1,9 @@
+name = "asistencia-creativo"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "asistencia-creativo"
+database_id = "7c513556-e4d9-4c78-933d-971aac644b70"
+migrations_dir = "migrations"

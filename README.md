@@ -1,114 +1,53 @@
-# Registro de Asistencia + Planificador de Contenido
-Equipo Creativo TLC
+# Coordinación · Equipo Creativo TLC
 
-## Resumen
-App completa en **1 archivo HTML** con:
-- ✅ Registro de asistencia
-- ✅ Gestión de eventos
-- ✅ Gestión de voluntarios
-- ✅ Calendario interactivo (mes/semana/día)
-- ✅ Planificador de contenido (Instagram + WhatsApp)
-- ✅ Captura de imágenes del calendario
-- ✅ Exportar/importar datos (CSV, JSON)
+Espacio de coordinación para líderes y voluntarios: calendario unificado (reuniones, servicios, grabaciones, tareas con fecha y contenido de redes), asistencia con racha, tareas asignadas, perfiles de voluntarios, programa del domingo y planificador de contenido.
 
-## Estado actual (15 sept 2026)
-**En desarrollo local** - probando diseño y lógica antes de migrar a base de datos.
+- Producción: https://asistencia-creativo.pages.dev
+- Stack: HTML/CSS/JS sin dependencias ni build · Cloudflare Pages Functions · Cloudflare D1
+- Auditoría, arquitectura y fases: [docs/AUDITORIA.md](docs/AUDITORIA.md)
+- Contexto de producto: [PRODUCT.md](PRODUCT.md)
 
-### Últimos cambios
-- ✅ Calendario interactivo con vistas mes/semana/día
-- ✅ Crear/editar/eliminar publicaciones de contenido
-- ✅ Botón flotante para capturar imágenes (descarga PNG con fecha/hora)
-- ✅ Fixes: edición de publicaciones no se elimina al guardar
-- ✅ Enlace de calendario 2026 corregido
-- ⏳ Pendiente: Botón Logout
+## Estructura
 
-## Tecnología
-- **Archivo único:** `registro_asistencia.html`
-- **Almacenamiento:** localStorage (local en cada dispositivo)
-- **Framework:** Vanilla HTML/CSS/JS (sin dependencias)
-- **Deploy:** Cloudflare Pages (auto-despliega desde GitHub en cada push)
+```
+public/        sitio estático (index.html, css/, js/, vendor/)
+functions/     rutas de la API (Pages Functions)
+server/        acceso (PIN + sesiones) y sincronización
+migrations/    esquema de la base D1
+scripts/       herramientas de operación
+```
 
-## URLs
-- **Repositorio:** https://github.com/creativos-tlc/registro-asistencia-equipo-creativo
-- **En producción:** https://asistencia-creativo.pages.dev/
-- **Rama principal:** `main` (auto-deploya)
+`registro_asistencia.html` (raíz) es la versión 1, conservada solo como referencia.
 
-## Cómo desplegar cambios
+## Desarrollo local
+
 ```bash
-cd /Users/danielgamboaflores/Desktop/TLC\ SANTIAGO/Registro\ de\ asistencia\ Equipo\ Creativo
-
-# 1. Editar archivo
-# → editar registro_asistencia.html
-
-# 2. Hacer commit
-git add registro_asistencia.html
-git commit -m "Descripción de cambios"
-
-# 3. Push a GitHub
-git push origin main
-
-# 4. Cloudflare automáticamente despliega (1-2 min)
+npx wrangler d1 migrations apply asistencia-creativo --local
+node scripts/crear-acceso.mjs "Daniel" --local        # imprime un PIN temporal
+npx wrangler pages dev public --port 8795 --d1 DB=7c513556-e4d9-4c78-933d-971aac644b70
 ```
 
-## Estructura de datos (localStorage)
-```javascript
-{
-  "eventos": [{ id, titulo, fecha, hora, voluntarios, tema }],
-  "asistencia": [{ voluntario, evento, presente }],
-  "voluntarios": [{ id, nombre, fechaIncorporacion }],
-  "publicaciones": [{ id, titulo, fecha, hora, tipo, plataforma, descripcion }]
-}
+Abre http://localhost:8795. En Ajustes (solo en localhost) hay un botón para cargar datos de ejemplo.
+
+## Publicar
+
+```bash
+npx wrangler d1 migrations apply asistencia-creativo --remote   # solo si hay migraciones nuevas
+npx wrangler pages deploy public --project-name=asistencia-creativo --branch main
 ```
 
-## Características por sección
+## Accesos
 
-### 📊 Inicio (Dashboard)
-- Stats: eventos, asistencias, voluntarios
-- Próximos eventos
-- Top asistencia
+Cada persona entra con su nombre y un PIN de 4 a 8 dígitos. Un líder da acceso desde el perfil de la persona (Equipo → persona → "Dar acceso"), o por consola:
 
-### 📅 Eventos
-- Crear eventos
-- Asignar voluntarios
-- Ver lista de eventos
+```bash
+node scripts/crear-acceso.mjs "Nombre" --remote
+```
 
-### ✅ Asistencia
-- Marcar asistencia por evento
-- Grid interactivo
-- Reportes
+Genera un PIN temporal que la persona debe cambiar al entrar. Tras 5 intentos fallidos el nombre se bloquea 15 minutos.
 
-### 📈 Reportes
-- Estadísticas
-- Filtros por voluntario/evento
-- Gráficos de asistencia
+## Datos y respaldo
 
-### 📱 Contenido (Planificador)
-- **Vistas:** Mes / Semana / Día
-- **Plataformas:** Instagram (post/story/reel) + WhatsApp
-- **Acciones:** Crear / Editar / Duplicar / Eliminar publicaciones
-- **Captura:** Botón 📷 para descargar imágenes del calendario (PNG)
-- **Navegación:** Flechas para cambiar mes/semana/día
-
-### ⚙️ Más
-- Gestión de voluntarios
-- Exportar datos (CSV, JSON)
-- Importar datos (CSV)
-- Respaldo completo (JSON)
-
-## Próximos pasos
-1. **Terminar pruebas locales** - confirmar que diseño y lógica son finales
-2. **Agregar logout** - botón para borrar localStorage si se necesita
-3. **Migrar a Cloudflare D1** - cuando esté todo confirmado
-   - Database ya creada: `asistencia-creativo` (ID: `7c513556-e4d9-4c78-933d-971aac644b70`)
-   - Requiere: Worker API + cambios en app para fetch()
-   - Beneficio: David y Daniel ven datos en tiempo real
-
-## Notas técnicas
-- localStorage funciona en Cloudflare Pages porque es HTTPS
-- Cada dispositivo tiene su propio localStorage (no sincroniza entre usuarios)
-- Exportar/importar JSON permite compartir datos manualmente por ahora
-- Próximamente: D1 sincronizará datos entre usuarios
-
-## Contactos
-- Daniel: d.gamboaflores@gmail.com
-- David: para revisar cambios
+- Los datos viven en D1 y se guardan también en cada teléfono (funciona sin señal y se sincroniza al volver).
+- Ajustes → "Descargar respaldo completo" genera un `.json` que se puede restaurar.
+- Al primer ingreso, la app ofrece traer lo que la versión anterior guardó en ese teléfono, sin duplicar lo que ya esté subido.
