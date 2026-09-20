@@ -392,10 +392,10 @@
             transform-origin: top;
             transition: transform var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
             box-shadow: var(--shadow-lg);
-            z-index: 20;
+            z-index: -1;
             pointer-events: none;
         }
-        .custom-select-options.open { opacity: 1; transform: scaleY(1); pointer-events: auto; }
+        .custom-select-options.open { opacity: 1; transform: scaleY(1); z-index: 1000; pointer-events: auto; }
 
         .custom-select-option {
             padding: 12px 14px;
