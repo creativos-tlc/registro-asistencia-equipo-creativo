@@ -356,7 +356,7 @@
         }
 
         /* ============ CUSTOM SELECT ============ */
-        .custom-select { position: relative; width: 100%; }
+        .custom-select { position: relative; width: 100%; z-index: 5; }
 
         .custom-select-trigger {
             padding: 8px 10px;
@@ -393,8 +393,9 @@
             transition: transform var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
             box-shadow: var(--shadow-lg);
             z-index: 20;
+            pointer-events: none;
         }
-        .custom-select-options.open { opacity: 1; transform: scaleY(1); }
+        .custom-select-options.open { opacity: 1; transform: scaleY(1); pointer-events: auto; }
 
         .custom-select-option {
             padding: 12px 14px;
@@ -2200,17 +2201,35 @@
             ultimoDeSemana.setDate(primeroDeSemana.getDate() + 6);
 
             let html = `<div class="mes-header" style="margin-bottom:var(--space-4);"><button data-semana-prev>← Anterior</button><h3>${primeroDeSemana.getDate()}/${primeroDeSemana.getMonth() + 1} - ${ultimoDeSemana.getDate()}/${ultimoDeSemana.getMonth() + 1}</h3><button data-semana-next>Siguiente →</button></div>`;
-            html += '<div class="semana-grid">';
+            html += '<div style="overflow-x:auto;"><div style="display:grid;grid-template-columns:60px repeat(7,1fr);gap:1px;background:var(--border);padding:1px;">';
+
+            // Headers
+            html += '<div style="background:var(--surface-2);padding:var(--space-2);font-weight:600;font-size:var(--text-xs);">Hora</div>';
             for (let i = 0; i < 7; i++) {
                 const fecha = new Date(primeroDeSemana);
                 fecha.setDate(primeroDeSemana.getDate() + i);
-                const fechaStr = fecha.toISOString().split('T')[0];
-                const publisDia = publicaciones.map((p, idx) => ({...p, idx})).filter(p => p.fecha === fechaStr && p.plataforma === plataformaActual);
-                html += `<div class="dia-semana" data-fecha="${fechaStr}"><div class="dia-semana-header">${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][fecha.getDay()]}</div><div class="dia-semana-fecha">${fecha.getDate()}/${fecha.getMonth() + 1}</div><div class="lista-publicaciones">`;
-                publisDia.forEach(p => html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${p.idx}" style="width:100%;cursor:pointer;" title="${esc(p.titulo)}">${esc(p.titulo)} ${p.hora ? `<span style="font-size:var(--text-xs);">${p.hora}</span>` : ''}</div>`);
-                html += `</div></div>`;
+                html += `<div style="background:var(--surface-2);padding:var(--space-2);font-weight:600;text-align:center;font-size:var(--text-xs);">${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][fecha.getDay()]}<br/>${fecha.getDate()}/${fecha.getMonth() + 1}</div>`;
             }
-            html += '</div>';
+
+            // Hours
+            for (let h = 0; h < 24; h++) {
+                const hora = String(h).padStart(2, '0') + ':00';
+                html += `<div style="background:var(--surface-1);padding:var(--space-2);font-size:var(--text-xs);color:var(--text-secondary);">${hora}</div>`;
+
+                for (let i = 0; i < 7; i++) {
+                    const fecha = new Date(primeroDeSemana);
+                    fecha.setDate(primeroDeSemana.getDate() + i);
+                    const fechaStr = fecha.toISOString().split('T')[0];
+                    const publisDia = publicaciones.filter(p => p.fecha === fechaStr && p.plataforma === plataformaActual && p.hora && p.hora.startsWith(String(h).padStart(2, '0')));
+                    html += `<div style="background:var(--surface-1);padding:1px;min-height:50px;cursor:pointer;overflow:hidden;" data-fecha="${fechaStr}" data-hora="${hora}">`;
+                    publisDia.forEach((p, idx) => {
+                        const pIdx = publicaciones.indexOf(p);
+                        html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${pIdx}" style="font-size:var(--text-xs);margin:1px;cursor:pointer;padding:2px 4px;" title="${esc(p.titulo)}">${esc(p.titulo.substring(0, 15))}</div>`;
+                    });
+                    html += '</div>';
+                }
+            }
+            html += '</div></div>';
             container.innerHTML = html;
             container.querySelectorAll('[data-semana-prev]').forEach(btn => btn.addEventListener('click', () => { semanaActual.setDate(semanaActual.getDate() - 7); renderizarSemana(); }));
             container.querySelectorAll('[data-semana-next]').forEach(btn => btn.addEventListener('click', () => { semanaActual.setDate(semanaActual.getDate() + 7); renderizarSemana(); }));
@@ -2218,6 +2237,7 @@
                 if (!e.target.closest('[data-pub-idx]')) {
                     abrirModalPublicacion(-1);
                     document.getElementById('modalFecha').value = cel.dataset.fecha;
+                    document.getElementById('modalHora').value = cel.dataset.hora || '';
                 }
             }));
             attachPublicacionListeners();
@@ -2228,19 +2248,37 @@
             const diaStr = diaActual.toISOString().split('T')[0];
             const publisDia = publicaciones.filter(p => p.fecha === diaStr && p.plataforma === plataformaActual);
             const fechaFormato = diaActual.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let html = `<div class="mes-header" style="margin-bottom:var(--space-4);"><button data-dia-prev>← Anterior</button><h3>${fechaFormato}</h3><button data-dia-next>Siguiente →</button></div><div class="lista-publicaciones">`;
-            if (publisDia.length === 0) {
-                html += `<p class="card-hint">No hay publicaciones para este día.</p>`;
-            } else {
-                publisDia.forEach((p) => {
-                    const idx = publicaciones.indexOf(p);
-                    html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${idx}" style="background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4);cursor:pointer;"><div style="font-weight:600;margin-bottom:var(--space-2);">${esc(p.titulo)}</div><div style="font-size:var(--text-sm);color:var(--text-secondary);">${p.hora || 'Sin hora'} · ${p.tipo}</div></div>`;
-                });
+            let html = `<div class="mes-header" style="margin-bottom:var(--space-4);"><button data-dia-prev>← Anterior</button><h3>${fechaFormato}</h3><button data-dia-next>Siguiente →</button></div>`;
+            html += '<div style="overflow-x:auto;"><div style="display:grid;grid-template-columns:80px 1fr;gap:1px;background:var(--border);padding:1px;">';
+
+            // Hours
+            for (let h = 0; h < 24; h++) {
+                const hora = String(h).padStart(2, '0') + ':00';
+                html += `<div style="background:var(--surface-2);padding:var(--space-3);font-weight:600;text-align:center;font-size:var(--text-sm);">${hora}</div>`;
+
+                const publiHora = publisDia.filter(p => p.hora && p.hora.startsWith(String(h).padStart(2, '0')));
+                html += `<div style="background:var(--surface-1);padding:var(--space-2);min-height:80px;cursor:pointer;" data-hora="${hora}">`;
+                if (publiHora.length === 0) {
+                    html += `<div style="color:var(--text-tertiary);font-size:var(--text-sm);">-</div>`;
+                } else {
+                    publiHora.forEach((p) => {
+                        const idx = publicaciones.indexOf(p);
+                        html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${idx}" style="background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--space-2);cursor:pointer;margin-bottom:var(--space-1);font-size:var(--text-sm);" title="${esc(p.titulo)}">${esc(p.titulo)}</div>`;
+                    });
+                }
+                html += '</div>';
             }
-            html += '</div>';
+            html += '</div></div>';
             container.innerHTML = html;
             container.querySelectorAll('[data-dia-prev]').forEach(btn => btn.addEventListener('click', () => { diaActual.setDate(diaActual.getDate() - 1); renderizarDia(); }));
             container.querySelectorAll('[data-dia-next]').forEach(btn => btn.addEventListener('click', () => { diaActual.setDate(diaActual.getDate() + 1); renderizarDia(); }));
+            container.querySelectorAll('[data-hora]').forEach(cel => cel.addEventListener('click', (e) => {
+                if (!e.target.closest('[data-pub-idx]')) {
+                    abrirModalPublicacion(-1);
+                    document.getElementById('modalFecha').value = diaStr;
+                    document.getElementById('modalHora').value = cel.dataset.hora || '';
+                }
+            }));
             attachPublicacionListeners();
         }
 
