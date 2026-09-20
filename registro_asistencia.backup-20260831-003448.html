@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Asistencia - Equipo Creativo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --pill-orange: #f5a623;
+            --pill-blue: #4a90e2;
+            --pill-red: #e8420a;
+            --text-light: #ffffff;
+            --text-dark: #0a0a0a;
+            --font: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text-light);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ANIMATED GRADIENT BACKGROUND */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.15;
+            will-change: transform;
+        }
+
+        .blob-1 {
+            width: 600px;
+            height: 600px;
+            background: var(--pill-orange);
+            top: -200px;
+            left: -150px;
+            animation: drift1 28s linear infinite;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: var(--pill-blue);
+            top: 30%;
+            right: -200px;
+            animation: drift2 34s linear infinite;
+        }
+
+        .blob-3 {
+            width: 450px;
+            height: 450px;
+            background: var(--pill-red);
+            bottom: 10%;
+            left: 20%;
+            animation: drift3 40s linear infinite;
+        }
+
+        @keyframes drift1 {
+            0% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(80px, 120px) scale(1.08); }
+            66% { transform: translate(-40px, 60px) scale(0.95); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        @keyframes drift2 {
+            0% { transform: translate(0,0) scale(1); }
+            40% { transform: translate(-100px, 80px) scale(1.1); }
+            70% { transform: translate(50px, -60px) scale(0.92); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        @keyframes drift3 {
+            0% { transform: translate(0,0) scale(1); }
+            30% { transform: translate(60px,-80px) scale(1.05); }
+            65% { transform: translate(-80px,40px) scale(0.97); }
+            100% { transform: translate(0,0) scale(1); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: clamp(1.8rem, 5vw, 2.4rem);
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            letter-spacing: -0.02em;
+            display: block;
+            background: rgba(0,0,0,0.4);
+            color: var(--text-light);
+            padding: 1.5rem 2rem;
+            border-radius: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        header p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 1.2rem;
+            line-height: 1.5;
+            display: inline-block;
+            border: 2px solid rgba(255,255,255,0.2);
+            padding: 0.8rem 1.8rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 600;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1rem;
+            margin-top: 1rem;
+            overflow-x: auto;
+            overflow-y: visible;
+            padding-bottom: 2rem;
+            padding-top: 1rem;
+        }
+
+        .nav-tabs button {
+            padding: 0.75rem 1.2rem;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            border-radius: 999px;
+            transition: all 0.3s;
+            font-family: var(--font);
+            white-space: nowrap;
+        }
+
+        .nav-tabs button:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.9);
+        }
+
+        .nav-tabs button.active {
+            background: var(--pill-orange);
+            color: var(--text-dark);
+            border-color: var(--pill-orange);
+            font-weight: 700;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 20px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: rgba(255,255,255,0.075);
+            border-color: rgba(255,255,255,0.18);
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+            transform: translateY(-2px);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: var(--text-light);
+            letter-spacing: -0.01em;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .vol-selector-grid {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin: 1rem 0;
+        }
+
+        .vol-selector {
+            padding: 0.7rem 1.2rem;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: fit-content;
+        }
+
+        .vol-selector:hover {
+            border-color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .vol-selector.selected {
+            background: var(--pill-orange);
+            color: var(--text-dark);
+            border-color: var(--pill-orange);
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="file"],
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: var(--font);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        input[type="file"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--pill-orange);
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.1);
+        }
+
+        .custom-select {
+            position: relative;
+            width: 100%;
+        }
+
+        .custom-select-trigger {
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: var(--font);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .custom-select-trigger:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.25);
+        }
+
+        .custom-select-trigger.active {
+            border-color: var(--pill-orange);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .custom-select-options {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, margin 0.4s ease;
+            backdrop-filter: blur(24px);
+            margin-top: -1px;
+        }
+
+        .custom-select-options.open {
+            max-height: 500px;
+            margin-top: 0;
+        }
+
+        .custom-select-option {
+            padding: 0.8rem 1rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .custom-select-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-select-option:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-light);
+        }
+
+        .custom-select-option.selected {
+            background: rgba(245,166,35,0.2);
+            color: var(--pill-orange);
+            font-weight: 700;
+        }
+
+        .select-arrow {
+            font-size: 0.8rem;
+            transition: transform 0.3s;
+        }
+
+        .custom-select-trigger.active .select-arrow {
+            transform: rotate(180deg);
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: var(--pill-orange);
+            color: var(--text-dark);
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-family: var(--font);
+            letter-spacing: 0.3px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(245,166,35,0.3);
+        }
+
+        button.secondary {
+            background: transparent;
+            color: var(--text-light);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        button.secondary:hover {
+            border-color: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.05);
+        }
+
+        button.danger {
+            background: var(--pill-red);
+        }
+
+        button.danger:hover {
+            box-shadow: 0 8px 24px rgba(232,66,10,0.3);
+        }
+
+        button.success {
+            background: var(--pill-blue);
+        }
+
+        button.success:hover {
+            box-shadow: 0 8px 24px rgba(74,144,226,0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .evento-item {
+            background: rgba(255,255,255,0.04);
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--pill-orange);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid var(--pill-orange);
+            transition: all 0.3s ease;
+        }
+
+        .evento-item:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .evento-item h3 {
+            margin: 0 0 0.6rem 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .evento-item p {
+            margin: 0.4rem 0;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .evento-item .date {
+            font-weight: 700;
+            color: var(--pill-orange);
+        }
+
+        .evento-actions {
+            margin-top: 1rem;
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .evento-actions button {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .attendance-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin: 2rem 0;
+            justify-content: flex-start;
+        }
+
+        .volunteer-card {
+            background: rgba(255,255,255,0.05);
+            padding: 1.4rem 1rem;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.12);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .volunteer-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.05), transparent 55%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .volunteer-card:hover {
+            border-color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .volunteer-card:hover::before {
+            opacity: 1;
+        }
+
+        .volunteer-card.present {
+            background: rgba(74,144,226,0.2);
+            border-color: var(--pill-blue);
+            box-shadow: 0 0 20px rgba(74,144,226,0.2);
+        }
+
+        .volunteer-card.present strong {
+            color: var(--pill-blue);
+        }
+
+        .volunteer-card.absent {
+            background: rgba(232,66,10,0.2);
+            border-color: var(--pill-red);
+            box-shadow: 0 0 20px rgba(232,66,10,0.2);
+        }
+
+        .volunteer-card.absent strong {
+            color: var(--pill-red);
+        }
+
+        .volunteer-card strong {
+            display: block;
+            font-weight: 800;
+            font-size: 1rem;
+            margin-bottom: 0.4rem;
+            color: var(--text-light);
+        }
+
+        .volunteer-card p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        table thead {
+            background: rgba(255,255,255,0.05);
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        table th,
+        table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        table th {
+            font-weight: 700;
+            color: var(--text-light);
+            letter-spacing: 0.3px;
+        }
+
+        table tbody tr:hover {
+            background: rgba(255,255,255,0.04);
+        }
+
+        table td {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.high {
+            background: rgba(74,144,226,0.2);
+            color: var(--pill-blue);
+            border: 1px solid rgba(74,144,226,0.4);
+        }
+
+        .badge.medium {
+            background: rgba(245,166,35,0.2);
+            color: var(--pill-orange);
+            border: 1px solid rgba(245,166,35,0.4);
+        }
+
+        .badge.low {
+            background: rgba(232,66,10,0.2);
+            color: var(--pill-red);
+            border: 1px solid rgba(232,66,10,0.4);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 0.8rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--pill-blue), var(--pill-orange));
+            transition: width 0.3s ease;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .vol-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            margin-bottom: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .vol-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .vol-name {
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(24px) saturate(160%);
+            -webkit-backdrop-filter: blur(24px) saturate(160%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.09);
+            box-shadow: 0 4px 32px rgba(0,0,0,0.35);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255,255,255,0.075);
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0.8rem;
+            font-weight: 700;
+        }
+
+        .stat-card .value {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--pill-orange);
+            letter-spacing: -0.02em;
+        }
+
+        .filter-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-pill {
+            padding: 0.7rem 1.2rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            transition: all 0.3s ease;
+            font-family: var(--font);
+            font-size: 0.9rem;
+        }
+
+        .filter-pill:hover {
+            border-color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .filter-pill.active {
+            background: var(--pill-orange);
+            color: var(--text-dark);
+            border-color: var(--pill-orange);
+        }
+
+        .mes-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .mes-header {
+            padding: 1rem 1.2rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .mes-header:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        .mes-header h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin: 0;
+        }
+
+        .mes-header .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .mes-header.open .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .mes-events {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .mes-events.open {
+            max-height: 2000px;
+        }
+
+        .mes-events-content {
+            padding: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- ANIMATED GRADIENT BACKGROUND -->
+    <div class="bg-canvas">
+        <div class="bg-blob blob-1"></div>
+        <div class="bg-blob blob-2"></div>
+        <div class="bg-blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>📋 Registro de Asistencia</h1>
+            <p>Equipo Creativo - Seguimiento de asistencia y evaluación de compromiso</p>
+            <a href="https://creativos-tlc.github.io/reuniones-equipo-creativo/calendario-juntas-creativas.html" target="_blank" style="display: inline-block; margin-top: 1.2rem; padding: 0.75rem 1.5rem; background: var(--pill-blue); color: var(--text-dark); border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: opacity 0.3s ease; cursor: pointer;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">📅 Ir al calendario 2026</a>
+        </header>
+
+        <div class="nav-tabs">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="eventos">Eventos</button>
+            <button class="tab-btn" data-tab="asistencia">Marcar Asistencia</button>
+            <button class="tab-btn" data-tab="reportes">Reportes</button>
+            <button class="tab-btn" data-tab="voluntarios">Voluntarios</button>
+            <button class="tab-btn" data-tab="datos">Datos</button>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid" id="statsGrid"></div>
+            <div class="card">
+                <h2>Próximos Eventos</h2>
+                <div id="proximosEventos"></div>
+            </div>
+            <div class="card">
+                <h2>Top Asistencia</h2>
+                <div id="topAsistencia"></div>
+            </div>
+        </div>
+
+        <!-- EVENTOS -->
+        <div id="eventos" class="tab-content">
+            <div class="card">
+                <h2>Crear Evento</h2>
+                <div class="form-group">
+                    <label>Tipo de Evento</label>
+                    <div class="custom-select" id="selectTipoEvento">
+                        <div class="custom-select-trigger" onclick="toggleSelectCustom(this)">
+                            <span>Seleccionar...</span>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        <div class="custom-select-options">
+                            <div class="custom-select-option" onclick="selectOption(this, 'Junta de Oración')">Junta de Oración</div>
+                            <div class="custom-select-option" onclick="selectOption(this, 'Junta de Información')">Junta de Información</div>
+                            <div class="custom-select-option" onclick="selectOption(this, 'Junta Creativa')">Junta Creativa</div>
+                            <div class="custom-select-option" onclick="selectOption(this, 'Servicio Domingo')">Servicio Domingo</div>
+                            <div class="custom-select-option" onclick="selectOption(this, 'Grabación')">Grabación</div>
+                            <div class="custom-select-option" onclick="selectOption(this, 'Otro')">Otro (especificar)</div>
+                        </div>
+                        <input type="hidden" id="tipoEvento" value="">
+                    </div>
+                </div>
+                <div class="form-group" id="grupoOtro" style="display:none;">
+                    <label>Nombre del Evento</label>
+                    <input type="text" id="nombreEvento" placeholder="Ej: Grabación Intro">
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="fechaEvento">
+                </div>
+                <div class="form-group">
+                    <label>Voluntarios Asignados (opcional)</label>
+                    <button type="button" onclick="seleccionarTodos()" style="margin-bottom:1rem;padding:0.6rem 1.2rem;font-size:0.85rem;">Todos</button>
+                    <div id="voluntariosAsignados"></div>
+                </div>
+                <button onclick="crearEvento()" class="success">Crear Evento</button>
+            </div>
+
+            <div class="card">
+                <h2>Eventos Registrados</h2>
+                <div class="filter-pills" id="filterPills"></div>
+                <div id="listaEventos"></div>
+            </div>
+        </div>
+
+        <!-- MARCAR ASISTENCIA -->
+        <div id="asistencia" class="tab-content">
+            <div class="card">
+                <h2>Seleccionar Evento</h2>
+                <div class="form-group">
+                    <label>Evento</label>
+                    <div class="custom-select" id="selectEventoAsistencia">
+                        <div class="custom-select-trigger" onclick="toggleSelectCustom(this)">
+                            <span>Seleccionar evento...</span>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        <div class="custom-select-options" id="eventosOptionsList"></div>
+                        <input type="hidden" id="eventoParaAsistencia" value="">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="cardAsistencia" style="display:none;">
+                <h2 id="nombreEventoAsistencia"></h2>
+                <p style="color:#666;margin-bottom:20px;">Marca a los que asistieron</p>
+                <div class="attendance-grid" id="gridAsistencia"></div>
+                <div class="button-group">
+                    <button onclick="guardarAsistencia()" class="success">Guardar Asistencia</button>
+                    <button onclick="limpiarSeleccion()" class="secondary">Limpiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORTES -->
+        <div id="reportes" class="tab-content">
+            <div class="card">
+                <h2>Reporte de Asistencia por Persona</h2>
+                <div class="table-responsive">
+                    <table id="tablaReporte">
+                        <thead>
+                            <tr>
+                                <th>Voluntario</th>
+                                <th>Eventos</th>
+                                <th>Asistencias</th>
+                                <th>Faltas</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTabla"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Detalles por Voluntario</h2>
+                <div class="form-group">
+                    <label>Seleccionar Voluntario</label>
+                    <div class="custom-select" id="selectVoluntarioDetalle">
+                        <div class="custom-select-trigger" onclick="toggleSelectCustom(this)">
+                            <span>Seleccionar...</span>
+                            <span class="select-arrow">▼</span>
+                        </div>
+                        <div class="custom-select-options" id="voluntariosOptionsList"></div>
+                        <input type="hidden" id="voluntarioDetalle" value="">
+                    </div>
+                </div>
+                <div id="detalleVoluntario"></div>
+            </div>
+        </div>
+
+        <!-- VOLUNTARIOS -->
+        <div id="voluntarios" class="tab-content">
+            <div class="card">
+                <h2 id="tituloGestor">Gestionar Voluntarios</h2>
+                <div class="form-group">
+                    <label>Nombre del Voluntario</label>
+                    <input type="text" id="nombreVoluntario" placeholder="Ej: Sorimar">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Incorporación</label>
+                    <input type="date" id="fechaIncorporacion">
+                </div>
+                <input type="hidden" id="indiceEdicion" value="">
+                <div style="display:flex;gap:10px;">
+                    <button onclick="guardarVoluntario()" id="btnGuardar" class="success">Agregar Voluntario</button>
+                    <button onclick="cancelarEdicion()" id="btnCancelar" class="secondary" style="display:none;">Cancelar</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Voluntarios Registrados</h2>
+                <div id="listaVoluntarios"></div>
+            </div>
+        </div>
+
+        <!-- DATOS -->
+        <div id="datos" class="tab-content">
+            <div class="card">
+                <h2>Exportar Datos</h2>
+                <p style="color:#666;margin-bottom:20px;">Descarga todos los registros de asistencia como CSV para compartir con David</p>
+                <button onclick="exportarCSV()" class="success">Descargar CSV</button>
+            </div>
+
+            <div class="card">
+                <h2>Importar Datos</h2>
+                <p style="color:#666;margin-bottom:20px;">Carga un archivo CSV con registros de asistencia</p>
+                <div class="form-group">
+                    <input type="file" id="archivoCSV" accept=".csv">
+                </div>
+                <button onclick="importarCSV()" class="secondary">Importar CSV</button>
+            </div>
+
+            <div class="card">
+                <h2>Sincronizar Datos</h2>
+                <p style="color:#666;margin-bottom:20px;">Exporta todos los datos locales (eventos, voluntarios, asistencia)</p>
+                <button onclick="exportarJSON()" class="success">Descargar JSON (Backup)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // INICIALIZACIÓN
+        const voluntarios = [
+            {nombre: 'Sorimar', fechaUnion: '2026-01-01'},
+            {nombre: 'Karol', fechaUnion: '2026-01-01'},
+            {nombre: 'David', fechaUnion: '2026-01-01'},
+            {nombre: 'Sofia', fechaUnion: '2026-01-01'},
+            {nombre: 'Kathy', fechaUnion: '2026-01-01'},
+            {nombre: 'Jazmin', fechaUnion: '2026-01-01'},
+            {nombre: 'Ronald', fechaUnion: '2026-01-01'},
+            {nombre: 'Danny', fechaUnion: '2026-01-01'},
+            {nombre: 'Renata', fechaUnion: '2026-01-01'}
+        ];
+        let eventos = [];
+        let asistencias = {};
+
+        // Función para formatear fechas sin problemas de zona horaria
+        function formatearFecha(fechaString) {
+            const [año, mes, día] = fechaString.split('-');
+            return `${día}/${mes}/${año}`;
+        }
+
+        // Función para obtener mes y año en formato largo
+        function obtenerMesAño(fechaString) {
+            const [año, mes, día] = fechaString.split('-');
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const mesNumero = parseInt(mes) - 1;
+            return `${meses[mesNumero]} ${año}`;
+        }
+
+        // Precarga el input de fecha con la fecha de hoy
+        window.addEventListener('load', () => {
+            const hoy = new Date().toISOString().split('T')[0];
+            const inputFecha = document.getElementById('fechaIncorporacion');
+            if (inputFecha) {
+                inputFecha.value = hoy;
+            }
+        });
+
+        // Cargar datos del localStorage
+        function cargarDatos() {
+            const datosGuardados = localStorage.getItem('registroAsistencia');
+            if (datosGuardados) {
+                const datos = JSON.parse(datosGuardados);
+                voluntarios.length = 0;
+
+                // Migración: si voluntarios son strings, convertir a objetos
+                const volsGuardados = datos.voluntarios || [];
+                const fechaActual = new Date().toISOString().split('T')[0];
+                if (volsGuardados.length > 0 && typeof volsGuardados[0] === 'string') {
+                    voluntarios.push(...volsGuardados.map(nombre => ({nombre, fechaUnion: fechaActual})));
+                } else {
+                    voluntarios.push(...volsGuardados);
+                }
+
+                eventos = datos.eventos || [];
+                asistencias = datos.asistencias || {};
+            } else {
+                guardarDatos();
+            }
+        }
+
+        function guardarDatos() {
+            localStorage.setItem('registroAsistencia', JSON.stringify({
+                voluntarios,
+                eventos,
+                asistencias
+            }));
+        }
+
+        // NAVEGACIÓN TABS
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                document.getElementById(tab).classList.add('active');
+                btn.classList.add('active');
+
+                // Refrescar contenido al cambiar tab
+                if (tab === 'dashboard') actualizarDashboard();
+                if (tab === 'eventos') actualizarEventos();
+                if (tab === 'asistencia') actualizarSelectEventos();
+                if (tab === 'reportes') actualizarReportes();
+                if (tab === 'voluntarios') actualizarVoluntarios();
+            });
+        });
+
+        // CUSTOM SELECT
+        function toggleSelectCustom(trigger) {
+            const select = trigger.parentElement;
+            const options = select.querySelector('.custom-select-options');
+            trigger.classList.toggle('active');
+            options.classList.toggle('open');
+        }
+
+        function selectOption(option, value) {
+            const select = option.closest('.custom-select');
+            if (!select) return;
+
+            const trigger = select.querySelector('.custom-select-trigger');
+            const hidden = select.querySelector('input[type="hidden"]');
+            const allOptions = select.querySelectorAll('.custom-select-option');
+
+            if (trigger) trigger.querySelector('span:first-child').textContent = value;
+            if (hidden) hidden.value = value;
+
+            allOptions.forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+
+            // Mostrar/ocultar grupo Otro si es necesario
+            const grupoOtro = document.getElementById('grupoOtro');
+            if (grupoOtro) {
+                grupoOtro.style.display = value === 'Otro' ? 'block' : 'none';
+            }
+
+            // Cerrar después de seleccionar
+            setTimeout(() => {
+                if (trigger) trigger.classList.remove('active');
+                const options = select.querySelector('.custom-select-options');
+                if (options) options.classList.remove('open');
+            }, 150);
+        }
+
+        // Cerrar select al hacer click fuera
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.custom-select-trigger').forEach(t => {
+                    t.classList.remove('active');
+                    t.parentElement.querySelector('.custom-select-options').classList.remove('open');
+                });
+            }
+        });
+
+        // TOGGLE VOLUNTARIOS SELECTOR
+        function toggleVoluntarioSelector(element, voluntario) {
+            element.classList.toggle('selected');
+            voluntariosChecked[voluntario] = element.classList.contains('selected');
+        }
+
+        // VOLUNTARIOS
+        function guardarVoluntario() {
+            const nombre = document.getElementById('nombreVoluntario').value.trim();
+            let fechaUnion = document.getElementById('fechaIncorporacion').value.trim();
+            const indiceEdicion = document.getElementById('indiceEdicion').value;
+
+            if (!nombre) {
+                alert('Ingresa un nombre');
+                return;
+            }
+
+            // Si no se especifica fecha, usar hoy
+            if (!fechaUnion) {
+                fechaUnion = new Date().toISOString().split('T')[0];
+            }
+
+            if (indiceEdicion) {
+                // Modo edición - actualizar voluntario existente
+                const indice = parseInt(indiceEdicion);
+                const nombreViejo = voluntarios[indice].nombre;
+
+                // Verificar que el nombre no sea duplicado (excepto el actual)
+                if (voluntarios.some((v, i) => v.nombre === nombre && i !== indice)) {
+                    alert('Este voluntario ya existe');
+                    return;
+                }
+
+                voluntarios[indice] = {nombre, fechaUnion};
+
+                // Actualizar referencias en eventos si el nombre cambió
+                if (nombreViejo !== nombre) {
+                    eventos.forEach(e => {
+                        if (e.asignados && e.asignados.includes(nombreViejo)) {
+                            e.asignados = e.asignados.map(vol => vol === nombreViejo ? nombre : vol);
+                        }
+                    });
+
+                    // Actualizar referencias en asistencias
+                    Object.keys(asistencias).forEach(eventoId => {
+                        if (asistencias[eventoId][nombreViejo] !== undefined) {
+                            asistencias[eventoId][nombre] = asistencias[eventoId][nombreViejo];
+                            delete asistencias[eventoId][nombreViejo];
+                        }
+                    });
+                }
+
+                cancelarEdicion();
+            } else {
+                // Modo agregar - nuevo voluntario
+                if (voluntarios.some(v => v.nombre === nombre)) {
+                    alert('Este voluntario ya existe');
+                    return;
+                }
+
+                console.log('Agregando voluntario:', nombre, 'Fecha:', fechaUnion);
+                voluntarios.push({nombre, fechaUnion});
+                document.getElementById('nombreVoluntario').value = '';
+                document.getElementById('fechaIncorporacion').value = new Date().toISOString().split('T')[0];
+            }
+
+            guardarDatos();
+            actualizarVoluntarios();
+            actualizarEventos();
+            actualizarSelectEventos();
+        }
+
+        function editarVoluntario(indice) {
+            const voluntario = voluntarios[indice];
+            document.getElementById('nombreVoluntario').value = voluntario.nombre;
+            document.getElementById('fechaIncorporacion').value = voluntario.fechaUnion;
+            document.getElementById('indiceEdicion').value = indice;
+
+            // Cambiar interfaz a modo edición
+            document.getElementById('tituloGestor').textContent = 'Editar Voluntario';
+            document.getElementById('btnGuardar').textContent = 'Actualizar Voluntario';
+            document.getElementById('btnGuardar').className = 'secondary';
+            document.getElementById('btnCancelar').style.display = 'block';
+
+            // Scroll al formulario
+            document.querySelector('[id="nombreVoluntario"]').focus();
+        }
+
+        function cancelarEdicion() {
+            document.getElementById('nombreVoluntario').value = '';
+            document.getElementById('fechaIncorporacion').value = new Date().toISOString().split('T')[0];
+            document.getElementById('indiceEdicion').value = '';
+
+            // Volver a modo agregar
+            document.getElementById('tituloGestor').textContent = 'Gestionar Voluntarios';
+            document.getElementById('btnGuardar').textContent = 'Agregar Voluntario';
+            document.getElementById('btnGuardar').className = 'success';
+            document.getElementById('btnCancelar').style.display = 'none';
+        }
+
+        function actualizarVoluntarios() {
+            const lista = document.getElementById('listaVoluntarios');
+            lista.innerHTML = voluntarios.map((v, i) => {
+                // Parsear fecha sin conversión de zona horaria
+                const [año, mes, día] = v.fechaUnion.split('-');
+                const fechaFormato = `${día}/${mes}/${año}`;
+                return `
+                <div class="vol-item">
+                    <div style="flex:1;">
+                        <span class="vol-name">${v.nombre}</span>
+                        <p style="font-size:0.8rem;color:#999;margin-top:0.3rem;">Desde: ${fechaFormato}</p>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="secondary" onclick="editarVoluntario(${i})" style="padding:0.5rem 1rem;font-size:0.8rem;">Editar</button>
+                        <button class="danger" onclick="eliminarVoluntario(${i})" style="padding:0.5rem 1rem;font-size:0.8rem;">Eliminar</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function eliminarVoluntario(index) {
+            if (confirm('¿Eliminar este voluntario?')) {
+                voluntarios.splice(index, 1);
+                guardarDatos();
+                actualizarVoluntarios();
+            }
+        }
+
+        // EVENTOS
+        function crearEvento() {
+            const tipo = document.getElementById('tipoEvento').value;
+            const fecha = document.getElementById('fechaEvento').value;
+            const nombre = tipo === 'Otro' ? document.getElementById('nombreEvento').value : tipo;
+
+            console.log('Tipo:', tipo);
+            console.log('Fecha:', fecha);
+            console.log('Nombre:', nombre);
+
+            if (!tipo || tipo === '' || !fecha || fecha === '') {
+                alert('Completa todos los campos - Tipo: ' + tipo + ', Fecha: ' + fecha);
+                return;
+            }
+
+            const id = Date.now().toString();
+            const evento = {
+                id,
+                nombre,
+                fecha,
+                tipo,
+                asignados: Object.keys(voluntariosChecked || {}).filter(k => voluntariosChecked[k])
+            };
+
+            eventos.push(evento);
+            asistencias[id] = {};
+
+            document.getElementById('tipoEvento').value = '';
+            document.getElementById('nombreEvento').value = '';
+            document.getElementById('fechaEvento').value = '';
+            document.getElementById('grupoOtro').style.display = 'none';
+            voluntariosChecked = {};
+
+            guardarDatos();
+            actualizarEventos();
+            actualizarSelectEventos();
+        }
+
+        let voluntariosChecked = {};
+
+        function seleccionarTodos() {
+            const container = document.getElementById('voluntariosAsignados');
+            const selectors = container.querySelectorAll('.vol-selector');
+            selectors.forEach(selector => {
+                if (!selector.classList.contains('selected')) {
+                    selector.classList.add('selected');
+                    voluntariosChecked[selector.textContent] = true;
+                }
+            });
+        }
+
+        let filtroActual = 'Todos';
+
+        function actualizarEventos() {
+            const container = document.getElementById('voluntariosAsignados');
+            container.innerHTML = `<div class="vol-selector-grid">` + voluntarios.map(v => `
+                <div class="vol-selector" onclick="toggleVoluntarioSelector(this, '${v.nombre}')">${v.nombre}</div>
+            `).join('') + `</div>`;
+
+            actualizarListaEventos();
+        }
+
+        function actualizarListaEventos() {
+            // Crear filtros
+            const tipos = ['Todos', ...new Set(eventos.map(e => e.tipo || 'Otro'))];
+            const filterContainer = document.getElementById('filterPills');
+            filterContainer.innerHTML = tipos.map(tipo => `
+                <button class="filter-pill ${filtroActual === tipo ? 'active' : ''}" onclick="filtrarPor('${tipo}')">
+                    ${tipo}
+                </button>
+            `).join('');
+
+            // Filtrar eventos
+            let eventosFiltrados = eventos;
+            if (filtroActual !== 'Todos') {
+                eventosFiltrados = eventos.filter(e => (e.tipo || 'Otro') === filtroActual);
+            }
+
+            // Agrupar por mes
+            const porMes = {};
+            eventosFiltrados.forEach((e, i) => {
+                const mes = obtenerMesAño(e.fecha);
+                if (!porMes[mes]) porMes[mes] = [];
+                porMes[mes].push({...e, index: i});
+            });
+
+            const lista = document.getElementById('listaEventos');
+            if (eventosFiltrados.length === 0) {
+                lista.innerHTML = '<p style="color:rgba(255,255,255,0.5);text-align:center;">No hay eventos con este filtro</p>';
+                return;
+            }
+
+            lista.innerHTML = Object.entries(porMes).map(([mes, eventosDelMes]) => `
+                <div class="mes-group">
+                    <div class="mes-header" onclick="toggleMes(this)">
+                        <h3>${mes} (${eventosDelMes.length})</h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="mes-events">
+                        <div class="mes-events-content">
+                            ${eventosDelMes.map(e => `
+                                <div class="evento-item">
+                                    <h3>${e.nombre}</h3>
+                                    <p><span class="date">${formatearFecha(e.fecha)}</span></p>
+                                    ${e.asignados && e.asignados.length > 0 ? `<p>Asignados: ${e.asignados.join(', ')}</p>` : ''}
+                                    <div class="evento-actions">
+                                        <button class="secondary" onclick="editarEvento(${e.index})">Editar</button>
+                                        <button class="danger" onclick="eliminarEvento(${e.index})">Eliminar</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filtrarPor(tipo) {
+            filtroActual = tipo;
+            actualizarListaEventos();
+        }
+
+        function toggleMes(header) {
+            header.classList.toggle('open');
+            header.nextElementSibling.classList.toggle('open');
+        }
+
+        function eliminarEvento(index) {
+            if (confirm('¿Eliminar este evento?')) {
+                const id = eventos[index].id;
+                delete asistencias[id];
+                eventos.splice(index, 1);
+                guardarDatos();
+                actualizarEventos();
+                actualizarSelectEventos();
+            }
+        }
+
+        // ASISTENCIA
+        function actualizarSelectEventos() {
+            const container = document.getElementById('eventosOptionsList');
+            container.innerHTML = eventos.map(e => `
+                <div class="custom-select-option" onclick="selectOptionEvento(this, '${e.id}')">${e.nombre} - ${formatearFecha(e.fecha)}</div>
+            `).join('');
+        }
+
+        function selectOptionEvento(option, eventoId) {
+            const select = option.closest('.custom-select');
+            const trigger = select.querySelector('.custom-select-trigger');
+            const hidden = select.querySelector('input[type="hidden"]');
+            const allOptions = select.querySelectorAll('.custom-select-option');
+            const evento = eventos.find(e => e.id === eventoId);
+
+            allOptions.forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+
+            trigger.querySelector('span:first-child').textContent = `${evento.nombre} - ${new Date(evento.fecha).toLocaleDateString('es-ES')}`;
+            hidden.value = eventoId;
+
+            setTimeout(() => {
+                trigger.classList.remove('active');
+                select.querySelector('.custom-select-options').classList.remove('open');
+            }, 150);
+
+            cargarAsistencia();
+        }
+
+        function cargarAsistencia() {
+            const id = document.getElementById('eventoParaAsistencia').value;
+            if (!id || id === '') {
+                document.getElementById('cardAsistencia').style.display = 'none';
+                return;
+            }
+
+            const evento = eventos.find(e => e.id === id);
+            document.getElementById('nombreEventoAsistencia').textContent = evento.nombre + ' - ' + new Date(evento.fecha).toLocaleDateString('es-ES');
+
+            const grid = document.getElementById('gridAsistencia');
+            const registro = asistencias[id] || {};
+
+            grid.innerHTML = voluntarios.map(v => {
+                const presente = registro[v.nombre] === true;
+                return `
+                    <div class="volunteer-card ${presente ? 'present' : ''}" onclick="toggleAsistencia('${v.nombre}', '${id}', this)">
+                        <strong>${v.nombre}</strong>
+                        <p>${presente ? '✓ Presente' : '○ Ausente'}</p>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('cardAsistencia').style.display = 'block';
+        }
+
+        function toggleAsistencia(voluntario, eventoId, element) {
+            if (!asistencias[eventoId]) asistencias[eventoId] = {};
+            asistencias[eventoId][voluntario] = !asistencias[eventoId][voluntario];
+            element.classList.toggle('present');
+        }
+
+        function guardarAsistencia() {
+            guardarDatos();
+            alert('Asistencia guardada');
+            document.getElementById('eventoParaAsistencia').value = '';
+            document.getElementById('cardAsistencia').style.display = 'none';
+        }
+
+        function limpiarSeleccion() {
+            const id = document.getElementById('eventoParaAsistencia').value;
+            if (id) {
+                asistencias[id] = {};
+                cargarAsistencia();
+            }
+        }
+
+        // REPORTES
+        function actualizarReportes() {
+            const cuerpo = document.getElementById('cuerpoTabla');
+            const container = document.getElementById('voluntariosOptionsList');
+            const hoy = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = voluntarios.map(v => `
+                <div class="custom-select-option" onclick="selectOptionVoluntario(this, '${v.nombre}')">${v.nombre}</div>
+            `).join('');
+
+            let filas = voluntarios.map(v => {
+                let total = 0, presentes = 0;
+
+                eventos.forEach(e => {
+                    // Solo contar eventos que ya han ocurrido
+                    if (e.fecha > hoy) return;
+                    // Solo contar eventos DESPUÉS de que el voluntario se unió
+                    if (e.fecha < v.fechaUnion) return;
+
+                    const registro = asistencias[e.id] || {};
+                    if (e.asignados && e.asignados.includes(v.nombre) || !e.asignados || e.asignados.length === 0) {
+                        total++;
+                        if (registro[v.nombre]) presentes++;
+                    }
+                });
+
+                const porcentaje = total > 0 ? Math.round((presentes / total) * 100) : 0;
+                const badge = porcentaje >= 80 ? 'high' : porcentaje >= 50 ? 'medium' : 'low';
+
+                return `
+                    <tr>
+                        <td><strong>${v.nombre}</strong></td>
+                        <td>${total}</td>
+                        <td>${presentes}</td>
+                        <td>${total - presentes}</td>
+                        <td>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width:${porcentaje}%"></div>
+                                </div>
+                                <span class="badge ${badge}">${porcentaje}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            cuerpo.innerHTML = filas.join('');
+        }
+
+        function selectOptionVoluntario(option, voluntario) {
+            const select = option.closest('.custom-select');
+            const trigger = select.querySelector('.custom-select-trigger');
+            const hidden = select.querySelector('input[type="hidden"]');
+            const allOptions = select.querySelectorAll('.custom-select-option');
+
+            allOptions.forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+
+            trigger.querySelector('span:first-child').textContent = voluntario;
+            hidden.value = voluntario;
+
+            setTimeout(() => {
+                trigger.classList.remove('active');
+                select.querySelector('.custom-select-options').classList.remove('open');
+            }, 150);
+
+            mostrarDetalleVoluntario();
+        }
+
+        function mostrarDetalleVoluntario() {
+            const voluntarioNombre = document.getElementById('voluntarioDetalle').value;
+            const voluntario = voluntarios.find(v => v.nombre === voluntarioNombre);
+            const container = document.getElementById('detalleVoluntario');
+            const hoy = new Date().toISOString().split('T')[0];
+
+            if (!voluntario) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let historial = [];
+            eventos.forEach(e => {
+                // Solo mostrar eventos que ya han ocurrido
+                if (e.fecha > hoy) return;
+                // Solo mostrar eventos después de que el voluntario se unió
+                if (e.fecha < voluntario.fechaUnion) return;
+
+                const registro = asistencias[e.id] || {};
+                if (e.asignados && e.asignados.includes(voluntario.nombre) || !e.asignados || e.asignados.length === 0) {
+                    historial.push({
+                        evento: e.nombre,
+                        fecha: e.fecha,
+                        asistio: registro[voluntario.nombre] ? 'Sí' : 'No'
+                    });
+                }
+            });
+
+            if (historial.length === 0) {
+                container.innerHTML = '<p style="color:#999;">Sin eventos asignados</p>';
+                return;
+            }
+
+            container.innerHTML = `<div class="table-responsive"><table style="width:100%;"><thead><tr><th>Evento</th><th>Fecha</th><th>Asistencia</th></tr></thead><tbody>` +
+            historial.map(h => `
+                <tr>
+                    <td>${h.evento}</td>
+                    <td>${formatearFecha(h.fecha)}</td>
+                    <td><span class="badge ${h.asistio === 'Sí' ? 'high' : 'low'}">${h.asistio}</span></td>
+                </tr>
+            `).join('') +
+            `</tbody></table></div>`;
+        }
+
+        // DASHBOARD
+        function actualizarDashboard() {
+            // Stats
+            const statsGrid = document.getElementById('statsGrid');
+            let totalEventos = eventos.length;
+            let totalAsistencias = 0;
+            Object.values(asistencias).forEach(reg => {
+                totalAsistencias += Object.values(reg).filter(v => v).length;
+            });
+
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="label">Total de Eventos</div>
+                    <div class="value">${totalEventos}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Total Asistencias</div>
+                    <div class="value">${totalAsistencias}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Voluntarios Activos</div>
+                    <div class="value">${voluntarios.length}</div>
+                </div>
+            `;
+
+            // Próximos eventos
+            const proximosEventos = document.getElementById('proximosEventos');
+            const hoy = new Date().toISOString().split('T')[0];
+            const eventosFuturos = [...eventos]
+                .filter(e => e.fecha >= hoy)
+                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            if (eventosFuturos.length === 0) {
+                proximosEventos.innerHTML = '<p style="color:#999;">No hay eventos próximos</p>';
+            } else {
+                proximosEventos.innerHTML = eventosFuturos.slice(0, 5).map(e => {
+                const tipo = e.tipo || 'Otro';
+                let color = 'rgba(245,166,35,0.2)';
+                if(tipo.includes('Información')) color = 'rgba(74,144,226,0.2)';
+                if(tipo.includes('Creativa')) color = 'rgba(232,66,10,0.2)';
+                return `
+                    <div class="evento-item" style="border-left-color:${color};">
+                        <h3>${e.nombre}</h3>
+                        <p><span class="date">${formatearFecha(e.fecha)}</span></p>
+                    </div>
+                `;
+            }).join('');
+            }
+
+            // Top asistencia
+            const topAsistencia = document.getElementById('topAsistencia');
+            let ranking = voluntarios.map(v => {
+                let total = 0, presentes = 0;
+                eventos.forEach(e => {
+                    // Solo contar eventos pasados
+                    if (e.fecha > hoy) return;
+                    // Solo contar eventos después de que el voluntario se unió
+                    if (e.fecha < v.fechaUnion) return;
+
+                    const registro = asistencias[e.id] || {};
+                    if (e.asignados && e.asignados.includes(v.nombre) || !e.asignados || e.asignados.length === 0) {
+                        total++;
+                        if (registro[v.nombre]) presentes++;
+                    }
+                });
+                return {
+                    nombre: v.nombre,
+                    porcentaje: total > 0 ? Math.round((presentes / total) * 100) : 0
+                };
+            }).sort((a, b) => b.porcentaje - a.porcentaje);
+
+            topAsistencia.innerHTML = ranking.slice(0, 10).map((v, i) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:rgba(255,255,255,0.04);border-radius:12px;margin-bottom:0.8rem;border:1px solid rgba(255,255,255,0.08);transition:all 0.3s ease;">
+                    <span style="color:var(--text-light);font-weight:700;"><strong>${i+1}. ${v.nombre}</strong></span>
+                    <span class="badge ${v.porcentaje >= 80 ? 'high' : v.porcentaje >= 50 ? 'medium' : 'low'}">${v.porcentaje}%</span>
+                </div>
+            `).join('');
+        }
+
+        // EXPORTAR/IMPORTAR
+        function exportarCSV() {
+            let csv = 'Evento,Fecha,Voluntario,Asistió\n';
+
+            eventos.forEach(evento => {
+                const registro = asistencias[evento.id] || {};
+                voluntarios.forEach(voluntario => {
+                    if (registro[voluntario.nombre] !== undefined) {
+                        csv += `"${evento.nombre}","${evento.fecha}","${voluntario.nombre}","${registro[voluntario.nombre] ? 'Sí' : 'No'}"\n`;
+                    }
+                });
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `asistencia_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function importarCSV() {
+            const archivo = document.getElementById('archivoCSV').files[0];
+            if (!archivo) {
+                alert('Selecciona un archivo CSV');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const csv = e.target.result;
+                const lineas = csv.split('\n').slice(1);
+                let importados = 0;
+
+                lineas.forEach(linea => {
+                    if (!linea.trim()) return;
+                    const partes = linea.match(/"([^"]*)"|([^,]*)/g);
+                    if (partes && partes.length >= 4) {
+                        const evento = partes[0].replace(/"/g, '');
+                        const fecha = partes[1].replace(/"/g, '');
+                        const voluntario = partes[2].replace(/"/g, '');
+                        const asistio = partes[3].includes('Sí');
+
+                        let eventoExistente = eventos.find(e => e.nombre === evento && e.fecha === fecha);
+                        if (!eventoExistente) {
+                            eventoExistente = {
+                                id: Date.now().toString() + Math.random(),
+                                nombre: evento,
+                                fecha: fecha,
+                                tipo: evento,
+                                asignados: []
+                            };
+                            eventos.push(eventoExistente);
+                            asistencias[eventoExistente.id] = {};
+                        }
+
+                        if (!asistencias[eventoExistente.id]) {
+                            asistencias[eventoExistente.id] = {};
+                        }
+                        asistencias[eventoExistente.id][voluntario] = asistio;
+                        importados++;
+                    }
+                });
+
+                guardarDatos();
+                alert(`${importados} registros importados`);
+                document.getElementById('archivoCSV').value = '';
+                actualizarEventos();
+            };
+            reader.readAsText(archivo);
+        }
+
+        function exportarJSON() {
+            const datos = {
+                voluntarios,
+                eventos,
+                asistencias,
+                fecha_exportacion: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_asistencia_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // INICIALIZAR
+        cargarDatos();
+        actualizarDashboard();
+    </script>
+</body>
+</html>

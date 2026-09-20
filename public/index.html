@@ -874,9 +874,14 @@
                     <p>Equipo Creativo · TLC</p>
                 </div>
             </div>
-            <a href="https://creativos-tlc.github.io/Equipo-Creativo/calendario-2026" target="_blank" rel="noopener" class="calendar-link" aria-label="Ir al calendario 2026" title="Calendario 2026">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-            </a>
+            <div style="display:flex;gap:var(--space-3);align-items:center;">
+                <a href="https://creativos-tlc.github.io/Equipo-Creativo/calendario-2026" target="_blank" rel="noopener" class="calendar-link" aria-label="Ir al calendario 2026" title="Calendario 2026">
+                    <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+                </a>
+                <button id="btnLogoutHeader" type="button" style="background:none;border:none;cursor:pointer;padding:var(--space-2);border-radius:var(--radius-sm);color:var(--text-secondary);transition:all var(--dur-fast) var(--ease);" title="Cerrar sesión" aria-label="Cerrar sesión">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                </button>
+            </div>
         </header>
 
         <nav class="nav-tabs" aria-label="Navegación principal">
@@ -1099,14 +1104,6 @@
                 </button>
             </div>
 
-            <div class="card" style="margin-top:var(--space-6);border-color:var(--danger-border);background:rgba(239,90,47,0.08);">
-                <h2 style="color:var(--danger);">Cerrar sesión</h2>
-                <p class="card-hint">Borra todos los datos guardados localmente y reinicia la app.</p>
-                <button type="button" id="btnLogout" class="danger block">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                    Cerrar sesión
-                </button>
-            </div>
         </div>
 
         <!-- PLANIFICADOR DE CONTENIDO -->
@@ -2022,11 +2019,22 @@
         document.getElementById('btnExportarCSV').addEventListener('click', exportarCSV);
         document.getElementById('btnImportarCSV').addEventListener('click', importarCSV);
         document.getElementById('btnExportarJSON').addEventListener('click', exportarJSON);
-        document.getElementById('btnLogout').addEventListener('click', () => {
+        document.getElementById('btnLogoutHeader').addEventListener('click', () => {
             if (confirm('¿Estás seguro? Se borrarán todos los datos guardados.')) {
                 localStorage.clear();
                 location.reload();
             }
+        });
+
+        // Hover effects
+        const btnLogout = document.getElementById('btnLogoutHeader');
+        btnLogout.addEventListener('mouseenter', function() {
+            this.style.background = 'var(--danger-soft)';
+            this.style.color = 'var(--danger)';
+        });
+        btnLogout.addEventListener('mouseleave', function() {
+            this.style.background = 'none';
+            this.style.color = 'var(--text-secondary)';
         });
 
         function exportarCSV() {

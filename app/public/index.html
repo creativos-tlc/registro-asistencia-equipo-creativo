@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0b0c0f">
     <title>Registro de Asistencia · Equipo Creativo</title>
+
+    <!-- Agregar a pantalla de inicio (iOS): ícono propio, sin barra de Safari -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" href="/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Asistencia">
+
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         /* ============ DESIGN TOKENS ============ */
@@ -126,6 +134,64 @@
             vertical-align: -0.2em;
         }
         .icon.filled { fill: currentColor; stroke: none; }
+
+        /* ============ LOGIN ============ */
+        #loginScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-5);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 360px;
+            background: var(--surface-1);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6) var(--space-5);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 1;
+        }
+        .login-mark {
+            width: 48px; height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--accent-soft);
+            border: 1px solid var(--accent-border);
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto var(--space-4);
+        }
+        .login-mark .icon { width: 24px; height: 24px; }
+        .login-card h1 { font-size: var(--text-xl); font-weight: 800; text-align: center; letter-spacing: -0.01em; }
+        .login-card p.sub { font-size: var(--text-sm); color: var(--text-tertiary); text-align: center; margin-top: var(--space-1); margin-bottom: var(--space-5); }
+        .login-quien { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+        .login-quien button {
+            flex: 1;
+            background: var(--surface-2);
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border-strong);
+        }
+        .login-quien button:hover { background: var(--surface-3); }
+        .login-quien button.selected { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+        .login-card input[type="password"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            font-size: 22px;
+            letter-spacing: 0.5em;
+            text-align: center;
+            font-family: var(--font);
+            background: var(--surface-2);
+            color: var(--text-primary);
+        }
+        .login-card input[type="password"]:focus-visible {
+            outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+        }
 
         /* ============ LAYOUT ============ */
         .container {
@@ -359,10 +425,10 @@
         .custom-select { position: relative; width: 100%; }
 
         .custom-select-trigger {
-            padding: 8px 10px;
+            padding: 12px 14px;
             border: 1px solid var(--border-strong);
             border-radius: var(--radius-sm);
-            font-size: var(--text-sm);
+            font-size: var(--text-base);
             font-family: var(--font);
             background: var(--surface-2);
             color: var(--text-primary);
@@ -372,7 +438,7 @@
             align-items: center;
             gap: var(--space-2);
             transition: border-color var(--dur-base) var(--ease);
-            min-height: auto;
+            min-height: 46px;
         }
         .custom-select-trigger .placeholder { color: var(--text-tertiary); }
         .custom-select-trigger:hover { border-color: var(--border-strong); background: var(--surface-3); }
@@ -385,16 +451,14 @@
             background: var(--surface-3);
             border: 1px solid var(--border-strong);
             border-radius: var(--radius-md);
-            max-height: 300px;
+            max-height: 0;
             overflow: hidden auto;
             opacity: 0;
-            transform: scaleY(0.95);
-            transform-origin: top;
-            transition: transform var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
+            transition: max-height var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
             box-shadow: var(--shadow-lg);
             z-index: 20;
         }
-        .custom-select-options.open { opacity: 1; transform: scaleY(1); }
+        .custom-select-options.open { max-height: 280px; opacity: 1; }
 
         .custom-select-option {
             padding: 12px 14px;
@@ -627,6 +691,13 @@
         .rank-name { flex: 1; font-weight: 700; min-width: 0; }
         .rank-bar-wrap { display: flex; align-items: center; gap: var(--space-2); }
 
+        /* ============ CUENTA ============ */
+        .cuenta-row {
+            display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+        }
+        .cuenta-row .quien { font-weight: 700; }
+        .cuenta-row .quien-label { font-size: var(--text-xs); color: var(--text-tertiary); display: block; margin-bottom: 2px; }
+
         /* ============ MONTH ACCORDION ============ */
         .mes-group { margin-bottom: var(--space-3); }
         .mes-group:last-child { margin-bottom: 0; }
@@ -664,7 +735,7 @@
             top: calc(var(--space-4) + env(safe-area-inset-top, 0px));
             left: var(--space-4);
             right: var(--space-4);
-            z-index: 100;
+            z-index: 300;
             display: flex;
             flex-direction: column;
             gap: var(--space-2);
@@ -696,166 +767,9 @@
         .toast.error { border-color: var(--danger-border); }
         .toast.error .icon { color: var(--danger); }
 
-        /* ============ PLANIFICADOR ============ */
-        .tab-subtab {
-            padding: var(--space-2) var(--space-4);
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-family: var(--font);
-            font-size: var(--text-sm);
-            cursor: pointer;
-            transition: all var(--dur-base) var(--ease);
-        }
-        .tab-subtab:hover { border-color: var(--border-strong); color: var(--text-primary); }
-        .tab-subtab.active {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: var(--accent-ink);
-            font-weight: 600;
-        }
-
-        .vista-calendario {
-            background: var(--surface-2);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: var(--space-4);
-            min-height: 400px;
-            overflow-x: auto;
-        }
-
-        .mes-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            margin-bottom: var(--space-6);
-        }
-
-        .mes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
-        .mes-header button { background: transparent; border: none; color: var(--accent); cursor: pointer; font-weight: 600; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); }
-        .mes-header button:hover { background: var(--accent-soft); }
-
-        .dia-header {
-            text-align: center;
-            font-size: var(--text-xs);
-            font-weight: 600;
-            color: var(--text-tertiary);
-            padding: var(--space-2);
-            text-transform: uppercase;
-        }
-
-        .dia-calendario {
-            aspect-ratio: 1.1;
-            background: var(--surface-3);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 4px;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            transition: all var(--dur-fast) var(--ease);
-            position: relative;
-            min-height: 40px;
-            overflow: hidden;
-        }
-        .dia-calendario:hover {
-            border-color: var(--accent-border);
-            background: var(--accent-soft);
-        }
-        .dia-calendario.otro-mes { color: var(--text-tertiary); }
-        .dia-numero { font-weight: 600; font-size: 11px; margin-bottom: 2px; }
-        .dia-publi { font-size: var(--text-xs); line-height: 1.2; flex: 1; overflow: hidden; max-height: 999px; }
-
-        .publicacion-item {
-            display: block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: var(--text-xs);
-            font-weight: 500;
-            color: white;
-            margin-bottom: 4px;
-            cursor: pointer;
-            position: relative;
-            line-height: 1.3;
-        }
-        .pub-titulo {
-            display: block;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin-bottom: 2px;
-        }
-        .pub-acciones {
-            display: flex;
-            gap: 1px;
-            flex-wrap: wrap;
-        }
-        .pub-accion-btn {
-            background: rgba(0,0,0,0.4);
-            border: none;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 9px;
-            transition: background 80ms;
-            font-weight: 500;
-        }
-        .pub-accion-btn:hover {
-            background: rgba(0,0,0,0.6);
-        }
-        .publicacion-item.post { background: #E1306C; } /* Instagram rosa */
-        .publicacion-item.historia { background: #F77737; } /* Instagram naranja */
-        .publicacion-item.reel { background: #833AB4; } /* Instagram púrpura */
-        .publicacion-item.whatsapp { background: #25D366; } /* WhatsApp verde */
-
-        .semana-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: var(--space-3);
-        }
-        .dia-semana {
-            background: var(--surface-3);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            padding: var(--space-4);
-        }
-        .dia-semana-header { font-weight: 600; margin-bottom: var(--space-3); font-size: var(--text-sm); }
-        .dia-semana-fecha { font-size: var(--text-xs); color: var(--text-tertiary); }
-
-        .lista-publicaciones {
-            display: flex;
-            flex-direction: column;
-            gap: var(--space-2);
-        }
-
         /* ============ RESPONSIVE ============ */
         @media (min-width: 480px) {
             .container { padding-left: var(--space-6); padding-right: var(--space-6); }
-        }
-
-        /* Tablet (768px - 1024px) */
-        @media (min-width: 768px) {
-            .container { max-width: 900px; }
-            .dia-calendario { aspect-ratio: 1.2; min-height: 50px; padding: 5px; }
-            .dia-numero { font-size: 12px; }
-        }
-
-        /* Desktop (1024px+) */
-        @media (min-width: 1024px) {
-            .container { max-width: 1200px; }
-            .dia-calendario { aspect-ratio: 1; min-height: 60px; padding: 6px; }
-            .dia-numero { font-size: 13px; margin-bottom: 3px; }
-            .mes-grid { gap: 2px; }
-        }
-
-        /* Desktop Grande (1440px+) */
-        @media (min-width: 1440px) {
-            .container { max-width: 1400px; }
-            .dia-calendario { aspect-ratio: 1; min-height: 70px; padding: 8px; }
-            .dia-numero { font-size: 14px; margin-bottom: 4px; }
-            .mes-grid { gap: 3px; }
         }
     </style>
 </head>
@@ -863,7 +777,31 @@
     <div class="bg-canvas"></div>
     <div id="toast-container" aria-live="polite"></div>
 
-    <div class="container">
+    <!-- LOGIN -->
+    <div id="loginScreen">
+        <form class="login-card" id="formLogin">
+            <div class="login-mark">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <h1>Asistencia</h1>
+            <p class="sub">Equipo Creativo · TLC</p>
+            <div class="form-group">
+                <label>¿Quién eres?</label>
+                <div class="login-quien" id="loginQuien">
+                    <button type="button" data-quien="Daniel">Daniel</button>
+                    <button type="button" data-quien="David">David</button>
+                </div>
+                <input type="hidden" id="loginNombre" value="">
+            </div>
+            <div class="form-group">
+                <label>PIN</label>
+                <input type="password" id="loginPin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="····">
+            </div>
+            <button type="submit" class="block" id="btnLogin">Entrar</button>
+        </form>
+    </div>
+
+    <div class="container" id="appRoot" style="display:none;">
         <header>
             <div class="brand">
                 <div class="brand-mark">
@@ -874,14 +812,9 @@
                     <p>Equipo Creativo · TLC</p>
                 </div>
             </div>
-            <div style="display:flex;gap:var(--space-3);align-items:center;">
-                <a href="https://creativos-tlc.github.io/Equipo-Creativo/calendario-2026" target="_blank" rel="noopener" class="calendar-link" aria-label="Ir al calendario 2026" title="Calendario 2026">
-                    <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-                </a>
-                <button id="btnLogoutHeader" type="button" style="background:none;border:none;cursor:pointer;padding:var(--space-2);border-radius:var(--radius-sm);color:var(--text-secondary);transition:all var(--dur-fast) var(--ease);" title="Cerrar sesión" aria-label="Cerrar sesión">
-                    <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-                </button>
-            </div>
+            <a href="https://creativos-tlc.github.io/reuniones-equipo-creativo/calendario-juntas-creativas.html" target="_blank" rel="noopener" class="calendar-link" aria-label="Ir al calendario 2026" title="Calendario 2026">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            </a>
         </header>
 
         <nav class="nav-tabs" aria-label="Navegación principal">
@@ -901,10 +834,6 @@
                 <button class="tab-btn" data-tab="reportes" type="button">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
                     <span>Reportes</span>
-                </button>
-                <button class="tab-btn" data-tab="planificador" type="button">
-                    <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="9" cy="15" r="1.5"/><circle cx="15" cy="15" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-                    <span>Contenido</span>
                 </button>
                 <button class="tab-btn" data-tab="mas" type="button">
                     <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.6"/><circle cx="5" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
@@ -1051,8 +980,19 @@
             </div>
         </div>
 
-        <!-- MÁS: VOLUNTARIOS + DATOS -->
+        <!-- MÁS: CUENTA + VOLUNTARIOS + DATOS -->
         <div id="mas" class="tab-content">
+            <span class="section-title">Cuenta</span>
+            <div class="card" style="margin-top:0;">
+                <div class="cuenta-row">
+                    <div>
+                        <span class="quien-label">Conectado como</span>
+                        <span class="quien" id="nombreConectado">—</span>
+                    </div>
+                    <button type="button" class="secondary small" id="btnCerrarSesion">Cerrar sesión</button>
+                </div>
+            </div>
+
             <span class="section-title">Voluntarios</span>
             <div class="card" style="margin-top:0;">
                 <h2 id="tituloGestor">Agregar voluntario</h2>
@@ -1079,7 +1019,7 @@
             <span class="section-title">Datos</span>
             <div class="card" style="margin-top:0;">
                 <h2>Exportar</h2>
-                <p class="card-hint">Descarga los registros de asistencia como CSV para compartir con David.</p>
+                <p class="card-hint">Descarga un respaldo de los registros de asistencia en CSV.</p>
                 <button type="button" id="btnExportarCSV" class="success block">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>
                     Descargar CSV
@@ -1088,7 +1028,7 @@
 
             <div class="card">
                 <h2>Importar</h2>
-                <p class="card-hint">Carga un archivo CSV con registros de asistencia.</p>
+                <p class="card-hint">Carga un archivo CSV con registros de asistencia (por ejemplo, para reconstruir eventos pasados en lote).</p>
                 <div class="form-group">
                     <input type="file" id="archivoCSV" accept=".csv">
                 </div>
@@ -1097,97 +1037,11 @@
 
             <div class="card" style="margin-bottom:0;">
                 <h2>Respaldo completo</h2>
-                <p class="card-hint">Descarga todos los datos locales (eventos, voluntarios, asistencia) como backup.</p>
+                <p class="card-hint">Descarga todos los datos (eventos, voluntarios, asistencia) como backup.</p>
                 <button type="button" id="btnExportarJSON" class="secondary block">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v12M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>
                     Descargar JSON
                 </button>
-            </div>
-
-        </div>
-
-        <!-- PLANIFICADOR DE CONTENIDO -->
-        <div id="planificador" class="tab-content">
-            <div style="display:flex;gap:var(--space-4);align-items:center;margin-bottom:var(--space-6);">
-                <span class="section-title" style="margin:0;">Planificador</span>
-                <div class="custom-select" id="selectPlataforma" style="flex-shrink:0;max-width:140px;">
-                    <div class="custom-select-trigger" data-toggle-select style="cursor:pointer;">
-                        <span class="trigger-label">Instagram</span>
-                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
-                    </div>
-                    <div class="custom-select-options">
-                        <div class="custom-select-option selected" data-select-plat="instagram">Instagram</div>
-                        <div class="custom-select-option" data-select-plat="whatsapp">WhatsApp</div>
-                    </div>
-                    <input type="hidden" id="plataformaActual" value="instagram">
-                </div>
-            </div>
-
-            <div style="display:flex;gap:var(--space-4);margin-bottom:var(--space-4);">
-                <button class="tab-subtab active" data-vista="mes" type="button">Mes</button>
-                <button class="tab-subtab" data-vista="semana" type="button">Semana</button>
-                <button class="tab-subtab" data-vista="dia" type="button">Día</button>
-            </div>
-
-            <div id="contenedorVistas">
-                <div id="vistaMes" class="vista-calendario active"></div>
-                <div id="vistaSemana" class="vista-calendario" style="display:none;"></div>
-                <div id="vistaDia" class="vista-calendario" style="display:none;"></div>
-            </div>
-
-            <button id="btnCapturarCalendario" type="button" style="position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:var(--accent-ink);border:none;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-md);transition:all var(--dur-base) var(--ease);z-index:100;" title="Capturar calendario">📷</button>
-
-            <!-- MODAL DE PUBLICACIÓN -->
-            <div id="modalPublicacion" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9998;align-items:center;justify-content:center;padding:var(--space-4);">
-                <div style="background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-6);max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);">
-                    <h2 id="modalHead" style="margin-top:0;margin-bottom:var(--space-4);">Nueva publicación</h2>
-
-                    <div class="form-group">
-                        <label>Título</label>
-                        <input type="text" id="modalTitulo" placeholder="Ej: Reflexión diaria" style="width:100%;">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Fecha</label>
-                        <input type="date" id="modalFecha" style="width:100%;">
-                    </div>
-
-                    <div class="form-group">
-                        <label>Hora (opcional)</label>
-                        <input type="time" id="modalHora" style="width:100%;">
-                    </div>
-
-                    <div class="form-group" id="modalGrupoTipo" style="display:block;">
-                        <label>Tipo de contenido</label>
-                        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap;">
-                            <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-sm);">
-                                <input type="radio" name="modalTipo" value="post" checked>
-                                <span style="font-size:var(--text-sm);">Post de feed</span>
-                            </label>
-                            <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-sm);">
-                                <input type="radio" name="modalTipo" value="historia">
-                                <span style="font-size:var(--text-sm);">Historia</span>
-                            </label>
-                            <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-sm);">
-                                <input type="radio" name="modalTipo" value="reel">
-                                <span style="font-size:var(--text-sm);">Reel</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group" id="modalGrupoDesc" style="display:none;">
-                        <label>Descripción</label>
-                        <input type="text" id="modalDescripcion" placeholder="Ej: Video, Foto, Encuesta, Sticker, etc." style="width:100%;">
-                    </div>
-
-                    <input type="hidden" id="modalIndice" value="">
-
-                    <div class="button-group">
-                        <button type="button" id="btnModalGuardar" class="success block">Guardar</button>
-                        <button type="button" id="btnModalCancelar" class="secondary" style="margin-top:var(--space-3);display:block;width:100%;">Cancelar</button>
-                        <button type="button" id="btnModalEliminar" class="danger" style="margin-top:var(--space-3);display:none;width:100%;">Eliminar</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -1196,29 +1050,15 @@
         'use strict';
 
         // ============ ESTADO ============
-        const voluntarios = [
-            {nombre: 'Sorimar', fechaUnion: '2026-01-01'},
-            {nombre: 'Karol', fechaUnion: '2026-01-01'},
-            {nombre: 'David', fechaUnion: '2026-01-01'},
-            {nombre: 'Sofia', fechaUnion: '2026-01-01'},
-            {nombre: 'Kathy', fechaUnion: '2026-01-01'},
-            {nombre: 'Jazmin', fechaUnion: '2026-01-01'},
-            {nombre: 'Ronald', fechaUnion: '2026-01-01'},
-            {nombre: 'Danny', fechaUnion: '2026-01-01'},
-            {nombre: 'Renata', fechaUnion: '2026-01-01'}
-        ];
+        const voluntarios = [];
         let eventos = [];
         let asistencias = {};
-        let publicaciones = [];
         let voluntariosChecked = {};
         let filtroActual = 'Todos';
         let confirmPendiente = null;
-        let plataformaActual = 'instagram';
-        let vistaActual = 'mes';
-        let mesActual = new Date();
-        let semanaActual = new Date();
-        let diaActual = new Date();
-        let indiceEdicionPublicacion = -1;
+
+        let TOKEN = localStorage.getItem('asistencia_token');
+        let NOMBRE_ACTUAL = localStorage.getItem('asistencia_nombre');
 
         const TIPO_COLOR = {
             'Reunión Lunes': 'var(--info)',
@@ -1298,28 +1138,32 @@
             pendiente.boton.classList.remove('confirming');
         }
 
-        // ============ PERSISTENCIA ============
-        function cargarDatos() {
-            const datosGuardados = localStorage.getItem('registroAsistencia');
-            if (datosGuardados) {
-                const datos = JSON.parse(datosGuardados);
-                voluntarios.length = 0;
-                const volsGuardados = datos.voluntarios || [];
-                if (volsGuardados.length > 0 && typeof volsGuardados[0] === 'string') {
-                    voluntarios.push(...volsGuardados.map(nombre => ({nombre, fechaUnion: hoyISO()})));
-                } else {
-                    voluntarios.push(...volsGuardados);
-                }
-                eventos = datos.eventos || [];
-                asistencias = datos.asistencias || {};
-                publicaciones = datos.publicaciones || [];
-            } else {
-                guardarDatos();
+        // ============ API ============
+        async function api(path, options) {
+            options = options || {};
+            const headers = Object.assign({}, options.headers || {});
+            if (TOKEN) headers['Authorization'] = 'Bearer ' + TOKEN;
+            let body = options.body;
+            if (body && typeof body !== 'string') {
+                body = JSON.stringify(body);
+                headers['Content-Type'] = 'application/json';
             }
+            const res = await fetch(path, Object.assign({}, options, { headers, body }));
+            let data = null;
+            try { data = await res.json(); } catch (e) {}
+            if (!res.ok) {
+                if (res.status === 401) mostrarLogin();
+                throw new Error((data && data.error) || 'Error de conexión');
+            }
+            return data;
         }
 
-        function guardarDatos() {
-            localStorage.setItem('registroAsistencia', JSON.stringify({ voluntarios, eventos, asistencias, publicaciones }));
+        async function cargarDatos() {
+            const estado = await api('/api/data');
+            voluntarios.length = 0;
+            voluntarios.push(...estado.voluntarios);
+            eventos = estado.eventos;
+            asistencias = estado.asistencias;
         }
 
         // ============ CÁLCULO DE ASISTENCIA (fuente única) ============
@@ -1351,6 +1195,62 @@
 
         function badgeDePorcentaje(p) { return p >= 80 ? 'high' : p >= 50 ? 'medium' : 'low'; }
 
+        // ============ LOGIN ============
+        document.getElementById('loginQuien').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-quien]');
+            if (!btn) return;
+            document.querySelectorAll('#loginQuien button').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('loginNombre').value = btn.dataset.quien;
+            document.getElementById('loginPin').focus();
+        });
+
+        document.getElementById('formLogin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('loginNombre').value;
+            const pin = document.getElementById('loginPin').value.trim();
+            if (!nombre) { toast('Elige quién eres', 'error'); return; }
+            if (!pin) { toast('Ingresa tu PIN', 'error'); return; }
+            const btn = document.getElementById('btnLogin');
+            btn.disabled = true;
+            try {
+                const resultado = await api('/api/login', { method: 'POST', body: { nombre, pin } });
+                TOKEN = resultado.token;
+                NOMBRE_ACTUAL = resultado.nombre;
+                localStorage.setItem('asistencia_token', TOKEN);
+                localStorage.setItem('asistencia_nombre', NOMBRE_ACTUAL);
+                document.getElementById('loginPin').value = '';
+                await iniciarApp();
+            } catch (err) {
+                toast(err.message, 'error');
+                document.getElementById('loginPin').value = '';
+                document.getElementById('loginPin').focus();
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btnCerrarSesion').addEventListener('click', async () => {
+            try { await api('/api/logout', { method: 'POST' }); } catch (e) {}
+            mostrarLogin();
+        });
+
+        function mostrarLogin() {
+            TOKEN = null;
+            localStorage.removeItem('asistencia_token');
+            localStorage.removeItem('asistencia_nombre');
+            document.getElementById('appRoot').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        async function iniciarApp() {
+            await cargarDatos();
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appRoot').style.display = '';
+            document.getElementById('nombreConectado').textContent = NOMBRE_ACTUAL || '—';
+            actualizarDashboard();
+        }
+
         // ============ NAVEGACIÓN ============
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1366,7 +1266,6 @@
                 if (tab === 'asistencia') actualizarSelectEventos();
                 if (tab === 'reportes') actualizarReportes();
                 if (tab === 'mas') actualizarVoluntarios();
-                if (tab === 'planificador') renderizarVista();
             });
         });
 
@@ -1444,7 +1343,7 @@
         document.getElementById('btnGuardarVoluntario').addEventListener('click', guardarVoluntario);
         document.getElementById('btnCancelarVoluntario').addEventListener('click', cancelarEdicion);
 
-        function guardarVoluntario() {
+        async function guardarVoluntario() {
             const inputNombre = document.getElementById('nombreVoluntario');
             const nombre = inputNombre.value.trim();
             let fechaUnion = document.getElementById('fechaIncorporacion').value.trim();
@@ -1459,47 +1358,28 @@
             }
             if (!fechaUnion) fechaUnion = hoyISO();
 
-            if (indiceEdicion) {
-                const indice = parseInt(indiceEdicion);
-                const nombreViejo = voluntarios[indice].nombre;
-
-                if (voluntarios.some((v, i) => v.nombre === nombre && i !== indice)) {
-                    toast('Ese voluntario ya existe', 'error');
-                    return;
-                }
-
-                voluntarios[indice] = {nombre, fechaUnion};
-
-                if (nombreViejo !== nombre) {
-                    eventos.forEach(e => {
-                        if (e.asignados && e.asignados.includes(nombreViejo)) {
-                            e.asignados = e.asignados.map(v => v === nombreViejo ? nombre : v);
-                        }
+            try {
+                if (indiceEdicion) {
+                    const indice = parseInt(indiceEdicion);
+                    const nombreViejo = voluntarios[indice].nombre;
+                    await api('/api/voluntarios/' + encodeURIComponent(nombreViejo), {
+                        method: 'PUT', body: { nombre, fechaUnion }
                     });
-                    Object.keys(asistencias).forEach(eventoId => {
-                        if (asistencias[eventoId][nombreViejo] !== undefined) {
-                            asistencias[eventoId][nombre] = asistencias[eventoId][nombreViejo];
-                            delete asistencias[eventoId][nombreViejo];
-                        }
-                    });
+                    toast(`${nombre} actualizado`);
+                    cancelarEdicion();
+                } else {
+                    await api('/api/voluntarios', { method: 'POST', body: { nombre, fechaUnion } });
+                    toast(`${nombre} agregado al equipo`);
+                    inputNombre.value = '';
+                    document.getElementById('fechaIncorporacion').value = hoyISO();
                 }
-                toast(`${nombre} actualizado`);
-                cancelarEdicion();
-            } else {
-                if (voluntarios.some(v => v.nombre === nombre)) {
-                    toast('Ese voluntario ya existe', 'error');
-                    return;
-                }
-                voluntarios.push({nombre, fechaUnion});
-                toast(`${nombre} agregado al equipo`);
-                inputNombre.value = '';
-                document.getElementById('fechaIncorporacion').value = hoyISO();
+                await cargarDatos();
+                actualizarVoluntarios();
+                actualizarEventos();
+                actualizarSelectEventos();
+            } catch (err) {
+                toast(err.message, 'error');
             }
-
-            guardarDatos();
-            actualizarVoluntarios();
-            actualizarEventos();
-            actualizarSelectEventos();
         }
 
         function editarVoluntario(indice) {
@@ -1567,16 +1447,17 @@
             if (btnDel) { pedirConfirmacion(btnDel, () => eliminarVoluntario(parseInt(btnDel.dataset.eliminarVol))); }
         });
 
-        function eliminarVoluntario(index) {
+        async function eliminarVoluntario(index) {
             const nombre = voluntarios[index].nombre;
-            voluntarios.splice(index, 1);
-            // limpiar referencias huérfanas en eventos y asistencias
-            eventos.forEach(e => { if (e.asignados) e.asignados = e.asignados.filter(n => n !== nombre); });
-            Object.keys(asistencias).forEach(id => { delete asistencias[id][nombre]; });
-            guardarDatos();
-            actualizarVoluntarios();
-            actualizarEventos();
-            toast(`${nombre} eliminado`);
+            try {
+                await api('/api/voluntarios/' + encodeURIComponent(nombre), { method: 'DELETE' });
+                await cargarDatos();
+                actualizarVoluntarios();
+                actualizarEventos();
+                toast(`${nombre} eliminado`);
+            } catch (err) {
+                toast(err.message, 'error');
+            }
         }
 
         // ============ EVENTOS ============
@@ -1586,7 +1467,7 @@
         document.getElementById('btnCancelarEvento').addEventListener('click', cancelarEdicionEvento);
         document.getElementById('btnSeleccionarTodos').addEventListener('click', seleccionarTodos);
 
-        function crearOActualizarEvento() {
+        async function crearOActualizarEvento() {
             const tipo = document.getElementById('tipoEvento').value;
             const fecha = document.getElementById('fechaEvento').value;
             const nombre = tipo === 'Otro' ? document.getElementById('nombreEvento').value.trim() : tipo;
@@ -1597,25 +1478,23 @@
                 return;
             }
 
-            if (indiceEdicionEvento !== null) {
-                const evento = eventos[indiceEdicionEvento];
-                evento.tipo = tipo;
-                evento.nombre = nombre;
-                evento.fecha = fecha;
-                evento.asignados = asignados;
-                toast('Evento actualizado');
-                cancelarEdicionEvento();
-            } else {
-                const id = Date.now().toString();
-                eventos.push({ id, nombre, fecha, tipo, asignados });
-                asistencias[id] = {};
-                toast('Evento creado');
-                limpiarFormularioEvento();
+            try {
+                if (indiceEdicionEvento !== null) {
+                    const evento = eventos[indiceEdicionEvento];
+                    await api('/api/eventos/' + evento.id, { method: 'PUT', body: { nombre, fecha, tipo, asignados } });
+                    toast('Evento actualizado');
+                    cancelarEdicionEvento();
+                } else {
+                    await api('/api/eventos', { method: 'POST', body: { nombre, fecha, tipo, asignados } });
+                    toast('Evento creado');
+                    limpiarFormularioEvento();
+                }
+                await cargarDatos();
+                actualizarEventos();
+                actualizarSelectEventos();
+            } catch (err) {
+                toast(err.message, 'error');
             }
-
-            guardarDatos();
-            actualizarEventos();
-            actualizarSelectEventos();
         }
 
         function limpiarFormularioEvento() {
@@ -1778,15 +1657,18 @@
             if (btnDel) { pedirConfirmacion(btnDel, () => eliminarEvento(parseInt(btnDel.dataset.eliminarEvento))); }
         });
 
-        function eliminarEvento(index) {
+        async function eliminarEvento(index) {
             const id = eventos[index].id;
-            delete asistencias[id];
-            eventos.splice(index, 1);
-            if (indiceEdicionEvento === index) cancelarEdicionEvento();
-            guardarDatos();
-            actualizarEventos();
-            actualizarSelectEventos();
-            toast('Evento eliminado');
+            try {
+                await api('/api/eventos/' + id, { method: 'DELETE' });
+                if (indiceEdicionEvento === index) cancelarEdicionEvento();
+                await cargarDatos();
+                actualizarEventos();
+                actualizarSelectEventos();
+                toast('Evento eliminado');
+            } catch (err) {
+                toast(err.message, 'error');
+            }
         }
 
         // ============ ASISTENCIA ============
@@ -1866,12 +1748,19 @@
         document.getElementById('btnGuardarAsistencia').addEventListener('click', guardarAsistencia);
         document.getElementById('btnLimpiarAsistencia').addEventListener('click', limpiarSeleccion);
 
-        function guardarAsistencia() {
-            guardarDatos();
-            toast('Asistencia guardada');
-            const select = document.getElementById('selectEventoAsistencia');
-            limpiarSelect(select, 'Seleccionar evento...');
-            document.getElementById('cardAsistencia').style.display = 'none';
+        async function guardarAsistencia() {
+            const id = document.getElementById('eventoParaAsistencia').value;
+            if (!id) return;
+            try {
+                await api('/api/asistencias/' + id, { method: 'PUT', body: { registro: asistencias[id] || {} } });
+                await cargarDatos();
+                toast('Asistencia guardada');
+                const select = document.getElementById('selectEventoAsistencia');
+                limpiarSelect(select, 'Seleccionar evento...');
+                document.getElementById('cardAsistencia').style.display = 'none';
+            } catch (err) {
+                toast(err.message, 'error');
+            }
         }
 
         function limpiarSeleccion() {
@@ -2019,23 +1908,6 @@
         document.getElementById('btnExportarCSV').addEventListener('click', exportarCSV);
         document.getElementById('btnImportarCSV').addEventListener('click', importarCSV);
         document.getElementById('btnExportarJSON').addEventListener('click', exportarJSON);
-        document.getElementById('btnLogoutHeader').addEventListener('click', () => {
-            if (confirm('¿Estás seguro? Se borrarán todos los datos guardados.')) {
-                localStorage.clear();
-                location.reload();
-            }
-        });
-
-        // Hover effects
-        const btnLogout = document.getElementById('btnLogoutHeader');
-        btnLogout.addEventListener('mouseenter', function() {
-            this.style.background = 'var(--danger-soft)';
-            this.style.color = 'var(--danger)';
-        });
-        btnLogout.addEventListener('mouseleave', function() {
-            this.style.background = 'none';
-            this.style.color = 'var(--text-secondary)';
-        });
 
         function exportarCSV() {
             let csv = 'Evento,Fecha,Voluntario,Asistio\n';
@@ -2051,16 +1923,17 @@
             toast('CSV descargado');
         }
 
-        function importarCSV() {
+        async function importarCSV() {
             const archivo = document.getElementById('archivoCSV').files[0];
             if (!archivo) { toast('Selecciona un archivo CSV primero', 'error'); return; }
 
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const csv = e.target.result;
                 const lineas = csv.split('\n').slice(1);
-                let importados = 0;
 
+                // Agrupar filas por evento (nombre + fecha) para minimizar llamadas a la API
+                const grupos = new Map();
                 lineas.forEach(linea => {
                     if (!linea.trim()) return;
                     const partes = parsearLineaCSV(linea);
@@ -2068,23 +1941,34 @@
                     const [evento, fecha, voluntario, asistioTxt] = partes;
                     if (!evento || !fecha || !voluntario) return;
                     const asistio = /^s/i.test(asistioTxt.trim());
-
-                    let eventoExistente = eventos.find(ev => ev.nombre === evento && ev.fecha === fecha);
-                    if (!eventoExistente) {
-                        eventoExistente = { id: Date.now().toString() + Math.random().toString(36).slice(2), nombre: evento, fecha, tipo: evento, asignados: [] };
-                        eventos.push(eventoExistente);
-                        asistencias[eventoExistente.id] = {};
-                    }
-                    if (!asistencias[eventoExistente.id]) asistencias[eventoExistente.id] = {};
-                    asistencias[eventoExistente.id][voluntario] = asistio;
-                    importados++;
+                    const clave = evento + '|||' + fecha;
+                    if (!grupos.has(clave)) grupos.set(clave, { nombre: evento, fecha, registro: {} });
+                    grupos.get(clave).registro[voluntario] = asistio;
                 });
 
-                guardarDatos();
-                toast(`${importados} registros importados`);
-                document.getElementById('archivoCSV').value = '';
-                actualizarEventos();
-                actualizarSelectEventos();
+                let importados = 0;
+                try {
+                    for (const grupo of grupos.values()) {
+                        let evento = eventos.find(ev => ev.nombre === grupo.nombre && ev.fecha === grupo.fecha);
+                        if (!evento) {
+                            evento = await api('/api/eventos', {
+                                method: 'POST',
+                                body: { nombre: grupo.nombre, fecha: grupo.fecha, tipo: grupo.nombre, asignados: [] }
+                            });
+                        }
+                        const registroPrevio = asistencias[evento.id] || {};
+                        const registroFinal = Object.assign({}, registroPrevio, grupo.registro);
+                        await api('/api/asistencias/' + evento.id, { method: 'PUT', body: { registro: registroFinal } });
+                        importados += Object.keys(grupo.registro).length;
+                    }
+                    await cargarDatos();
+                    toast(`${importados} registros importados`);
+                    document.getElementById('archivoCSV').value = '';
+                    actualizarEventos();
+                    actualizarSelectEventos();
+                } catch (err) {
+                    toast(err.message, 'error');
+                }
             };
             reader.readAsText(archivo);
         }
@@ -2105,354 +1989,12 @@
             window.URL.revokeObjectURL(url);
         }
 
-        // ============ PLANIFICADOR ============
-        function generarIdPublicacion() {
-            return 'pub-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        }
-
-        function guardarPublicacion() {
-            const titulo = document.getElementById('modalTitulo').value.trim();
-            const fecha = document.getElementById('modalFecha').value;
-            const hora = document.getElementById('modalHora').value;
-            const tipo = document.querySelector('input[name="modalTipo"]:checked')?.value || 'post';
-            const descripcion = document.getElementById('modalDescripcion').value.trim();
-
-            if (!titulo || !fecha) {
-                toast('Ingresa título y fecha', 'error');
-                return;
-            }
-
-            const idx = parseInt(document.getElementById('modalIndice').value);
-            const esEdicion = idx >= 0;
-            if (esEdicion) {
-                publicaciones[idx] = { id: publicaciones[idx].id, titulo, fecha, hora, tipo, plataforma: plataformaActual, descripcion };
-            } else {
-                publicaciones.push({ id: generarIdPublicacion(), titulo, fecha, hora, tipo, plataforma: plataformaActual, descripcion });
-            }
-
-            guardarDatos();
-            cerrarModalPublicacion();
-            limpiarFormularioPublicacion();
-            renderizarVista();
-            toast(esEdicion ? 'Publicación actualizada' : 'Publicación agregada');
-        }
-
-        function limpiarFormularioPublicacion() {
-            document.getElementById('modalTitulo').value = '';
-            document.getElementById('modalFecha').value = '';
-            document.getElementById('modalHora').value = '';
-            document.getElementById('modalDescripcion').value = '';
-            document.querySelector('input[name="modalTipo"]').checked = true;
-            document.getElementById('modalIndice').value = '';
-            indiceEdicionPublicacion = -1;
-            document.getElementById('modalHead').textContent = 'Nueva publicación';
-            document.getElementById('btnModalEliminar').style.display = 'none';
-            indiceEdicionPublicacion = -1;
-        }
-
-        function renderizarVista() {
-            if (vistaActual === 'mes') renderizarMes();
-            else if (vistaActual === 'semana') renderizarSemana();
-            else if (vistaActual === 'dia') renderizarDia();
-        }
-
-        function renderizarMes() {
-            const container = document.getElementById('vistaMes');
-            const year = mesActual.getFullYear();
-            const month = mesActual.getMonth();
-            const primerDia = new Date(year, month, 1);
-            const ultimoDia = new Date(year, month + 1, 0);
-            const diasPrevios = primerDia.getDay();
-            const diasDelMes = ultimoDia.getDate();
-
-            let html = `<div class="mes-header"><button data-mes-prev>← Anterior</button><h3>${['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][month]} ${year}</h3><button data-mes-next>Siguiente →</button></div>`;
-            html += '<div class="mes-grid">';
-            const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-            diasSemana.forEach(d => html += `<div class="dia-header">${d}</div>`);
-
-            for (let i = 0; i < diasPrevios; i++) html += `<div class="dia-calendario otro-mes"></div>`;
-            for (let d = 1; d <= diasDelMes; d++) {
-                const fecha = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const publisDia = publicaciones.map((p, idx) => ({...p, idx})).filter(p => p.fecha === fecha && p.plataforma === plataformaActual);
-                html += `<div class="dia-calendario" data-fecha="${fecha}"><div class="dia-numero">${d}</div><div class="dia-publi">`;
-                publisDia.forEach(p => html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${p.idx}"><span class="pub-titulo" title="${esc(p.titulo)}">${esc(p.titulo)}</span></div>`);
-                html += `</div></div>`;
-            }
-            html += '</div>';
-            container.innerHTML = html;
-
-            container.querySelectorAll('[data-mes-prev]').forEach(btn => btn.addEventListener('click', () => { mesActual.setMonth(mesActual.getMonth() - 1); renderizarMes(); }));
-            container.querySelectorAll('[data-mes-next]').forEach(btn => btn.addEventListener('click', () => { mesActual.setMonth(mesActual.getMonth() + 1); renderizarMes(); }));
-            container.querySelectorAll('[data-fecha]').forEach(cel => cel.addEventListener('click', (e) => {
-                if (!e.target.closest('[data-pub-idx]')) {
-                    abrirModalPublicacion(-1);
-                    document.getElementById('modalFecha').value = cel.dataset.fecha;
-                }
-            }));
-            attachPublicacionListeners();
-        }
-
-        function renderizarSemana() {
-            const container = document.getElementById('vistaSemana');
-            const primeroDeSemana = new Date(semanaActual);
-            primeroDeSemana.setDate(semanaActual.getDate() - semanaActual.getDay());
-            const ultimoDeSemana = new Date(primeroDeSemana);
-            ultimoDeSemana.setDate(primeroDeSemana.getDate() + 6);
-
-            let html = `<div class="mes-header" style="margin-bottom:var(--space-4);"><button data-semana-prev>← Anterior</button><h3>${primeroDeSemana.getDate()}/${primeroDeSemana.getMonth() + 1} - ${ultimoDeSemana.getDate()}/${ultimoDeSemana.getMonth() + 1}</h3><button data-semana-next>Siguiente →</button></div>`;
-            html += '<div class="semana-grid">';
-            for (let i = 0; i < 7; i++) {
-                const fecha = new Date(primeroDeSemana);
-                fecha.setDate(primeroDeSemana.getDate() + i);
-                const fechaStr = fecha.toISOString().split('T')[0];
-                const publisDia = publicaciones.map((p, idx) => ({...p, idx})).filter(p => p.fecha === fechaStr && p.plataforma === plataformaActual);
-                html += `<div class="dia-semana" data-fecha="${fechaStr}"><div class="dia-semana-header">${['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][fecha.getDay()]}</div><div class="dia-semana-fecha">${fecha.getDate()}/${fecha.getMonth() + 1}</div><div class="lista-publicaciones">`;
-                publisDia.forEach(p => html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${p.idx}" style="width:100%;cursor:pointer;" title="${esc(p.titulo)}">${esc(p.titulo)} ${p.hora ? `<span style="font-size:var(--text-xs);">${p.hora}</span>` : ''}</div>`);
-                html += `</div></div>`;
-            }
-            html += '</div>';
-            container.innerHTML = html;
-            container.querySelectorAll('[data-semana-prev]').forEach(btn => btn.addEventListener('click', () => { semanaActual.setDate(semanaActual.getDate() - 7); renderizarSemana(); }));
-            container.querySelectorAll('[data-semana-next]').forEach(btn => btn.addEventListener('click', () => { semanaActual.setDate(semanaActual.getDate() + 7); renderizarSemana(); }));
-            container.querySelectorAll('[data-fecha]').forEach(cel => cel.addEventListener('click', (e) => {
-                if (!e.target.closest('[data-pub-idx]')) {
-                    abrirModalPublicacion(-1);
-                    document.getElementById('modalFecha').value = cel.dataset.fecha;
-                }
-            }));
-            attachPublicacionListeners();
-        }
-
-        function renderizarDia() {
-            const container = document.getElementById('vistaDia');
-            const diaStr = diaActual.toISOString().split('T')[0];
-            const publisDia = publicaciones.filter(p => p.fecha === diaStr && p.plataforma === plataformaActual);
-            const fechaFormato = diaActual.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            let html = `<div class="mes-header" style="margin-bottom:var(--space-4);"><button data-dia-prev>← Anterior</button><h3>${fechaFormato}</h3><button data-dia-next>Siguiente →</button></div><div class="lista-publicaciones">`;
-            if (publisDia.length === 0) {
-                html += `<p class="card-hint">No hay publicaciones para este día.</p>`;
-            } else {
-                publisDia.forEach((p) => {
-                    const idx = publicaciones.indexOf(p);
-                    html += `<div class="publicacion-item ${p.tipo}" data-pub-idx="${idx}" style="background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4);cursor:pointer;"><div style="font-weight:600;margin-bottom:var(--space-2);">${esc(p.titulo)}</div><div style="font-size:var(--text-sm);color:var(--text-secondary);">${p.hora || 'Sin hora'} · ${p.tipo}</div></div>`;
-                });
-            }
-            html += '</div>';
-            container.innerHTML = html;
-            container.querySelectorAll('[data-dia-prev]').forEach(btn => btn.addEventListener('click', () => { diaActual.setDate(diaActual.getDate() - 1); renderizarDia(); }));
-            container.querySelectorAll('[data-dia-next]').forEach(btn => btn.addEventListener('click', () => { diaActual.setDate(diaActual.getDate() + 1); renderizarDia(); }));
-            attachPublicacionListeners();
-        }
-
-        function abrirModalPublicacion(idx = -1) {
-            const modal = document.getElementById('modalPublicacion');
-            const p = idx >= 0 ? publicaciones[idx] : null;
-
-            // Llenar el modal con los datos
-            document.getElementById('modalHead').textContent = p ? 'Editar publicación' : 'Nueva publicación';
-            document.getElementById('modalTitulo').value = p ? p.titulo : '';
-            document.getElementById('modalFecha').value = p ? p.fecha : hoyISO();
-            document.getElementById('modalHora').value = p ? (p.hora || '') : '';
-            document.getElementById('modalDescripcion').value = p ? (p.descripcion || '') : '';
-            document.getElementById('modalIndice').value = idx;
-
-            if (plataformaActual === 'instagram') {
-                document.querySelector(`input[name="modalTipo"][value="${p ? p.tipo : 'post'}"]`).checked = true;
-                document.getElementById('modalGrupoTipo').style.display = 'block';
-                document.getElementById('modalGrupoDesc').style.display = 'none';
-            } else {
-                document.getElementById('modalGrupoTipo').style.display = 'none';
-                document.getElementById('modalGrupoDesc').style.display = 'block';
-            }
-
-            // Mostrar/ocultar botón eliminar
-            document.getElementById('btnModalEliminar').style.display = p ? 'block' : 'none';
-
-            // Mostrar modal
-            modal.style.display = 'flex';
-        }
-
-        function cerrarModalPublicacion() {
-            document.getElementById('modalPublicacion').style.display = 'none';
-        }
-
-        function guardarDesdeModal() {
-            const titulo = document.getElementById('modalTitulo').value.trim();
-            const fecha = document.getElementById('modalFecha').value;
-            const hora = document.getElementById('modalHora').value;
-            const tipo = document.querySelector('input[name="modalTipo"]:checked')?.value || 'post';
-            const descripcion = document.getElementById('modalDescripcion').value.trim();
-            const idx = parseInt(document.getElementById('modalIndice').value);
-
-            if (!titulo || !fecha) {
-                toast('Ingresa título y fecha', 'error');
-                return;
-            }
-
-            if (idx >= 0) {
-                publicaciones[idx] = { id: publicaciones[idx].id, titulo, fecha, hora, tipo, plataforma: plataformaActual, descripcion };
-                toast('Publicación actualizada');
-            } else {
-                publicaciones.push({ id: generarIdPublicacion(), titulo, fecha, hora, tipo, plataforma: plataformaActual, descripcion });
-                toast('Publicación agregada');
-            }
-
-            guardarDatos();
-            renderizarVista();
-            cerrarModalPublicacion();
-        }
-
-        function eliminarDesdeModal() {
-            const idx = parseInt(document.getElementById('modalIndice').value);
-            if (idx >= 0 && confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
-                publicaciones.splice(idx, 1);
-                guardarDatos();
-                renderizarVista();
-                cerrarModalPublicacion();
-                toast('Publicación eliminada');
-            }
-        }
-
-        function duplicarPublicacion(idx) {
-            if (idx < 0 || idx >= publicaciones.length) return;
-            const p = publicaciones[idx];
-            const copia = { ...p, id: generarIdPublicacion() };
-            publicaciones.push(copia);
-            guardarDatos();
-            renderizarVista();
-            toast('Publicación duplicada');
-        }
-
-        function eliminarPublicacion(idx) {
-            if (idx < 0 || idx >= publicaciones.length) return;
-            pedirConfirmacion(null, () => {
-                publicaciones.splice(idx, 1);
-                guardarDatos();
-                renderizarVista();
-                toast('Publicación eliminada');
-            });
-        }
-
-        function attachPublicacionListeners() {
-            // Clic en publicación abre modal
-            document.querySelectorAll('[data-pub-idx]').forEach(el => {
-                el.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    abrirModalPublicacion(parseInt(el.dataset.pubIdx));
-                });
-            });
-            // Botones en vista de día
-            document.querySelectorAll('[data-editar-pub]').forEach(btn => {
-                btn.addEventListener('click', (e) => { e.stopPropagation(); abrirModalPublicacion(parseInt(btn.dataset.editarPub)); });
-            });
-            document.querySelectorAll('[data-duplicar-pub]').forEach(btn => {
-                btn.addEventListener('click', (e) => { e.stopPropagation(); duplicarPublicacion(parseInt(btn.dataset.duplicarPub)); });
-            });
-            document.querySelectorAll('[data-eliminar-pub]').forEach(btn => {
-                btn.addEventListener('click', (e) => { e.stopPropagation(); eliminarPublicacion(parseInt(btn.dataset.eliminarPub)); });
-            });
-        }
-
-        function mostrarMenuAcciones(idx, evento) {
-            const p = publicaciones[idx];
-            const menu = document.createElement('div');
-            menu.style.cssText = `position:fixed;top:${evento.pageY || evento.clientY}px;left:${evento.pageX || evento.clientX}px;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);z-index:9999;min-width:150px;`;
-            menu.innerHTML = `
-                <button style="display:block;width:100%;text-align:left;padding:var(--space-3) var(--space-4);background:none;border:none;border-bottom:1px solid var(--border);color:var(--text-primary);cursor:pointer;font-family:var(--font);font-size:var(--text-sm);" data-accion="editar">✏️ Editar</button>
-                <button style="display:block;width:100%;text-align:left;padding:var(--space-3) var(--space-4);background:none;border:none;border-bottom:1px solid var(--border);color:var(--text-primary);cursor:pointer;font-family:var(--font);font-size:var(--text-sm);" data-accion="duplicar">📋 Duplicar</button>
-                <button style="display:block;width:100%;text-align:left;padding:var(--space-3) var(--space-4);background:none;border:none;color:var(--danger);cursor:pointer;font-family:var(--font);font-size:var(--text-sm);" data-accion="eliminar">🗑️ Eliminar</button>
-            `;
-            document.body.appendChild(menu);
-            menu.querySelector('[data-accion="editar"]').addEventListener('click', () => { editarPublicacion(idx); document.body.removeChild(menu); });
-            menu.querySelector('[data-accion="duplicar"]').addEventListener('click', () => { duplicarPublicacion(idx); document.body.removeChild(menu); });
-            menu.querySelector('[data-accion="eliminar"]').addEventListener('click', () => { eliminarPublicacion(idx); document.body.removeChild(menu); });
-            document.addEventListener('click', () => { if (menu.parentNode) document.body.removeChild(menu); }, { once: true });
-        }
-
-        function capturarCalendario() {
-            const contenedor = document.getElementById('contenedorVistas');
-            const vistaActiva = contenedor.querySelector('.vista-calendario.active');
-            if (!vistaActiva) return;
-
-            const btn = document.getElementById('btnCapturarCalendario');
-            btn.textContent = '⏳';
-            btn.disabled = true;
-
-            const clone = vistaActiva.cloneNode(true);
-            const tempDiv = document.createElement('div');
-            tempDiv.style.position = 'fixed';
-            tempDiv.style.top = '-9999px';
-            tempDiv.style.left = '-9999px';
-            tempDiv.style.width = vistaActiva.offsetWidth + 'px';
-            tempDiv.style.height = vistaActiva.offsetHeight + 'px';
-            tempDiv.appendChild(clone);
-            document.body.appendChild(tempDiv);
-
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-            script.onload = function() {
-                html2canvas(clone, {
-                    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0b0c0f',
-                    scale: 2,
-                    logging: false
-                }).then(canvas => {
-                    const link = document.createElement('a');
-                    const now = new Date();
-                    const fecha = now.toISOString().slice(0, 10);
-                    const hora = now.toTimeString().slice(0, 8).replace(/:/g, '-');
-                    link.href = canvas.toDataURL('image/png');
-                    link.download = `calendario-${vistaActual}-${fecha}-${hora}.png`;
-                    link.click();
-
-                    document.body.removeChild(tempDiv);
-                    btn.textContent = '📷';
-                    btn.disabled = false;
-                    toast('Imagen capturada y descargada');
-                }).catch(err => {
-                    document.body.removeChild(tempDiv);
-                    btn.textContent = '📷';
-                    btn.disabled = false;
-                    toast('Error al capturar la imagen', 'error');
-                });
-            };
-            document.body.appendChild(script);
-        }
-
-        // Listeners del modal
-        document.getElementById('btnModalGuardar').addEventListener('click', guardarDesdeModal);
-        document.getElementById('btnModalCancelar').addEventListener('click', cerrarModalPublicacion);
-        document.getElementById('btnModalEliminar').addEventListener('click', eliminarDesdeModal);
-        document.getElementById('btnCapturarCalendario').addEventListener('click', capturarCalendario);
-        document.getElementById('modalPublicacion').addEventListener('click', (e) => {
-            if (e.target.id === 'modalPublicacion') cerrarModalPublicacion();
-        });
-
-        document.querySelectorAll('[data-select-plat]').forEach(opt => opt.addEventListener('click', (e) => {
-            e.stopPropagation();
-            plataformaActual = opt.dataset.selectPlat;
-            document.getElementById('plataformaActual').value = plataformaActual;
-            document.getElementById('selectPlataforma').querySelectorAll('.custom-select-option').forEach(o => o.classList.remove('selected'));
-            opt.classList.add('selected');
-            document.querySelector('#selectPlataforma .trigger-label').textContent = plataformaActual === 'instagram' ? 'Instagram' : 'WhatsApp';
-            cerrarSelect(document.getElementById('selectPlataforma'));
-            renderizarVista();
-        }));
-
-        document.querySelectorAll('[data-vista]').forEach(btn => btn.addEventListener('click', () => {
-            vistaActual = btn.dataset.vista;
-            document.querySelectorAll('[data-vista]').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.vista-calendario').forEach(v => v.style.display = 'none');
-            if (vistaActual === 'mes') document.getElementById('vistaMes').style.display = 'block';
-            else if (vistaActual === 'semana') document.getElementById('vistaSemana').style.display = 'block';
-            else document.getElementById('vistaDia').style.display = 'block';
-            renderizarVista();
-        }));
-
         // ============ INICIALIZAR ============
-        cargarDatos();
-        actualizarDashboard();
-        document.getElementById('modalFecha').value = hoyISO();
+        if (TOKEN) {
+            iniciarApp().catch(() => mostrarLogin());
+        } else {
+            mostrarLogin();
+        }
     </script>
 </body>
 </html>
