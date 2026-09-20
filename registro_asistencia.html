@@ -385,14 +385,16 @@
             background: var(--surface-3);
             border: 1px solid var(--border-strong);
             border-radius: var(--radius-md);
-            max-height: 0;
+            max-height: 300px;
             overflow: hidden auto;
             opacity: 0;
-            transition: max-height var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
+            transform: scaleY(0.95);
+            transform-origin: top;
+            transition: transform var(--dur-base) var(--ease), opacity var(--dur-fast) var(--ease);
             box-shadow: var(--shadow-lg);
             z-index: 20;
         }
-        .custom-select-options.open { max-height: 280px; opacity: 1; }
+        .custom-select-options.open { opacity: 1; transform: scaleY(1); }
 
         .custom-select-option {
             padding: 12px 14px;
