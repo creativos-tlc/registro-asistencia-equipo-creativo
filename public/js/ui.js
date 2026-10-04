@@ -1,5 +1,6 @@
 /* Piezas de interfaz compartidas: hojas, avisos, confirmación, avatar, formularios. */
 import { html, icono, iniciales, poner, tonoDe, raw } from './util.js';
+import { ErrorPermiso } from './store.js';
 
 // ---------- acciones (delegación de clics por data-action) ----------
 export const acciones = {};
@@ -9,7 +10,10 @@ export function iniciarAcciones() {
     const el = e.target.closest('[data-action]');
     if (!el || el.disabled) return;
     const fn = acciones[el.dataset.action];
-    if (fn) { e.preventDefault(); fn(el, e); }
+    if (!fn) return;
+    e.preventDefault();
+    const fallo = (err) => { if (err instanceof ErrorPermiso) toast(err.message, { tipo: 'error' }); else throw err; };
+    try { const r = fn(el, e); if (r && typeof r.catch === 'function') r.catch(fallo); } catch (err) { fallo(err); }
   });
 }
 

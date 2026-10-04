@@ -250,3 +250,6 @@ button.row:hover, a.row:hover { background: var(--s2); }
   .sync { min-width: 44px; justify-content: center; }
   .mchip--mas { min-height: 32px; }
 }
+
+/* Cosas que solo ve un líder */
+[data-rol="voluntario"] .solo-lider { display: none !important; }

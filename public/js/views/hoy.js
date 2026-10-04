@@ -1,4 +1,4 @@
-import { yo } from '../store.js';
+import { esLider, yo } from '../store.js';
 import { DIAS_SIN_RESPALDO_AVISO, tipoDe } from '../model.js';
 import { equipoActual, estadisticas, eventosOrdenados, listaTomada, nombreDe, pendientesDeLista, personas, proximoServicio, publicaciones, resumenAsistencia, tareasAbiertas, tareasVencidas } from '../datos.js';
 import { dif, fechaLarga, fechaRelativa, hoy, html, icono, plural, rangoHora, raw, nombreDiaLargo } from '../util.js';
@@ -47,7 +47,7 @@ function atencion() {
   if (vencidas.length) avisos.push(html`<button class="row" type="button" data-action="ir-tareas">${icono('alert', 'i--lg')}<span class="row__main"><span class="row__title">${plural(vencidas.length, 'tarea vencida', 'tareas vencidas')}</span><span class="row__sub">${vencidas.slice(0, 2).map((t) => t.titulo).join(' · ')}</span></span>${icono('chev-r', 'row__chev')}</button>`);
   pendientesDeLista().slice(0, 3).forEach((e) => avisos.push(html`<button class="row" type="button" data-action="asistencia-abrir" data-id="${e.id}">${icono('tasks', 'i--lg')}<span class="row__main"><span class="row__title">Falta tomar asistencia</span><span class="row__sub">${e.titulo} · ${fechaRelativa(e.fecha)}</span></span>${icono('chev-r', 'row__chev')}</button>`));
   const dias = leerUltimoRespaldo();
-  if (dias === null || dias >= DIAS_SIN_RESPALDO_AVISO) {
+  if (esLider() && (dias === null || dias >= DIAS_SIN_RESPALDO_AVISO)) {
     avisos.push(html`<button class="row" type="button" data-action="ir-ajustes">${icono('download', 'i--lg')}<span class="row__main"><span class="row__title">Descarga un respaldo</span><span class="row__sub">${dias === null ? 'Aún no has hecho ninguno desde este dispositivo.' : `El último fue hace ${dias} días.`}</span></span>${icono('chev-r', 'row__chev')}</button>`);
   }
   return avisos;

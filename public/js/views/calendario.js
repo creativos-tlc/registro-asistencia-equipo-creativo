@@ -1,5 +1,5 @@
 /* Calendario unificado. `fabricarCalendario` sirve tanto al Calendario general como a Contenido. */
-import { guardar } from '../store.js';
+import { esLider, guardar } from '../store.js';
 import { CANALES } from '../model.js';
 import { distribuirSolapes, equipoActual, evento, itemsCalendario, publicacion, tarea } from '../datos.js';
 import { aISO, aMin, deMin, fechaLarga, hoy, html, icono, inicioMes, inicioSemana, leerISO, nombreDiaCorto, nombreMes, nuevoId, raw, sumarDias, sumarMeses, fechaDiaMes, plural, dif, diaSemana, clamp } from '../util.js';
@@ -203,6 +203,7 @@ function paso(dir) {
 }
 
 function menuNuevoEn(fecha, hora = '') {
+  if (!esLider()) { acciones['publicacion-nueva']({ dataset: { fecha, hora, canal: instancia?.canal || 'whatsapp' } }); return; }
   const modulos = equipoActual().modulos || [];
   const atr = raw(`data-fecha="${fecha}" data-hora="${hora}"`);
   const it = (accion, ic, t, c) => html`<button class="menu__item" type="button" data-action="${accion}" ${atr}><span class="typebadge" style="--c:${c}">${icono(ic)}</span><span><strong>${t}</strong></span></button>`;
@@ -287,7 +288,7 @@ document.addEventListener('drop', (e) => {
   if (!cel || !dato || !dato.includes(':')) return;
   e.preventDefault();
   const [clase, id] = dato.split(':');
-  moverItem(clase, id, cel.dataset.fecha, e.altKey);
+  try { moverItem(clase, id, cel.dataset.fecha, e.altKey); } catch (err) { toast(err.message || 'No se pudo mover', { tipo: 'error' }); }
 });
 
 export const vistaCalendario = fabricarCalendario({ id: 'calendario', titulo: 'Calendario' });

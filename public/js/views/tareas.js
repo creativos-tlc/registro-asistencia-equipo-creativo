@@ -38,7 +38,7 @@ export const vistaTareas = {
 
     return html`
       <div class="tareas">
-        <form class="rapida" data-form="tarea-rapida">
+        <form class="rapida solo-lider" data-form="tarea-rapida">
           <input class="input" name="titulo" placeholder="Agregar una tarea…" aria-label="Nueva tarea" autocomplete="off" enterkeyhint="done">
           <button class="btn btn--primary" type="submit">${icono('plus', 'i--sm')} Agregar</button>
         </form>

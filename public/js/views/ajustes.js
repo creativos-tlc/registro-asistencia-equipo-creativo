@@ -1,4 +1,4 @@
-import { api, cambiarPin, estadoSync, guardar, lista, pendientes, salir, sincronizarAhora, volcarTodo, yo, COLECCIONES } from '../store.js';
+import { api, cambiarPin, esLider, estadoSync, guardar, lista, pendientes, salir, sincronizarAhora, volcarTodo, yo, COLECCIONES } from '../store.js';
 import { html, hoy, icono, raw } from '../util.js';
 import { abrirHoja, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 import { refrescar } from '../router.js';
@@ -94,13 +94,13 @@ export const vistaAjustes = {
           </div></div>
           <p class="hint" style="margin-top:var(--sp-2)">Los cambios se guardan al instante en este teléfono y se envían a la base compartida. Sin señal, quedan en cola y salen solos al volver la conexión.</p></section>
 
-        <section class="section"><div class="section__head"><h3 class="section__title">Datos y respaldo</h3></div>
+        ${esLider() ? html`<section class="section"><div class="section__head"><h3 class="section__title">Datos y respaldo</h3></div>
           <div class="panel"><div class="list">
             ${fila('download', 'Descargar respaldo completo', dias === null ? 'Nunca has descargado uno desde este dispositivo' : dias === 0 ? 'Último respaldo: hoy' : `Último respaldo: hace ${dias} días`, 'ajustes-respaldo')}
             ${fila('upload', 'Restaurar desde un respaldo', 'Suma los datos de un archivo .json sin borrar lo actual', 'ajustes-restaurar')}
             ${hayDatosAntiguos() ? fila('users', 'Traer datos de la versión anterior', 'Datos que este teléfono tenía guardados antes de la actualización', 'legacy-abrir') : ''}
           </div></div>
-          <input id="archivoRespaldo" type="file" accept="application/json,.json" hidden></section>
+          <input id="archivoRespaldo" type="file" accept="application/json,.json" hidden></section>` : ''}
 
         <section class="section"><div class="section__head"><h3 class="section__title">Enlaces</h3></div>
           <div class="panel"><div class="list">

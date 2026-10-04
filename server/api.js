@@ -17,10 +17,21 @@ const MAX_DATA = 24 * 1024;
 const LIMITE_PULL = 5000;
 
 // Punto único de permisos. Hoy solo entran líderes; cuando entren voluntarios se afina aquí.
+const COLECCIONES_VOLUNTARIO = new Set(['publicaciones']);
+const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas'];
+
 function puede(yo, operacion, coleccion) {
   if (yo.rol === 'lider') return true;
   if (operacion === 'leer') return coleccion !== 'ajustes';
-  return false;
+  return COLECCIONES_VOLUNTARIO.has(coleccion);
+}
+
+// Un voluntario ve quién está en el equipo, pero no sus datos de contacto ni notas.
+function paraRol(yo, coleccion, data) {
+  if (yo.rol === 'lider' || coleccion !== 'personas' || !data) return data;
+  const copia = { ...data };
+  CAMPOS_PRIVADOS.forEach((c) => delete copia[c]);
+  return copia;
 }
 
 function verificarOrigen(request, url) {
@@ -44,7 +55,7 @@ async function pull(env, yo, url) {
     rev: r.rev,
     t: r.t,
     borrado: !!r.borrado,
-    data: r.borrado ? null : JSON.parse(r.data),
+    data: r.borrado ? null : paraRol(yo, r.c, JSON.parse(r.data)),
   }));
   const ultimo = results.length ? results[results.length - 1].t : desde;
   return { ahora: Date.now(), cursor: ultimo, hayMas: results.length === LIMITE_PULL, registros };

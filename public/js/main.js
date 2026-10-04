@@ -1,8 +1,8 @@
-import { arrancar, comenzar, alExpirarSesion, suscribir, estadoSync, sincronizarAhora, yo, obtener, poner as guardarDoc } from './store.js';
+import { arrancar, comenzar, alExpirarSesion, suscribir, estadoSync, sincronizarAhora, yo, esLider, obtener, poner as guardarDoc } from './store.js';
 import { EQUIPO_CREATIVO, EQUIPO_INICIAL, MODULOS } from './model.js';
 import { equipoActual } from './datos.js';
 import { html, icono, poner } from './util.js';
-import { avatar, iniciarAcciones, iniciarHoja, registrarAcciones, abrirHoja, cerrarHoja, toast } from './ui.js';
+import { acciones, avatar, iniciarAcciones, iniciarHoja, registrarAcciones, abrirHoja, cerrarHoja, toast } from './ui.js';
 import { mostrarAcceso } from './gate.js';
 import { iniciarRouter, registrar, solicitarRefresco, ir } from './router.js';
 import { ofrecerImportacion } from './legacy.js';
@@ -37,6 +37,7 @@ function construirNav() {
   poner(document.getElementById('sideNav'), modulos.map((m) => enlace(m, 'side__link')));
   document.getElementById('brandTeam').textContent = `${equipo.nombre} · TLC`;
   const persona = yo();
+  document.body.dataset.rol = persona.rol;
   poner(document.getElementById('sideUser'), html`
     ${avatar(persona.nombre, 'sm')}
     <div class="who__txt"><strong>${persona.nombre}</strong><span>${persona.rol === 'lider' ? 'Líder' : 'Voluntario'}</span></div>`);
@@ -58,6 +59,7 @@ function pintarSync() {
 
 // ---------- menú de creación rápida ----------
 function menuCrear() {
+  if (!esLider()) { acciones['publicacion-nueva']({ dataset: {} }); return; }
   const modulos = equipoActual().modulos || [];
   const item = (accion, ic, titulo, sub, color) => html`
     <button class="menu__item" type="button" data-action="${accion}">
@@ -95,7 +97,7 @@ async function entrar() {
   construirNav();
   pintarSync();
   iniciarRouter();
-  ofrecerImportacion();
+  if (esLider()) ofrecerImportacion();
 }
 
 iniciarAcciones();

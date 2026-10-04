@@ -1,4 +1,4 @@
-import { guardar, lista } from '../store.js';
+import { esLider, guardar, lista } from '../store.js';
 import { EQUIPO_CREATIVO, PLANTILLA_SERVICIO, TIPOS, tipoDe } from '../model.js';
 import { citados, evento, eventosOrdenados, listaTomada, nombreDe, personas, pideLista, resumenAsistencia, tareas } from '../datos.js';
 import { fechaLarga, fechaRelativa, html, hoy, icono, nuevoId, raw, sumarDias, rangoHora, plural, poner } from '../util.js';
@@ -14,7 +14,7 @@ export function verEvento(id) {
   const tareasLigadas = tareas().filter((x) => x.eventoId === e.id);
   const programa = e.programa || [];
 
-  const bloqueAsistencia = pideLista(e) ? html`
+  const bloqueAsistencia = pideLista(e) && esLider() ? html`
     <section class="section" style="margin:0">
       <div class="section__head"><h3 class="section__title">Asistencia</h3></div>
       <div class="panel">
@@ -28,10 +28,10 @@ export function verEvento(id) {
       </div>
     </section>` : '';
 
-  const bloquePrograma = t.programa ? html`
+  const bloquePrograma = t.programa && (esLider() || programa.length) ? html`
     <section class="section" style="margin:0">
       <div class="section__head"><h3 class="section__title">${e.tipo === 'servicio' ? 'Programa del servicio' : 'Agenda'}</h3>
-        <button class="section__link" type="button" data-action="programa-editar" data-id="${e.id}">${icono('edit', 'i--sm')} ${programa.length ? 'Editar' : 'Armar'}</button></div>
+        <button class="section__link solo-lider" type="button" data-action="programa-editar" data-id="${e.id}">${icono('edit', 'i--sm')} ${programa.length ? 'Editar' : 'Armar'}</button></div>
       ${programa.length ? html`<div class="panel"><ol class="list">${programa.map((f) => html`
         <li class="row">
           <span class="num muted" style="min-width:44px">${f.hora || '·'}</span>
@@ -43,7 +43,7 @@ export function verEvento(id) {
   const bloqueTareas = html`
     <section class="section" style="margin:0">
       <div class="section__head"><h3 class="section__title">Tareas de este evento</h3>
-        <button class="section__link" type="button" data-action="tarea-nueva" data-evento="${e.id}" data-fecha="${e.fecha}">${icono('plus', 'i--sm')} Agregar</button></div>
+        <button class="section__link solo-lider" type="button" data-action="tarea-nueva" data-evento="${e.id}" data-fecha="${e.fecha}">${icono('plus', 'i--sm')} Agregar</button></div>
       ${tareasLigadas.length ? html`<div class="panel"><div class="list">${tareasLigadas.map((x) => html`
         <button class="row ${x.estado === 'hecha' ? 'row--done' : ''}" type="button" data-action="tarea-editar" data-id="${x.id}">
           <span class="row__main"><span class="row__title">${x.titulo}</span><span class="row__sub">${(x.asignados || []).map(nombreDe).join(', ') || 'Sin asignar'}</span></span>
@@ -72,7 +72,7 @@ export function verEvento(id) {
         ${cit.length ? html`<div class="chips">${cit.map((p) => html`<span class="chip">${avatar(p.nombre, 'sm')}${p.nombre}</span>`)}</div>` : html`<p class="muted" style="font-size:var(--t-sm)">Sin personas en el equipo todavía.</p>`}
         <p class="hint" style="margin-top:var(--sp-2)">${e.participantes?.length ? 'Personas elegidas para este evento.' : 'Todo el equipo activo a esa fecha.'}</p>
       </section>`,
-    pie: html`
+    pie: !esLider() ? '' : html`
       <button class="icon-btn icon-btn--danger" type="button" data-action="evento-eliminar" data-id="${e.id}" aria-label="Eliminar evento">${icono('trash')}</button>
       <button class="icon-btn" type="button" data-action="evento-duplicar" data-id="${e.id}" aria-label="Duplicar evento">${icono('copy')}</button>
       <span class="spacer"></span>

@@ -86,7 +86,7 @@ export const vistaEquipo = {
             <button class="seg__btn" type="button" role="tab" data-action="equipo-modo" data-m="asistencia" aria-selected="${est.modo === 'asistencia'}">Asistencia</button>
           </div>
           ${est.modo === 'personas'
-            ? html`<button class="btn btn--primary" type="button" data-action="persona-nueva">${icono('user-plus', 'i--sm')} Agregar voluntario</button>`
+            ? html`<button class="btn btn--primary solo-lider" type="button" data-action="persona-nueva">${icono('user-plus', 'i--sm')} Agregar voluntario</button>`
             : html`<button class="btn btn--soft" type="button" data-action="equipo-csv">${icono('download', 'i--sm')} Descargar CSV</button>`}
         </div>
         ${est.modo === 'personas' ? html`

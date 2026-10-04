@@ -1,4 +1,4 @@
-import { api, guardar, yo } from '../store.js';
+import { api, esLider, guardar, yo } from '../store.js';
 import { AREAS_SUGERIDAS, EQUIPO_CREATIVO, ASISTENCIA } from '../model.js';
 import { eventos, estadisticas, persona, personas, tareasDe } from '../datos.js';
 import { edadDe, fechaCorta, fechaRelativa, hoy, html, icono, norm, nuevoId, plural, raw, telLimpio } from '../util.js';
@@ -43,7 +43,7 @@ export function verPersona(id) {
         ${dato('cake', 'Nacimiento', p.anioNac ? `${p.anioNac} · ${plural(edad, 'año', 'años')}` : '')}
         ${dato('calendar', 'En el equipo desde', p.desde ? fechaCorta(p.desde) : '')}
         ${dato('alert', 'Contacto de emergencia', p.emergencia)}
-        ${!p.telefono && !p.correo && !p.direccion && !p.anioNac ? html`<p class="muted" style="padding:var(--sp-4)">Aún no hay datos de contacto. Toca Editar para completarlos.</p>` : ''}
+        ${!p.telefono && !p.correo && !p.direccion && !p.anioNac && esLider() ? html`<p class="muted" style="padding:var(--sp-4)">Aún no hay datos de contacto. Toca Editar para completarlos.</p>` : ''}
       </div></div>
 
       ${(p.areas || []).length ? html`<section class="section" style="margin:0"><div class="section__head"><h3 class="section__title">Áreas</h3></div><div class="chips">${p.areas.map((a) => html`<span class="tag">${a}</span>`)}</div></section>` : ''}
@@ -60,7 +60,7 @@ export function verPersona(id) {
       </section>
 
       <section class="section" style="margin:0">
-        <div class="section__head"><h3 class="section__title">Pendiente</h3><button class="section__link" type="button" data-action="tarea-nueva" data-persona="${id}">${icono('plus', 'i--sm')} Asignar tarea</button></div>
+        <div class="section__head"><h3 class="section__title">Pendiente</h3><button class="section__link solo-lider" type="button" data-action="tarea-nueva" data-persona="${id}">${icono('plus', 'i--sm')} Asignar tarea</button></div>
         ${tareasAbiertas.length || proximos.length ? html`<div class="panel"><div class="list">
           ${tareasAbiertas.map((t) => html`<button class="row" type="button" data-action="tarea-editar" data-id="${t.id}"><span class="row__main"><span class="row__title">${t.titulo}</span><span class="row__sub">${t.vence ? `Vence ${fechaRelativa(t.vence)}` : 'Sin fecha'}</span></span>${icono('circle')}</button>`)}
           ${proximos.map((e) => html`<button class="row" type="button" data-action="evento-ver" data-id="${e.id}"><span class="row__main"><span class="row__title">${e.titulo}</span><span class="row__sub">${fechaRelativa(e.fecha)}</span></span>${icono('calendar')}</button>`)}
@@ -74,7 +74,7 @@ export function verPersona(id) {
             <button class="btn btn--soft" type="button" data-action="persona-acceso" data-id="${id}">${icono('lock', 'i--sm')} ${p.tieneAcceso ? 'Restablecer PIN' : 'Dar acceso'}</button>
             ${p.tieneAcceso ? html`<button class="btn btn--ghost" type="button" data-action="persona-quitar-acceso" data-id="${id}">Quitar acceso</button>` : ''}
           </div></section>` : ''}`,
-    pie: html`
+    pie: !esLider() ? '' : html`
       <button class="icon-btn icon-btn--danger" type="button" data-action="persona-eliminar" data-id="${id}" aria-label="Archivar o eliminar">${icono('trash')}</button>
       <span class="spacer"></span>
       <button class="btn btn--primary" type="button" data-action="persona-editar" data-id="${id}" style="flex:0 0 auto">${icono('edit', 'i--sm')} Editar</button>`,
