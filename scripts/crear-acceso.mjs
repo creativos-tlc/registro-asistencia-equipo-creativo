@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Crea (o reinicia) el acceso de una persona a la app y crea su ficha si no existe.
-// Uso:  node scripts/crear-acceso.mjs "Daniel" [--rol lider] [--local | --remote] [--pin 123456]
+// Uso:  node scripts/crear-acceso.mjs "Daniel" [--rol lider|voluntario] [--id per_xxx] [--local | --remote] [--pin 123456]
+// Con --id se reutiliza una ficha que ya existe en el equipo (no se crea otra).
 // Sin --pin genera un PIN temporal de 6 dígitos: la persona debe cambiarlo al primer ingreso.
 import { pbkdf2Sync, randomBytes, randomInt } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -19,7 +20,7 @@ if (!nombre) { console.error('Falta el nombre. Ej: node scripts/crear-acceso.mjs
 if (!['lider', 'voluntario'].includes(rol)) { console.error('Rol inválido'); process.exit(1); }
 
 const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase().replace(/\s+/g, ' ');
-const personaId = 'per_' + norm(nombre).replace(/[^a-z0-9]+/g, '_');
+const personaId = opcion('--id') || 'per_' + norm(nombre).replace(/[^a-z0-9]+/g, '_');
 const salt = randomBytes(16).toString('hex');
 const hash = pbkdf2Sync(pin, Buffer.from(salt, 'hex'), 100000, 32, 'sha256').toString('hex');
 const q = (s) => `'${String(s).replace(/'/g, "''")}'`;
@@ -32,6 +33,7 @@ VALUES (${q(personaId)}, ${q(nombre)}, ${q(norm(nombre))}, ${q(rol)}, ${q(hash)}
 ON CONFLICT(persona_id) DO UPDATE SET pin_hash = excluded.pin_hash, pin_salt = excluded.pin_salt, rol = excluded.rol, debe_cambiar = 1, activo = 1;
 INSERT OR IGNORE INTO registros (coleccion, id, equipo_id, data, rev, borrado, actualizado_en, actualizado_por)
 VALUES ('personas', ${q(personaId)}, 'creativo', ${q(ficha)}, 1, 0, ${ahora}, 'script');
+UPDATE registros SET data = json_set(data, '$.tieneAcceso', json('true')), rev = rev + 1, actualizado_en = ${ahora}, actualizado_por = 'script' WHERE coleccion = 'personas' AND id = ${q(personaId)};
 DELETE FROM sesiones WHERE persona_id = ${q(personaId)};
 `;
 
