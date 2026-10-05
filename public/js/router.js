@@ -8,10 +8,15 @@ let pendiente = 0;
 
 export const registrar = (nombre, vista) => { vistas[nombre] = vista; };
 
+let permitidas = null; // null = todas
+let inicio = 'hoy';
+export function limitarRutas(lista, rutaInicial) { permitidas = lista ? new Set([...lista, 'ajustes']) : null; inicio = rutaInicial || 'hoy'; }
+
 export function rutaActual() {
   const [camino, consulta = ''] = location.hash.replace(/^#\/?/, '').split('?');
   const [nombre = '', param = ''] = camino.split('/');
-  return { nombre: vistas[nombre] ? nombre : 'hoy', param: decodeURIComponent(param), consulta: new URLSearchParams(consulta) };
+  const ok = vistas[nombre] && (!permitidas || permitidas.has(nombre));
+  return { nombre: ok ? nombre : inicio, param: ok ? decodeURIComponent(param) : '', consulta: new URLSearchParams(consulta) };
 }
 
 export function ir(destino, { reemplazar = false } = {}) {

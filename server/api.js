@@ -17,13 +17,14 @@ const MAX_DATA = 24 * 1024;
 const LIMITE_PULL = 5000;
 
 // Punto único de permisos. Hoy solo entran líderes; cuando entren voluntarios se afina aquí.
-const COLECCIONES_VOLUNTARIO = new Set(['publicaciones']);
+// Un voluntario ve el calendario y las tareas, y puede crear y asignar tareas. Nada más.
+const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas']);
+const ESCRITURA_VOLUNTARIO = new Set(['tareas']);
 const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas'];
 
 function puede(yo, operacion, coleccion) {
   if (yo.rol === 'lider') return true;
-  if (operacion === 'leer') return coleccion !== 'ajustes';
-  return COLECCIONES_VOLUNTARIO.has(coleccion);
+  return (operacion === 'leer' ? LECTURA_VOLUNTARIO : ESCRITURA_VOLUNTARIO).has(coleccion);
 }
 
 // Un voluntario ve quién está en el equipo, pero no sus datos de contacto ni notas.

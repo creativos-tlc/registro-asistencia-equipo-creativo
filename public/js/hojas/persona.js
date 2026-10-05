@@ -60,7 +60,7 @@ export function verPersona(id) {
       </section>
 
       <section class="section" style="margin:0">
-        <div class="section__head"><h3 class="section__title">Pendiente</h3><button class="section__link solo-lider" type="button" data-action="tarea-nueva" data-persona="${id}">${icono('plus', 'i--sm')} Asignar tarea</button></div>
+        <div class="section__head"><h3 class="section__title">Pendiente</h3><button class="section__link" type="button" data-action="tarea-nueva" data-persona="${id}">${icono('plus', 'i--sm')} Asignar tarea</button></div>
         ${tareasAbiertas.length || proximos.length ? html`<div class="panel"><div class="list">
           ${tareasAbiertas.map((t) => html`<button class="row" type="button" data-action="tarea-editar" data-id="${t.id}"><span class="row__main"><span class="row__title">${t.titulo}</span><span class="row__sub">${t.vence ? `Vence ${fechaRelativa(t.vence)}` : 'Sin fecha'}</span></span>${icono('circle')}</button>`)}
           ${proximos.map((e) => html`<button class="row" type="button" data-action="evento-ver" data-id="${e.id}"><span class="row__main"><span class="row__title">${e.titulo}</span><span class="row__sub">${fechaRelativa(e.fecha)}</span></span>${icono('calendar')}</button>`)}

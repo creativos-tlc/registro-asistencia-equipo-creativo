@@ -43,7 +43,7 @@ export function verEvento(id) {
   const bloqueTareas = html`
     <section class="section" style="margin:0">
       <div class="section__head"><h3 class="section__title">Tareas de este evento</h3>
-        <button class="section__link solo-lider" type="button" data-action="tarea-nueva" data-evento="${e.id}" data-fecha="${e.fecha}">${icono('plus', 'i--sm')} Agregar</button></div>
+        <button class="section__link" type="button" data-action="tarea-nueva" data-evento="${e.id}" data-fecha="${e.fecha}">${icono('plus', 'i--sm')} Agregar</button></div>
       ${tareasLigadas.length ? html`<div class="panel"><div class="list">${tareasLigadas.map((x) => html`
         <button class="row ${x.estado === 'hecha' ? 'row--done' : ''}" type="button" data-action="tarea-editar" data-id="${x.id}">
           <span class="row__main"><span class="row__title">${x.titulo}</span><span class="row__sub">${(x.asignados || []).map(nombreDe).join(', ') || 'Sin asignar'}</span></span>

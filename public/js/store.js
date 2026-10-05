@@ -109,7 +109,7 @@ export const obtener = (c, id) => (estado.docs[c]?.[id] ? { id, ...estado.docs[c
 // ---------- escritura ----------
 /** ops: [{c, id, data}] — data null borra. Devuelve una función `deshacer`. */
 export class ErrorPermiso extends Error {}
-export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'publicaciones';
+export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'tareas';
 
 export function guardar(ops) {
   if (ops.some((op) => !puedeEscribir(op.c))) throw new ErrorPermiso('Solo los líderes pueden hacer este cambio.');

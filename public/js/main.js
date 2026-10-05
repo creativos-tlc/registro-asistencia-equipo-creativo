@@ -1,10 +1,10 @@
 import { arrancar, comenzar, alExpirarSesion, suscribir, estadoSync, sincronizarAhora, yo, esLider, obtener, poner as guardarDoc } from './store.js';
-import { EQUIPO_CREATIVO, EQUIPO_INICIAL, MODULOS } from './model.js';
+import { EQUIPO_CREATIVO, EQUIPO_INICIAL, MODULOS, MODULOS_VOLUNTARIO } from './model.js';
 import { equipoActual } from './datos.js';
 import { html, icono, poner } from './util.js';
 import { acciones, avatar, iniciarAcciones, iniciarHoja, registrarAcciones, abrirHoja, cerrarHoja, toast } from './ui.js';
 import { mostrarAcceso } from './gate.js';
-import { iniciarRouter, registrar, solicitarRefresco, ir } from './router.js';
+import { iniciarRouter, limitarRutas, registrar, solicitarRefresco, ir } from './router.js';
 import { ofrecerImportacion } from './legacy.js';
 
 import { vistaHoy } from './views/hoy.js';
@@ -29,7 +29,9 @@ registrar('ajustes', vistaAjustes);
 // ---------- navegación ----------
 function construirNav() {
   const equipo = equipoActual();
-  const modulos = (equipo.modulos || EQUIPO_INICIAL.modulos).filter((m) => MODULOS[m]);
+  const todos = (equipo.modulos || EQUIPO_INICIAL.modulos).filter((m) => MODULOS[m]);
+  const modulos = esLider() ? todos : todos.filter((m) => MODULOS_VOLUNTARIO.includes(m));
+  limitarRutas(esLider() ? null : modulos.map((m) => MODULOS[m].ruta), modulos[0] ? MODULOS[modulos[0]].ruta : 'ajustes');
   const enlace = (m, clase) => html`<a class="${clase}" href="#/${MODULOS[m].ruta}" data-nav="${m}">${icono(MODULOS[m].icono)}<span>${MODULOS[m].label}</span></a>`;
   const tabbar = document.getElementById('tabbar');
   tabbar.style.setProperty('--tabs', modulos.length);
@@ -59,7 +61,7 @@ function pintarSync() {
 
 // ---------- menú de creación rápida ----------
 function menuCrear() {
-  if (!esLider()) { acciones['publicacion-nueva']({ dataset: {} }); return; }
+  if (!esLider()) { acciones['tarea-nueva']({ dataset: {} }); return; }
   const modulos = equipoActual().modulos || [];
   const item = (accion, ic, titulo, sub, color) => html`
     <button class="menu__item" type="button" data-action="${accion}">

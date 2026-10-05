@@ -45,6 +45,9 @@ export const MODULOS = {
   contenido:  { label: 'Contenido',  icono: 'image',    ruta: 'contenido' },
 };
 
+/** Pestañas que ve un voluntario con acceso. */
+export const MODULOS_VOLUNTARIO = ['calendario', 'tareas'];
+
 export const EQUIPO_INICIAL = {
   nombre: 'Equipo Creativo',
   iglesia: 'The Life Church',
