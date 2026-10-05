@@ -31,6 +31,8 @@ Abre http://localhost:8795. En Ajustes (solo en localhost) hay un botón para ca
 
 ## Publicar
 
+No hay publicación automática: subir código a GitHub no actualiza el sitio. Se publica con el comando de abajo (la Action antigua de GitHub se quitó porque apuntaba a otro proyecto de Cloudflare).
+
 ```bash
 npx wrangler d1 migrations apply asistencia-creativo --remote   # solo si hay migraciones nuevas
 npx wrangler pages deploy public --project-name=asistencia-creativo --branch main
