@@ -36,8 +36,8 @@ function planificar(v1) {
   const ops = [];
   const cuenta = { personas: 0, eventos: 0, asistencias: 0, publicaciones: 0, yaEstaban: 0 };
 
-  // personas: se reconocen por nombre para no duplicar a los líderes ni a lo que ya subió el otro teléfono
-  const idPorNombre = new Map(personas({ inactivas: true }).map((p) => [norm(p.nombre), p.id]));
+  // personas: se reconocen por nombre o alias (p. ej. "Danny" = Daniel) para no duplicar a nadie
+  const idPorNombre = new Map(personas({ inactivas: true }).flatMap((p) => [p.nombre, ...(p.alias || [])].map((n) => [norm(n), p.id])));
   v1.vols.forEach((v) => {
     const k = norm(v.nombre);
     if (idPorNombre.has(k)) { cuenta.yaEstaban++; return; }
