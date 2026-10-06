@@ -33,7 +33,7 @@ function listaPersonas() {
     return html`<button class="row" type="button" data-action="persona-ver" data-id="${p.id}">
       ${avatar(p.nombre)}
       <span class="row__main">
-        <span class="row__title">${nombreCompleto(p)} ${p.rol === 'lider' ? html`<span class="tag tag--accent" style="margin-left:4px">Líder</span>` : ''}${p.activo === false ? html`<span class="tag tag--bad" style="margin-left:4px">Archivado</span>` : ''}</span>
+        <span class="row__title">${nombreCompleto(p)} ${p.rol === 'lider' ? html`<span class="tag tag--accent" style="margin-left:4px">Líder</span>` : ''}${p.activo === false ? html`<span class="tag tag--bad" style="margin-left:4px">Archivado</span>` : ''}${p.tieneAcceso ? html`<span class="tag tag--info" style="margin-left:4px" title="Puede entrar a la app">${icono('lock', 'i--sm')} Acceso</span>` : ''}</span>
         <span class="row__sub">${(p.areas || []).slice(0, 3).join(' · ') || 'Sin áreas'}${edad ? html`<span>${edad} años</span>` : ''}</span>
       </span>
       <span class="row__end">${s.racha >= 2 ? html`<span class="tag tag--accent" title="Asistencias seguidas">${icono('flame', 'i--sm')} ${s.racha}</span>` : ''}${s.porcentaje !== null ? html`<span class="tag ${s.porcentaje >= 80 ? 'tag--ok' : s.porcentaje >= 50 ? 'tag--accent' : 'tag--bad'} num">${s.porcentaje}%</span>` : ''}${icono('chev-r', 'row__chev')}</span>

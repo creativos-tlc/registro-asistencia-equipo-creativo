@@ -7,6 +7,27 @@ import { lista } from '../store.js';
 
 const nombreCompleto = (p) => [p.nombre, p.apellidos].filter(Boolean).join(' ');
 
+const PERMISOS = {
+  voluntario: 'Con acceso: ve el calendario y las tareas y puede crear y asignar tareas. No ve asistencia, equipo ni datos de contacto.',
+  lider: 'Con acceso: ve y edita todo, incluidos los datos personales, y puede dar o quitar accesos.',
+};
+
+// Nombre con el que entra a la app: el nombre; con apellido solo si hay otra persona con el mismo nombre.
+function nombreAcceso(p, id) {
+  const repetido = personas({ inactivas: true }).some((o) => o.id !== id && norm(o.nombre) === norm(p.nombre));
+  return repetido && p.apellidos ? nombreCompleto(p) : p.nombre;
+}
+
+function mostrarPin(p, id, pin) {
+  abrirHoja({
+    titulo: `PIN temporal de ${p.nombre}`,
+    cuerpo: html`
+      <div class="panel panel--pad" style="text-align:center"><div class="num" style="font-size:44px;font-weight:800;letter-spacing:0.18em">${pin}</div><p class="hint">Se muestra una sola vez.</p></div>
+      <div class="notice notice--warn">${icono('shield')}<div class="notice__body"><span>Compártelo <strong>en privado</strong>. ${p.nombre} entra a esta misma dirección, elige su nombre, escribe este PIN y crea uno propio.</span><span>${p.rol === 'lider' ? 'Tendrá acceso completo, como tú.' : 'Verá el calendario y las tareas, y podrá crear tareas.'}</span></div></div>`,
+    pie: html`<button class="btn btn--soft" type="button" data-action="copiar-pin" data-pin="${pin}">${icono('copy', 'i--sm')} Copiar</button><button class="btn btn--primary" type="button" data-action="persona-ver" data-id="${id}">Listo</button>`,
+  });
+}
+
 // ---------- perfil ----------
 export function verPersona(id) {
   const p = persona(id);
@@ -100,7 +121,10 @@ export function formPersona({ base = null } = {}) {
           <div class="chips">
             <label class="chip chip--radio"><input class="sr-only" type="radio" name="rol" value="voluntario" ${raw((b.rol || 'voluntario') === 'voluntario' ? 'checked' : '')}>Voluntario</label>
             <label class="chip chip--radio"><input class="sr-only" type="radio" name="rol" value="lider" ${raw(b.rol === 'lider' ? 'checked' : '')}>Líder</label>
-          </div></div>
+          </div>
+          <p class="hint" id="pe-rol-hint">${PERMISOS[b.rol || 'voluntario']}</p></div>
+        ${esNueva ? html`<label class="check solo-lider"><input type="checkbox" name="acceso"> Darle acceso a la app ahora</label>
+          <p class="hint" style="margin-top:calc(var(--sp-3) * -1)">Se genera un PIN temporal para que entre con su nombre. Puedes hacerlo después desde su perfil.</p>` : ''}
         <div class="form-grid form-grid--2">
           <div class="field"><label for="pe-tel">Teléfono <span class="opt">(opcional)</span></label><input class="input" id="pe-tel" name="telefono" type="tel" inputmode="tel" value="${b.telefono || ''}" placeholder="+56 9 1234 5678" autocomplete="off"></div>
           <div class="field"><label for="pe-mail">Correo <span class="opt">(opcional)</span></label><input class="input" id="pe-mail" name="correo" type="email" inputmode="email" value="${b.correo || ''}" autocomplete="off"></div>
@@ -119,9 +143,12 @@ export function formPersona({ base = null } = {}) {
       </form>`,
     pie: html`<button class="btn btn--soft" type="button" data-action="cerrar-hoja">Cancelar</button><button class="btn btn--primary" type="button" data-action="persona-guardar">${esNueva ? 'Agregar al equipo' : 'Guardar cambios'}</button>`,
   });
+  document.getElementById('fPersona').addEventListener('change', (e) => {
+    if (e.target.name === 'rol') document.getElementById('pe-rol-hint').textContent = PERMISOS[e.target.value];
+  });
 }
 
-function guardarPersona() {
+async function guardarPersona() {
   const form = document.getElementById('fPersona');
   const d = leerForm(form);
   if (!d.nombre) { marcarError(form.nombre, 'Escribe un nombre'); return; }
@@ -133,16 +160,38 @@ function guardarPersona() {
   const marcadas = [...form.closest('.sheet__body').querySelectorAll('input[name=area]:checked')].map((i) => i.value);
   const extras = d.areaExtra ? d.areaExtra.split(',').map((x) => x.trim()).filter(Boolean) : [];
   const previa = id ? persona(id) : null;
+  const rol = d.rol === 'lider' ? 'lider' : 'voluntario';
   const data = {
     ...(previa || {}),
     equipoId: EQUIPO_CREATIVO, equipos: previa?.equipos || [EQUIPO_CREATIVO], activo: previa ? previa.activo !== false : true,
-    nombre: d.nombre, apellidos: d.apellidos || '', rol: d.rol || 'voluntario', telefono: d.telefono || '', correo: d.correo || '',
+    nombre: d.nombre, apellidos: d.apellidos || '', rol, telefono: d.telefono || '', correo: d.correo || '',
     anioNac: anio, direccion: d.direccion || '', desde: d.desde || hoy(), emergencia: d.emergencia || '', notas: d.notas || '',
     areas: [...new Set([...marcadas, ...extras])],
   };
   delete data.id;
-  const nuevoIdPersona = id || nuevoId('per');
-  guardar([{ c: 'personas', id: nuevoIdPersona, data }]);
+  const personaId = id || nuevoId('per');
+  const boton = document.querySelector('[data-action=persona-guardar]');
+  boton?.classList.add('btn--busy');
+  try {
+    // Con acceso: primero el servidor (si falla, no se guarda nada a medias)
+    if (!id && d.acceso) {
+      const { pinTemporal } = await api('admin/credencial', { metodo: 'POST', cuerpo: { personaId, nombre: nombreAcceso(data, personaId), rol } });
+      data.tieneAcceso = true;
+      guardar([{ c: 'personas', id: personaId, data }]);
+      toast(`${d.nombre} se sumó al equipo con acceso`);
+      mostrarPin({ ...data, id: personaId }, personaId, pinTemporal);
+      return;
+    }
+    if (id && previa.tieneAcceso && previa.rol !== rol) {
+      await api('admin/rol', { metodo: 'POST', cuerpo: { personaId: id, rol } });
+    }
+  } catch (e) {
+    marcarError(form.nombre, e.message || 'No se pudo dar el acceso');
+    return;
+  } finally {
+    boton?.classList.remove('btn--busy');
+  }
+  guardar([{ c: 'personas', id: personaId, data }]);
   toast(id ? 'Perfil guardado' : `${d.nombre} se sumó al equipo`);
   if (id) verPersona(id); else cerrarHoja();
 }
@@ -175,17 +224,12 @@ async function eliminarPersona(id) {
 // ---------- acceso a la app ----------
 async function darAcceso(id) {
   const p = persona(id);
-  if (!(await confirmar({ titulo: p.tieneAcceso ? `Restablecer PIN de ${p.nombre}` : `Dar acceso a ${p.nombre}`, mensaje: 'Se genera un PIN temporal que tendrá que cambiar al entrar por primera vez. Si ya tenía sesiones abiertas, se cierran.', boton: 'Generar PIN', peligro: false }))) return;
+  if (!(await confirmar({ titulo: p.tieneAcceso ? `Restablecer PIN de ${p.nombre}` : `Dar acceso a ${p.nombre}`, mensaje: `Se genera un PIN temporal que tendrá que cambiar al entrar por primera vez. Nivel: ${p.rol === 'lider' ? 'líder (acceso completo)' : 'voluntario (calendario y tareas)'}. Si ya tenía sesiones abiertas, se cierran.`, boton: 'Generar PIN', peligro: false }))) return;
   try {
-    const { pinTemporal } = await api('admin/credencial', { metodo: 'POST', cuerpo: { personaId: id, nombre: p.nombre, rol: p.rol === 'lider' ? 'lider' : 'voluntario' } });
+    const rol = p.rol === 'lider' ? 'lider' : 'voluntario';
+    const { pinTemporal } = await api('admin/credencial', { metodo: 'POST', cuerpo: { personaId: id, nombre: nombreAcceso(p, id), rol } });
     guardar([{ c: 'personas', id, data: { ...p, tieneAcceso: true } }]);
-    abrirHoja({
-      titulo: `PIN temporal de ${p.nombre}`,
-      cuerpo: html`
-        <div class="panel panel--pad" style="text-align:center"><div class="num" style="font-size:44px;font-weight:800;letter-spacing:0.18em">${pinTemporal}</div><p class="hint">Se muestra una sola vez.</p></div>
-        <div class="notice notice--warn">${icono('shield')}<div class="notice__body"><span>Compártelo <strong>en privado</strong>. ${p.nombre} entra a esta misma dirección, elige su nombre, escribe este PIN y crea uno propio.</span></div></div>`,
-      pie: html`<button class="btn btn--soft" type="button" data-action="copiar-pin" data-pin="${pinTemporal}">${icono('copy', 'i--sm')} Copiar</button><button class="btn btn--primary" type="button" data-action="persona-ver" data-id="${id}">Listo</button>`,
-    });
+    mostrarPin(p, id, pinTemporal);
   } catch (e) {
     toast(e.message || 'No se pudo generar el PIN', { tipo: 'error' });
   }

@@ -40,13 +40,14 @@ npx wrangler pages deploy public --project-name=asistencia-creativo --branch mai
 
 ## Accesos
 
-Cada persona entra con su nombre y un PIN de 4 a 8 dígitos. Un líder da acceso desde el perfil de la persona (Equipo → persona → "Dar acceso"), o por consola:
+Cada persona entra con su nombre y un PIN de 4 a 8 dígitos. Hay dos niveles:
 
-```bash
-node scripts/crear-acceso.mjs "Nombre" --remote
-```
+- **Voluntario**: ve el calendario y las tareas, y puede crear y asignar tareas. No ve asistencia, equipo ni datos de contacto.
+- **Líder**: ve y edita todo, incluidos los datos personales, y puede dar o quitar accesos.
 
-Genera un PIN temporal que la persona debe cambiar al entrar. Tras 5 intentos fallidos el nombre se bloquea 15 minutos.
+Un líder crea accesos desde la app: Equipo → Agregar voluntario → "Darle acceso a la app ahora" (o, en alguien ya existente, su perfil → "Dar acceso"). La app muestra un PIN temporal una sola vez; la persona lo cambia al entrar. El nivel sale del "Rol en el equipo" y se puede cambiar editando el perfil (nadie puede cambiarse el suyo). Por consola sigue disponible: `node scripts/crear-acceso.mjs "Nombre" --rol voluntario --remote`.
+
+Tras 5 intentos fallidos el nombre se bloquea 15 minutos.
 
 ## Datos y respaldo
 

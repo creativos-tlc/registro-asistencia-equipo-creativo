@@ -1,5 +1,6 @@
 import {
   cambiarPin,
+  cambiarRol,
   cerrarSesion,
   crearOReiniciarCredencial,
   exigirSesion,
@@ -141,6 +142,15 @@ export async function manejar({ request, env }) {
         if (yo.rol !== 'lider') throw new HttpError(403, 'Solo un líder puede dar acceso');
         const temporal = await crearOReiniciarCredencial(env, await leerJSON(request, 2048));
         return responder({ pinTemporal: temporal });
+      }
+
+      case 'POST admin/rol': {
+        const yo = await exigirSesion(env, request);
+        if (yo.rol !== 'lider') throw new HttpError(403, 'Solo un líder puede cambiar permisos');
+        const { personaId, rol } = await leerJSON(request, 1024);
+        if (personaId === yo.personaId) throw new HttpError(400, 'No puedes cambiar tu propio nivel de permisos');
+        await cambiarRol(env, String(personaId), String(rol));
+        return responder({ ok: true });
       }
 
       case 'POST admin/quitar-acceso': {

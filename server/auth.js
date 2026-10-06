@@ -168,6 +168,12 @@ export async function crearOReiniciarCredencial(env, { personaId, nombre, rol })
   return temporal;
 }
 
+export async function cambiarRol(env, personaId, rol) {
+  if (!['lider', 'voluntario'].includes(rol)) throw new HttpError(400, 'Rol inválido');
+  const r = await env.DB.prepare('UPDATE credenciales SET rol = ? WHERE persona_id = ? AND activo = 1').bind(rol, personaId).run();
+  if (!r.meta.changes) throw new HttpError(404, 'Esa persona no tiene acceso a la app');
+}
+
 export async function quitarCredencial(env, personaId) {
   await env.DB.prepare('UPDATE credenciales SET activo = 0 WHERE persona_id = ?').bind(personaId).run();
   await env.DB.prepare('DELETE FROM sesiones WHERE persona_id = ?').bind(personaId).run();
