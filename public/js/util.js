@@ -57,6 +57,8 @@ export function fechaRelativa(iso) {
   return fechaCorta(iso);
 }
 
+export const saludo = () => { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches'; };
+
 // ---------- Horas ----------
 export const aMin = (t) => (t && /^\d{2}:\d{2}$/.test(t) ? Number(t.slice(0, 2)) * 60 + Number(t.slice(3)) : null);
 export const deMin = (m) => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;

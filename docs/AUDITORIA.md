@@ -98,7 +98,7 @@ scripts/crear-acceso.mjs
 
 - **Datos personales** (correo, dirección, año de nacimiento, posibles menores): solo se ven con sesión iniciada. Revisar con la iglesia qué datos es necesario guardar de menores.
 - **PIN:** 6 dígitos con bloqueo es razonable para este uso; si algún día se abre a más gente, migrar a enlace mágico por correo.
-- **Duplicados de nombre:** "Danny" y "Daniel" podrían ser la misma persona; confirmar y unir desde Equipo.
+- **Duplicados de nombre:** resuelto el 5-oct-2026: la ficha antigua "Danny" se unió a Daniel.
 - **Limpieza pendiente:** archivar `app/` y `../App Voluntarios/`, borrar la base D1 `asistencia_creativo` (guion bajo) y el proyecto Pages `registro-asistencia` cuando se confirme que no se usan; alinear la GitHub Action con el proyecto `asistencia-creativo`.
 
 ## Operación

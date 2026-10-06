@@ -58,7 +58,7 @@ export const EQUIPO_INICIAL = {
 /** Plantilla base del programa de un servicio (editable; no impone contenido). */
 export const PLANTILLA_SERVICIO = ['Bienvenida', 'Alabanza', 'Anuncios', 'Mensaje', 'Cierre'];
 
-export const PLANTEL_INICIAL = ['Sorimar', 'Karol', 'David', 'Sofia', 'Kathy', 'Jazmin', 'Ronald', 'Danny', 'Renata'];
+export const PLANTEL_INICIAL = ['Sorimar', 'Karol', 'David', 'Sofia', 'Kathy', 'Jazmin', 'Ronald', 'Daniel', 'Renata'];
 
 /** Días desde los que un evento sin asistencia tomada se considera "pendiente". */
 export const DIAS_ASISTENCIA_PENDIENTE = 14;

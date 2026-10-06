@@ -47,7 +47,7 @@ Identidad existente que se conserva: interfaz oscura con acento dorado/ámbar (`
 
 ## Evidence on Hand
 
-- Plantel inicial real de 9 personas (Sorimar, Karol, David, Sofia, Kathy, Jazmin, Ronald, Danny, Renata) como datos por defecto en la versión actual. No hay más datos personales cargados en el repositorio: edades, correos y direcciones deben ingresarse por el equipo, nunca inventarse.
+- Plantel inicial real de 9 personas (Sorimar, Karol, David, Sofia, Kathy, Jazmin, Ronald, Daniel, Renata) como datos por defecto en la versión actual. No hay más datos personales cargados en el repositorio: edades, correos y direcciones deben ingresarse por el equipo, nunca inventarse.
 - Backup local previo: `registro_asistencia.backup-20260831-003448.html`.
 
 ## Product Principles

@@ -145,5 +145,5 @@ p { text-wrap: pretty; }
 /* Con movimiento reducido se quita el desplazamiento, no el cambio de estado (el color sigue avisando). */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .sheet[open], .toast, .fab, .btn, .chip, .row { animation: none !important; transform: none !important; }
+  .sheet[open], .toast, .fab, .btn, .chip, .row, .bienvenida { animation: none !important; transform: none !important; }
 }

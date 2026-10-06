@@ -254,3 +254,21 @@ button.row:hover, a.row:hover { background: var(--s2); }
 
 /* Cosas que solo ve un líder */
 [data-rol="voluntario"] .solo-lider { display: none !important; }
+
+/* ============ FRASE DEL DÍA ============ */
+.frase { display: flex; flex-direction: column; gap: var(--sp-3); }
+.frase::before { content: ""; width: 32px; height: 3px; border-radius: 2px; background: var(--accent); }
+.frase blockquote { margin: 0; font-size: var(--t-lg); font-weight: 600; line-height: 1.4; text-wrap: balance; }
+.frase figcaption { font-size: var(--t-sm); color: var(--tx-2); }
+.frase--grande blockquote { font-size: var(--t-xl); line-height: 1.35; }
+.bienvenida {
+  position: fixed; inset: 0; z-index: 90; display: grid; place-items: center;
+  padding: calc(var(--sp-6) + var(--safe-t)) var(--sp-6) calc(var(--sp-6) + var(--safe-b));
+  background: var(--bg); overflow-y: auto;
+  animation: fundir var(--dur-2) var(--ease);
+}
+.bienvenida--sale { opacity: 0; transition: opacity 200ms var(--ease); pointer-events: none; }
+.bienvenida__cuerpo { width: min(34rem, 100%); display: flex; flex-direction: column; gap: var(--sp-6); align-items: flex-start; }
+.bienvenida__saludo { font-size: var(--t-sm); font-weight: 600; color: var(--tx-2); }
+.bienvenida .btn { min-width: 11rem; margin-top: var(--sp-2); }
+@media (min-width: 720px) { .frase--grande blockquote { font-size: var(--t-2xl); } }

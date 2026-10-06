@@ -1,11 +1,9 @@
 import { esLider, yo } from '../store.js';
 import { DIAS_SIN_RESPALDO_AVISO, tipoDe } from '../model.js';
 import { equipoActual, estadisticas, eventosOrdenados, listaTomada, nombreDe, pendientesDeLista, personas, proximoServicio, publicaciones, resumenAsistencia, tareasAbiertas, tareasVencidas } from '../datos.js';
-import { dif, fechaLarga, fechaRelativa, hoy, html, icono, plural, rangoHora, raw, nombreDiaLargo } from '../util.js';
+import { dif, fechaLarga, fechaRelativa, hoy, html, icono, plural, rangoHora, raw, nombreDiaLargo, saludo } from '../util.js';
 import { vacio } from '../ui.js';
 import { leerUltimoRespaldo } from './ajustes.js';
-
-const saludo = () => { const h = new Date().getHours(); return h < 12 ? 'Buenos días' : h < 20 ? 'Buenas tardes' : 'Buenas noches'; };
 
 function filaEvento(e) {
   const t = tipoDe(e.tipo);

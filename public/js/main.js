@@ -6,6 +6,7 @@ import { acciones, avatar, iniciarAcciones, iniciarHoja, registrarAcciones, abri
 import { mostrarAcceso } from './gate.js';
 import { iniciarRouter, limitarRutas, registrar, solicitarRefresco, ir } from './router.js';
 import { ofrecerImportacion } from './legacy.js';
+import { bienvenidaDelDia } from './bienvenida.js';
 
 import { vistaHoy } from './views/hoy.js';
 import { vistaCalendario } from './views/calendario.js';
@@ -99,6 +100,7 @@ async function entrar() {
   construirNav();
   pintarSync();
   iniciarRouter();
+  await bienvenidaDelDia(yo().nombre);
   if (esLider()) ofrecerImportacion();
 }
 

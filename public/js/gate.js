@@ -2,6 +2,7 @@
 import { api, ingresar, cambiarPin, ErrorApi } from './store.js';
 import { html, icono, poner } from './util.js';
 import { avatar, marcarError } from './ui.js';
+import { bloqueFrase } from './bienvenida.js';
 
 const marca = html`
   <div class="gate__brand">
@@ -39,6 +40,7 @@ export function mostrarAcceso() {
         return;
       }
       pintar(html`
+        ${bloqueFrase()}
         <div><h2>¿Quién eres?</h2><p>Elige tu nombre para entrar.</p></div>
         ${personas.length ? html`<div class="names">${personas.map((p) => html`<button class="names__btn" type="button" data-n="${p.nombre}" data-id="${p.personaId}">${avatar(p.nombre)}<span>${p.nombre}</span></button>`)}</div>`
           : html`<div class="notice">${icono('info')}<div class="notice__body">Todavía no hay accesos creados. Un administrador debe crearlos con <strong>scripts/crear-acceso.mjs</strong>.</div></div>`}
