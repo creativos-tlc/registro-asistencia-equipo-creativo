@@ -35,7 +35,7 @@ export function bienvenidaDelDia(nombre) {
   const shell = document.getElementById('shell');
   shell?.setAttribute('inert', '');
   const boton = raiz.querySelector('button');
-  boton.focus();
+  requestAnimationFrame(() => boton.focus());
 
   return new Promise((resolver) => {
     const cerrar = () => {
