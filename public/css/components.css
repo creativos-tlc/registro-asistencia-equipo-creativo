@@ -173,23 +173,24 @@ button.row:hover, a.row:hover { background: var(--s2); }
 /* ============ HOJA MODAL (dialog nativo: foco y Esc gratis) ============ */
 .sheet {
   border: 1px solid var(--line-2); padding: 0; color: var(--tx); background: var(--s1);
-  width: 100%; max-width: none; max-height: 92dvh; margin: auto 0 0;
+  width: 100%; max-width: none; height: -webkit-fit-content; height: fit-content; max-height: 92vh; max-height: 92dvh; margin: auto 0 0;
   border-radius: 22px 22px 0 0; overflow: hidden; box-shadow: var(--shadow-2);
 }
 .sheet[open] { display: flex; flex-direction: column; animation: hoja-sube var(--dur-2) var(--ease); }
 .sheet::backdrop { background: var(--scrim); animation: fundir var(--dur-2) var(--ease); }
 @keyframes hoja-sube { from { transform: translateY(28px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fundir { from { opacity: 0; } to { opacity: 1; } }
-.sheet__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-4) var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.sheet__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-4) var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--line); flex-shrink: 0; }
 .sheet__title { font-size: var(--t-lg); font-weight: 700; min-width: 0; }
-.sheet__body { padding: var(--sp-5); overflow-y: auto; overscroll-behavior: contain; flex: 1; display: flex; flex-direction: column; gap: var(--sp-5); }
+.sheet__body { padding: var(--sp-5); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; flex: 0 1 auto; min-height: 0; max-height: calc(92vh - 150px - var(--safe-b)); max-height: calc(92dvh - 150px - var(--safe-b)); display: flex; flex-direction: column; gap: var(--sp-5); }
 .sheet__body > * { flex-shrink: 0; }
-.sheet__foot { display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5) calc(var(--sp-3) + var(--safe-b)); border-top: 1px solid var(--line); flex-shrink: 0; background: var(--s1); }
+.sheet__foot { flex: none; display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5) calc(var(--sp-3) + var(--safe-b)); border-top: 1px solid var(--line); flex-shrink: 0; background: var(--s1); }
 .sheet__foot .btn--primary { flex: 1; }
 .sheet__foot .spacer { flex: 1; }
 @media (min-width: 720px) {
-  .sheet { width: min(600px, 92vw); margin: auto; border-radius: 22px; max-height: 88dvh; }
+  .sheet { width: min(600px, 92vw); margin: auto; border-radius: 22px; max-height: 88vh; max-height: 88dvh; }
   .sheet--wide { width: min(760px, 94vw); }
+  .sheet__body { max-height: calc(88vh - 150px); max-height: calc(88dvh - 150px); }
 }
 
 /* Menú de creación */
