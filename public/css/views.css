@@ -66,13 +66,13 @@
 }
 
 /* Semana y día: cuadrícula de horas */
-.tg { --head-h: 56px; --colmin: 92px; overflow: auto; max-height: calc(100dvh - 300px); min-height: 380px; background: var(--s1); border: 1px solid var(--line); border-radius: var(--r-lg); overscroll-behavior: contain; }
+.tg { --head-h: 66px; --colmin: 92px; overflow: auto; max-height: calc(100dvh - 300px); min-height: 380px; background: var(--s1); border: 1px solid var(--line); border-radius: var(--r-lg); overscroll-behavior: contain; }
 .tg[data-cols="1"] { --colmin: 0px; }
 .tg__inner { min-width: calc(56px + var(--cols) * var(--colmin)); }
 .tg__head, .tg__all { display: grid; grid-template-columns: 56px repeat(var(--cols), minmax(0, 1fr)); }
 .tg__head { position: sticky; top: 0; z-index: 4; background: var(--s2); border-bottom: 1px solid var(--line); }
 .tg__corner { position: sticky; left: 0; z-index: 3; background: inherit; }
-.tg__dia { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--sp-2) 0; min-height: var(--head-h); border-left: 1px solid var(--line); font-size: var(--t-xs); font-weight: 600; color: var(--tx-2); }
+.tg__dia { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--sp-2) 0; height: var(--head-h); justify-content: center; border-left: 1px solid var(--line); font-size: var(--t-xs); font-weight: 600; color: var(--tx-2); }
 .tg__dia strong { font-size: var(--t-lg); color: var(--tx); width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
 .tg__dia--hoy strong { background: var(--accent); color: var(--accent-ink); }
 .tg__dia--hoy { color: var(--accent-tx); }
@@ -112,7 +112,7 @@
 
 /* Semana en el celular: los 7 días caben sin desplazarse de lado */
 @media (max-width: 719px) {
-  .tg { --head-h: 52px; --colmin: 50px; max-height: calc(100dvh - 330px); }
+  .tg { --head-h: 64px; --colmin: 50px; max-height: calc(100dvh - 330px); }
   .tg__inner { min-width: 0; }
   .tg__head, .tg__all, .tg__body { grid-template-columns: 42px repeat(var(--cols), minmax(0, 1fr)); }
   .tg[data-cols="1"] .tg__head, .tg[data-cols="1"] .tg__all, .tg[data-cols="1"] .tg__body { grid-template-columns: 52px minmax(0, 1fr); }
@@ -120,7 +120,7 @@
   .tg__h { right: 4px; }
   .tg:not([data-cols="1"]) .ev { padding: 2px 3px; border-radius: 6px; }
   .tg:not([data-cols="1"]) .ev__h { display: none; }
-  .tg:not([data-cols="1"]) .ev__t { font-size: var(--t-xs); white-space: normal; word-break: break-word; line-height: 1.15; }
+  .tg:not([data-cols="1"]) .ev__t { font-size: var(--t-xs); white-space: normal; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; word-break: normal; overflow-wrap: break-word; hyphens: auto; line-height: 1.15; }
   .tg:not([data-cols="1"]) .tg__lbl { font-size: 10px; }
   .tg:not([data-cols="1"]) .mchip span.trunc { display: none; }
   .tg:not([data-cols="1"]) .mchip { justify-content: center; padding: 0; }
