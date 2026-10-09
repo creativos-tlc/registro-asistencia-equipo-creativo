@@ -112,6 +112,7 @@
   border: 1px solid color-mix(in srgb, var(--h) 35%, transparent);
 }
 .avatar--sm { --sz: 28px; }
+.avatar--md { --sz: 46px; }
 .avatar--lg { --sz: 64px; }
 .avatars { display: flex; }
 .avatars .avatar { margin-left: -8px; box-shadow: 0 0 0 2px var(--s1); }

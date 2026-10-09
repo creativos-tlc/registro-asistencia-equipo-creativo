@@ -95,11 +95,12 @@ p { text-wrap: pretty; }
   position: fixed; right: var(--sp-4); bottom: calc(var(--nav-h) + var(--safe-b) + var(--sp-4)); z-index: 35;
   width: 56px; height: 56px; border-radius: 18px;
   display: grid; place-items: center;
-  background: var(--accent); color: var(--accent-ink);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.2);
-  transition: transform var(--dur-1) var(--ease);
+  background: linear-gradient(180deg, var(--fab-alto) 0%, var(--accent) 100%);
+  color: var(--accent-ink);
+  box-shadow: var(--fab-sombra);
+  transition: transform var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease);
 }
-.fab:active { transform: scale(0.94); }
+.fab:active { transform: scale(0.94); box-shadow: var(--fab-sombra-presionado); }
 .fab .i { width: 26px; height: 26px; stroke-width: 2.2; }
 .fab--hidden { display: none; }
 

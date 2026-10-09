@@ -23,20 +23,32 @@ function filtradas() {
 function listaPersonas() {
   const arr = filtradas();
   if (!arr.length) {
-    return est.q || est.filtro !== 'activos'
+    return html`<div class="panel">${est.q || est.filtro !== 'activos'
       ? vacio({ icon: 'search', titulo: 'Sin resultados', texto: 'Prueba con otro nombre o cambia el filtro.' })
-      : vacio({ icon: 'users', titulo: 'Aún no hay voluntarios', texto: 'Suma a las personas del equipo con su contacto y las áreas donde ayudan.', boton: { accion: 'persona-nueva', texto: 'Agregar voluntario' } });
+      : vacio({ icon: 'users', titulo: 'Aún no hay voluntarios', texto: 'Suma a las personas del equipo con su contacto y las áreas donde ayudan.', boton: { accion: 'persona-nueva', texto: 'Agregar voluntario' } })}</div>`;
   }
-  return html`<div class="list">${arr.map((p) => {
+  return html`<div class="pers">${arr.map((p) => {
     const s = estadisticas(p.id);
     const edad = edadDe(p.anioNac);
-    return html`<button class="row" type="button" data-action="persona-ver" data-id="${p.id}">
-      ${avatar(p.nombre)}
-      <span class="row__main">
-        <span class="row__title">${nombreCompleto(p)} ${p.rol === 'lider' ? html`<span class="tag tag--accent" style="margin-left:4px">Líder</span>` : ''}${p.activo === false ? html`<span class="tag tag--bad" style="margin-left:4px">Archivado</span>` : ''}${p.tieneAcceso ? html`<span class="tag tag--info" style="margin-left:4px" title="Puede entrar a la app">${icono('lock', 'i--sm')} Acceso</span>` : ''}</span>
-        <span class="row__sub">${(p.areas || []).slice(0, 3).join(' · ') || 'Sin áreas'}${edad ? html`<span>${edad} años</span>` : ''}</span>
+    const areas = p.areas || [];
+    const meta = [areas.length ? areas.slice(0, 2).join(' · ') + (areas.length > 2 ? ` +${areas.length - 2}` : '') : 'Sin áreas', edad ? `${edad} años` : ''].filter(Boolean).join('  ·  ');
+    const etiquetas = [
+      p.rol === 'lider' ? html`<span class="tag tag--accent">Líder</span>` : '',
+      p.tieneAcceso ? html`<span class="tag tag--info" title="Puede entrar a la app">${icono('lock', 'i--sm')} Acceso</span>` : '',
+      p.activo === false ? html`<span class="tag tag--bad">Archivado</span>` : '',
+      s.racha >= 2 ? html`<span class="tag tag--accent" title="Asistencias seguidas">${icono('flame', 'i--sm')} ${s.racha} seguidas</span>` : '',
+    ].filter(Boolean);
+    return html`<button class="pcard" type="button" data-action="persona-ver" data-id="${p.id}">
+      ${avatar(p.nombre, 'md')}
+      <span class="pcard__main">
+        <span class="pcard__nombre trunc">${nombreCompleto(p)}</span>
+        <span class="pcard__meta">${meta}</span>
+        ${etiquetas.length ? html`<span class="pcard__tags">${etiquetas}</span>` : ''}
       </span>
-      <span class="row__end">${s.racha >= 2 ? html`<span class="tag tag--accent" title="Asistencias seguidas">${icono('flame', 'i--sm')} ${s.racha}</span>` : ''}${s.porcentaje !== null ? html`<span class="tag ${s.porcentaje >= 80 ? 'tag--ok' : s.porcentaje >= 50 ? 'tag--accent' : 'tag--bad'} num">${s.porcentaje}%</span>` : ''}${icono('chev-r', 'row__chev')}</span>
+      <span class="pcard__fin">
+        ${s.porcentaje !== null ? html`<span class="tag ${s.porcentaje >= 80 ? 'tag--ok' : s.porcentaje >= 50 ? 'tag--accent' : 'tag--bad'} num pcard__pct">${s.porcentaje}%</span>` : ''}
+        ${icono('chev-r', 'row__chev')}
+      </span>
     </button>`;
   })}</div>`;
 }
@@ -94,7 +106,7 @@ export const vistaEquipo = {
           <div class="chips chips--scroll" role="group" aria-label="Filtrar" style="margin:var(--sp-3) 0">
             ${[['activos', `Activos ${total}`], ['lideres', 'Líderes'], ['voluntarios', 'Voluntarios'], ['archivados', 'Archivados']].map(([k, l]) => html`<button class="chip" type="button" data-action="equipo-filtro" data-f="${k}" aria-pressed="${est.filtro === k}">${l}</button>`)}
           </div>
-          <div class="panel" id="listaPersonas">${listaPersonas()}</div>` : reporte()}
+          <div id="listaPersonas">${listaPersonas()}</div>` : reporte()}
       </div>`;
   },
   montar(raiz) {
