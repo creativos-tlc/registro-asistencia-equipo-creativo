@@ -26,6 +26,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     sel: hoy(),
     capas: new Set(capasFijas || (prefs[id] && prefs[id].capas) || ['eventos', 'tareas', 'contenido']),
     formato: null,
+    canal: null,
     capasFijas,
     conCanal,
     scrollTg: null,
@@ -37,7 +38,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     if (est.vista === 'dia') return [est.fecha, est.fecha];
     return [est.fecha, sumarDias(est.fecha, 29)];
   }
-  const items = () => { const [d, h] = rango(); return itemsCalendario({ desde: d, hasta: h, capas: [...est.capas].filter((c) => tienePermiso('contenido') || c !== 'contenido'), formato: est.formato }); };
+  const items = () => { const [d, h] = rango(); return itemsCalendario({ desde: d, hasta: h, capas: [...est.capas].filter((c) => tienePermiso('contenido') || c !== 'contenido'), formato: est.formato, canal: est.canal }); };
   const porFecha = (arr) => { const m = new Map(); arr.forEach((i) => { if (!m.has(i.fecha)) m.set(i.fecha, []); m.get(i.fecha).push(i); }); return m; };
 
   function tituloPeriodo() {
@@ -143,18 +144,26 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
       </section>`)}`;
   }
 
-  // Cuántos hay de cada formato en el período que se está viendo (el mes completo en la vista Mes).
+  // Encabezado de Contenido: el canal arriba y, dentro de Instagram, sus formatos. Los conteos son del período que se ve.
   function resumenFormatos() {
     let desde; let hasta;
     if (est.vista === 'mes') { desde = `${est.fecha.slice(0, 7)}-01`; hasta = `${est.fecha.slice(0, 7)}-31`; } else [desde, hasta] = rango();
     const todos = itemsCalendario({ desde, hasta, capas: ['contenido'] });
     const n = (k) => todos.filter((i) => i.formato === k).length;
-    return html`<div class="cal__formatos">
-      <div class="chips" role="group" aria-label="Filtrar por formato">
-        <button class="chip fchip" type="button" data-action="cal-formato" data-f="" aria-pressed="${!est.formato}">Todos <span class="num">${todos.length}</span></button>
-        ${Object.entries(FORMATOS).map(([k, f]) => html`<button class="chip fchip" type="button" style="--c:${f.color}" data-action="cal-formato" data-f="${k}" aria-pressed="${est.formato === k}"><span class="fmt fmt--mini" style="--c:${f.color}" aria-hidden="true">${f.letra}</span>${f.plural} <span class="num">${n(k)}</span></button>`)}
+    const nCanal = (c) => todos.filter((i) => i.canal === c).length;
+    const canales = [['', 'Todo', todos.length], ['instagram', 'Instagram', nCanal('instagram')], ['whatsapp', 'WhatsApp', nCanal('whatsapp')]];
+    const formatos = est.canal === 'whatsapp' ? ['whatsapp'] : est.canal === 'instagram' ? ['post', 'reel', 'historia'] : ['post', 'reel', 'historia', 'whatsapp'];
+    const detalle = est.canal === 'instagram'
+      ? html`<div class="chips" role="group" aria-label="Formato de Instagram">${formatos.map((k) => html`<button class="chip fchip" type="button" style="--c:${FORMATOS[k].color}" data-action="cal-formato" data-f="${k}" aria-pressed="${est.formato === k}"><span class="fmt fmt--mini" style="--c:${FORMATOS[k].color}" aria-hidden="true">${FORMATOS[k].letra}</span>${FORMATOS[k].plural} <span class="num">${n(k)}</span></button>`)}</div>`
+      : html`<div class="leyenda" aria-label="Cantidad por formato">${formatos.map((k) => html`<span class="leyenda__i" title="${FORMATOS[k].plural}" aria-label="${FORMATOS[k].plural}: ${n(k)}"><span class="fmt fmt--mini" style="--c:${FORMATOS[k].color}" aria-hidden="true">${FORMATOS[k].letra}</span><span class="num">${n(k)}</span>${formatos.length === 1 ? html` ${FORMATOS[k].plural}` : ''}</span>`)}</div>`;
+    return html`<div class="cal__filtros">
+      <div class="seg seg--block" role="group" aria-label="Canal">
+        ${canales.map(([k, l, c]) => html`<button class="seg__btn" type="button" data-action="cal-canal" data-canal="${k}" aria-pressed="${(est.canal || '') === k}">${l} <span class="num seg__n">${c}</span></button>`)}
       </div>
-      <button class="btn btn--soft btn--sm" type="button" data-action="cal-exportar">${icono('download', 'i--sm')} Descargar imagen</button>
+      <div class="cal__resumen">
+        ${detalle}
+        <button class="btn btn--soft btn--sm" type="button" data-action="cal-exportar" aria-label="Descargar la imagen del mes" title="Descargar la imagen del mes">${icono('download', 'i--sm')}<span class="solo-ancho">Imagen</span></button>
+      </div>
     </div>`;
   }
 
@@ -257,7 +266,8 @@ registrarAcciones({
     guardarPrefs({ [instancia.id]: { vista: instancia.vista, capas: [...instancia.capas] } });
     refrescar();
   },
-  'cal-formato': (el) => { instancia.formato = el.dataset.f || null; refrescar(); },
+  'cal-canal': (el) => { instancia.canal = el.dataset.canal || null; instancia.formato = null; refrescar(); },
+  'cal-formato': (el) => { instancia.formato = instancia.formato === el.dataset.f ? null : (el.dataset.f || null); refrescar(); },
   'cal-dia': (el) => {
     const f = el.dataset.fecha;
     if (esAncho()) { menuNuevoEn(f); return; }
@@ -277,7 +287,7 @@ registrarAcciones({
     toast('Preparando la imagen…');
     try {
       const todos = itemsCalendario({ desde: `${mes}-01`, hasta: `${mes}-31`, capas: ['contenido'] });
-      const resultado = await exportarMes({ mes, todos, formato: instancia.formato });
+      const resultado = await exportarMes({ mes, todos, formato: instancia.formato, canal: instancia.canal });
       if (resultado === 'descargada') toast('Imagen descargada');
     } catch (err) {
       console.error(err);

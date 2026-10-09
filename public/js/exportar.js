@@ -53,9 +53,10 @@ function insignia(ctx, x, y, tam, f, colores) {
   ctx.textAlign = 'left';
 }
 
-export async function dibujarMes({ mes, todos, formato }) {
+export async function dibujarMes({ mes, todos, formato, canal }) {
   await cargarFuentes();
-  const items = formato ? todos.filter((i) => i.formato === formato) : todos;
+  const items = todos.filter((i) => (!formato || i.formato === formato) && (!canal || i.canal === canal));
+  const activo = (k) => (!formato || formato === k) && (!canal || (k === 'whatsapp' ? 'whatsapp' : 'instagram') === canal);
   const c = { bg: token('--bg'), s1: token('--s1'), s2: token('--s2'), linea: token('--line-2'), tx: token('--tx'), tx2: token('--tx-2'), tx3: token('--tx-3'), accent: token('--accent') };
   const colores = Object.fromEntries(Object.entries(FORMATOS).map(([k, f]) => { const fondo = resolver(f.color); return [k, { fondo, tinta: tintaSobre(fondo) }]; }));
 
@@ -90,7 +91,7 @@ export async function dibujarMes({ mes, todos, formato }) {
   ctx.fillText(`Contenido · ${nombreMes(primero)}`, MARGEN, 92);
   ctx.fillStyle = c.tx2;
   ctx.font = '500 26px Outfit, system-ui, sans-serif';
-  const sub = formato ? `Solo ${FORMATOS[formato].plural}` : 'Instagram y WhatsApp · Equipo Creativo TLC';
+  const sub = formato ? `Solo ${FORMATOS[formato].plural}` : canal ? `Solo ${canal === 'instagram' ? 'Instagram' : 'WhatsApp'}` : 'Instagram y WhatsApp · Equipo Creativo TLC';
   ctx.fillText(sub, MARGEN, 132);
 
   // Resumen por formato
@@ -98,7 +99,7 @@ export async function dibujarMes({ mes, todos, formato }) {
   const yResumen = altoEncabezado + 14;
   Object.entries(FORMATOS).forEach(([k, f]) => {
     const cantidad = todos.filter((i) => i.formato === k).length;
-    ctx.globalAlpha = formato && formato !== k ? 0.4 : 1;
+    ctx.globalAlpha = activo(k) ? 1 : 0.4;
     insignia(ctx, x, yResumen, 44, k, colores);
     ctx.fillStyle = c.tx;
     ctx.font = '700 28px Outfit, system-ui, sans-serif';
@@ -185,10 +186,10 @@ export async function dibujarMes({ mes, todos, formato }) {
 const aBlob = (lienzo) => new Promise((ok, mal) => lienzo.toBlob((b) => (b ? ok(b) : mal(new Error('No se pudo crear el PNG'))), 'image/png'));
 
 /** Crea la imagen del mes y la comparte (WhatsApp, Guardar imagen…) o, si no se puede, la descarga. */
-export async function exportarMes({ mes, todos, formato }) {
-  const lienzo = await dibujarMes({ mes, todos, formato });
+export async function exportarMes({ mes, todos, formato, canal }) {
+  const lienzo = await dibujarMes({ mes, todos, formato, canal });
   const blob = await aBlob(lienzo);
-  const nombre = `contenido-${mes}${formato ? `-${formato}` : ''}.png`;
+  const nombre = `contenido-${mes}${formato ? `-${formato}` : canal ? `-${canal}` : ''}.png`;
   const archivo = new File([blob], nombre, { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
     try {

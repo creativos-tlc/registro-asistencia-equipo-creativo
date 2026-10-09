@@ -1,4 +1,4 @@
-import { estadisticas, personas } from '../datos.js';
+import { estadisticas, eventosOrdenados, listaTomada, pideLista, personas } from '../datos.js';
 import { edadDe, html, icono, norm, plural, poner, hoy } from '../util.js';
 import { avatar, registrarAcciones, vacio, toast } from '../ui.js';
 import { refrescar } from '../router.js';
@@ -58,18 +58,28 @@ function reporte() {
   const conDatos = filas.filter((f) => f.s.total > 0).sort((a, b) => (b.s.porcentaje ?? -1) - (a.s.porcentaje ?? -1) || b.s.p - a.s.p);
   const sinDatos = filas.filter((f) => f.s.total === 0);
   if (!conDatos.length) return html`<div class="panel">${vacio({ icon: 'tasks', titulo: 'Aún no hay asistencia registrada', texto: 'Cuando tomes lista en un evento, aquí verás el porcentaje y la racha de cada persona.' })}</div>`;
+  const con = conDatos.filter((f) => f.s.porcentaje !== null);
+  const promedio = con.length ? Math.round(con.reduce((n, f) => n + f.s.porcentaje, 0) / con.length) : null;
+  const listas = eventosOrdenados().filter((e) => e.fecha <= hoy() && pideLista(e) && listaTomada(e)).length;
+  const tono = (pct) => (pct >= 80 ? 'ok' : pct >= 50 ? 'accent' : 'bad');
   return html`
-    <div class="panel"><div class="tabla" role="table" aria-label="Asistencia por persona">
-      <div class="tabla__cab" role="row"><span>Persona</span><span title="Presente">Pres.</span><span title="Ausente">Aus.</span><span title="Justificó">Just.</span><span>Racha</span><span>%</span></div>
-      ${conDatos.map(({ p, s }) => html`
-        <button class="tabla__fila" type="button" role="row" data-action="persona-ver" data-id="${p.id}">
-          <span class="tabla__n">${avatar(p.nombre, 'sm')}<span class="trunc">${p.nombre}</span></span>
-          <span class="num">${s.p}</span><span class="num">${s.a}</span><span class="num">${s.j}</span>
-          <span class="num">${s.racha ? html`${icono('flame', 'i--sm')} ${s.racha}` : '–'}</span>
-          <span><span class="tag ${s.porcentaje >= 80 ? 'tag--ok' : s.porcentaje >= 50 ? 'tag--accent' : 'tag--bad'} num">${s.porcentaje === null ? '—' : `${s.porcentaje}%`}</span></span>
-        </button>`)}
-    </div></div>
-    ${sinDatos.length ? html`<p class="hint" style="margin-top:var(--sp-3)">Sin listas todavía: ${sinDatos.map((f) => f.p.nombre).join(', ')}.</p>` : ''}
+    <div class="asis-resumen">
+      <div class="asis-resumen__dato"><strong class="num">${promedio === null ? '—' : `${promedio}%`}</strong><span>asistencia promedio</span></div>
+      <div class="asis-resumen__dato"><strong class="num">${listas}</strong><span>${listas === 1 ? 'lista tomada' : 'listas tomadas'}</span></div>
+      <button class="btn btn--soft btn--sm asis-resumen__csv" type="button" data-action="equipo-csv">${icono('download', 'i--sm')} Descargar CSV</button>
+    </div>
+    <div class="pers">${conDatos.map(({ p, s }) => html`
+      <button class="pcard pcard--asis" type="button" data-action="persona-ver" data-id="${p.id}">
+        ${avatar(p.nombre, 'md')}
+        <span class="pcard__main">
+          <span class="pcard__nombre trunc">${nombreCompleto(p)}</span>
+          <span class="pcard__meta"><span class="cuenta cuenta--ok">${s.p} presente${s.p === 1 ? '' : 's'}</span> · <span class="cuenta cuenta--bad">${s.a} ausente${s.a === 1 ? '' : 's'}</span>${s.j ? html` · <span class="cuenta cuenta--info">${s.j} justificó</span>` : ''}</span>
+          <span class="barra" role="img" aria-label="${s.porcentaje ?? 0}% de asistencia"><span class="barra__r barra__r--${tono(s.porcentaje ?? 0)}" style="width:${s.porcentaje ?? 0}%"></span></span>
+          ${s.racha >= 2 ? html`<span class="pcard__tags"><span class="tag tag--accent">${icono('flame', 'i--sm')} ${s.racha} seguidas</span></span>` : ''}
+        </span>
+        <span class="pcard__fin"><span class="tag tag--${tono(s.porcentaje ?? 0)} num pcard__pct">${s.porcentaje === null ? '—' : `${s.porcentaje}%`}</span>${icono('chev-r', 'row__chev')}</span>
+      </button>`)}</div>
+    ${sinDatos.length ? html`<p class="hint" style="margin-top:var(--sp-4)">Sin listas todavía: ${sinDatos.map((f) => f.p.nombre).join(', ')}.</p>` : ''}
     <p class="hint" style="margin-top:var(--sp-2)">Los ausentes justificados no bajan el porcentaje ni cortan la racha.</p>`;
 }
 
@@ -99,7 +109,7 @@ export const vistaEquipo = {
           </div>
           ${est.modo === 'personas'
             ? html`<button class="btn btn--primary solo-lider" type="button" data-action="persona-nueva">${icono('user-plus', 'i--sm')} Agregar voluntario</button>`
-            : html`<button class="btn btn--soft" type="button" data-action="equipo-csv">${icono('download', 'i--sm')} Descargar CSV</button>`}
+            : ''}
         </div>
         ${est.modo === 'personas' ? html`
           <div class="buscar">${icono('search')}<input class="input" id="buscarPersona" type="search" placeholder="Buscar por nombre o área" value="${est.q}" aria-label="Buscar en el equipo" autocomplete="off"></div>
