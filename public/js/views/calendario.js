@@ -1,5 +1,5 @@
 /* Calendario unificado. `fabricarCalendario` sirve tanto al Calendario general como a Contenido. */
-import { esLider, guardar } from '../store.js';
+import { esLider, guardar, tienePermiso } from '../store.js';
 import { CANALES, FORMATOS } from '../model.js';
 import { exportarMes } from '../exportar.js';
 import { montarNotas, renderNotas } from './notas.js';
@@ -37,7 +37,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     if (est.vista === 'dia') return [est.fecha, est.fecha];
     return [est.fecha, sumarDias(est.fecha, 29)];
   }
-  const items = () => { const [d, h] = rango(); return itemsCalendario({ desde: d, hasta: h, capas: [...est.capas].filter((c) => esLider() || c !== 'contenido'), formato: est.formato }); };
+  const items = () => { const [d, h] = rango(); return itemsCalendario({ desde: d, hasta: h, capas: [...est.capas].filter((c) => tienePermiso('contenido') || c !== 'contenido'), formato: est.formato }); };
   const porFecha = (arr) => { const m = new Map(); arr.forEach((i) => { if (!m.has(i.fecha)) m.set(i.fecha, []); m.get(i.fecha).push(i); }); return m; };
 
   function tituloPeriodo() {
@@ -171,7 +171,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     else cuerpo = cuadricula(dias, arr);
 
     const equipo = equipoActual();
-    const tieneContenido = esLider() && (equipo.modulos || []).includes('contenido');
+    const tieneContenido = tienePermiso('contenido') && (equipo.modulos || []).includes('contenido');
     return html`
       <div class="cal" data-cal="${id}">
         <div class="cal__tools">
@@ -222,12 +222,13 @@ function paso(dir) {
 }
 
 function menuNuevoEn(fecha, hora = '') {
-  if (!esLider()) { acciones['tarea-nueva']({ dataset: { fecha } }); return; }
+  const soloContenido = instancia && instancia.capasFijas && instancia.capasFijas.length === 1 && instancia.capasFijas[0] === 'contenido';
+  if (!esLider() && !soloContenido && !tienePermiso('contenido')) { acciones['tarea-nueva']({ dataset: { fecha } }); return; }
   const modulos = equipoActual().modulos || [];
   const atr = raw(`data-fecha="${fecha}" data-hora="${hora}"`);
   const it = (accion, ic, t, c) => html`<button class="menu__item" type="button" data-action="${accion}" ${atr}><span class="typebadge" style="--c:${c}">${icono(ic)}</span><span><strong>${t}</strong></span></button>`;
   if (instancia && instancia.capasFijas && instancia.capasFijas.length === 1 && instancia.capasFijas[0] === 'contenido') { const f = instancia.formato; acciones['publicacion-nueva']({ dataset: { fecha, hora, canal: f === 'whatsapp' ? 'whatsapp' : 'instagram', formato: f && f !== 'whatsapp' ? f : '' } }); return; }
-  abrirHoja({ titulo: `${fechaLarga(fecha)}${hora ? ` · ${hora}` : ''}`, cuerpo: html`<div class="menu">${it('evento-nuevo', 'calendar', 'Evento', 'var(--info)')}${it('tarea-nueva', 'tasks', 'Tarea con fecha', 'var(--tx-2)')}${modulos.includes('contenido') ? it('publicacion-nueva', 'image', 'Publicación', 'var(--pink)') : ''}</div>` });
+  abrirHoja({ titulo: `${fechaLarga(fecha)}${hora ? ` · ${hora}` : ''}`, cuerpo: html`<div class="menu">${esLider() ? it('evento-nuevo', 'calendar', 'Evento', 'var(--info)') : ''}${it('tarea-nueva', 'tasks', 'Tarea con fecha', 'var(--tx-2)')}${modulos.includes('contenido') ? it('publicacion-nueva', 'image', 'Publicación', 'var(--pink)') : ''}</div>` });
 }
 
 function moverItem(clase, id, nuevaFecha, duplicar) {

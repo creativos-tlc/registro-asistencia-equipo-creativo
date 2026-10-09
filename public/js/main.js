@@ -1,4 +1,4 @@
-import { arrancar, comenzar, alExpirarSesion, suscribir, estadoSync, sincronizarAhora, yo, esLider, obtener, poner as guardarDoc } from './store.js';
+import { arrancar, comenzar, alExpirarSesion, suscribir, estadoSync, sincronizarAhora, yo, esLider, tienePermiso, obtener, poner as guardarDoc } from './store.js';
 import { EQUIPO_CREATIVO, EQUIPO_INICIAL, MODULOS, MODULOS_VOLUNTARIO } from './model.js';
 import { equipoActual } from './datos.js';
 import { html, icono, poner } from './util.js';
@@ -31,7 +31,7 @@ registrar('ajustes', vistaAjustes);
 function construirNav() {
   const equipo = equipoActual();
   const todos = (equipo.modulos || EQUIPO_INICIAL.modulos).filter((m) => MODULOS[m]);
-  const modulos = esLider() ? todos : todos.filter((m) => MODULOS_VOLUNTARIO.includes(m));
+  const modulos = esLider() ? todos : todos.filter((m) => MODULOS_VOLUNTARIO.includes(m) || (m === 'contenido' && tienePermiso('contenido')));
   limitarRutas(esLider() ? null : modulos.map((m) => MODULOS[m].ruta), modulos[0] ? MODULOS[modulos[0]].ruta : 'ajustes');
   const enlace = (m, clase) => html`<a class="${clase}" href="#/${MODULOS[m].ruta}" data-nav="${m}">${icono(MODULOS[m].icono)}<span>${MODULOS[m].label}</span></a>`;
   const tabbar = document.getElementById('tabbar');
@@ -72,7 +72,7 @@ document.addEventListener('tema-cambio', pintarTema);
 
 // ---------- menú de creación rápida ----------
 function menuCrear() {
-  if (!esLider()) { acciones['tarea-nueva']({ dataset: {} }); return; }
+  if (!esLider() && !tienePermiso('contenido')) { acciones['tarea-nueva']({ dataset: {} }); return; }
   const modulos = equipoActual().modulos || [];
   const item = (accion, ic, titulo, sub, color) => html`
     <button class="menu__item" type="button" data-action="${accion}">
@@ -82,10 +82,10 @@ function menuCrear() {
   abrirHoja({
     titulo: 'Crear',
     cuerpo: html`<div class="menu">
-      ${item('evento-nuevo', 'calendar', 'Evento', 'Reunión, servicio, ensayo o grabación', 'var(--info)')}
+      ${esLider() ? item('evento-nuevo', 'calendar', 'Evento', 'Reunión, servicio, ensayo o grabación', 'var(--info)') : ''}
       ${item('tarea-nueva', 'tasks', 'Tarea', 'Asignar algo a alguien del equipo', 'var(--tx-2)')}
       ${modulos.includes('contenido') ? item('publicacion-nueva', 'image', 'Publicación', 'Instagram o WhatsApp', 'var(--pink)') : ''}
-      ${item('persona-nueva', 'user-plus', 'Voluntario', 'Sumar a alguien al equipo', 'var(--accent)')}
+      ${esLider() ? item('persona-nueva', 'user-plus', 'Voluntario', 'Sumar a alguien al equipo', 'var(--accent)') : ''}
     </div>`,
   });
 }

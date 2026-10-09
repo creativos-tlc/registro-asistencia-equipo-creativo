@@ -94,7 +94,12 @@ export function verPersona(id) {
           <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap">
             <button class="btn btn--soft" type="button" data-action="persona-acceso" data-id="${id}">${icono('lock', 'i--sm')} ${p.tieneAcceso ? 'Restablecer PIN' : 'Dar acceso'}</button>
             ${p.tieneAcceso ? html`<button class="btn btn--ghost" type="button" data-action="persona-quitar-acceso" data-id="${id}">Quitar acceso</button>` : ''}
-          </div></section>` : ''}`,
+          </div>
+          ${p.tieneAcceso && p.rol !== 'lider' ? html`
+            <p class="muted" style="font-size:var(--t-sm);margin:var(--sp-4) 0 var(--sp-2)">Además de calendario y tareas, puede tener:</p>
+            <div class="chips"><button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="contenido" aria-pressed="${(p.permisos || []).includes('contenido')}">${icono('image', 'i--sm')} Contenido</button></div>
+            <p class="hint" style="margin-top:var(--sp-2)">Contenido: ve el calendario de publicaciones y puede crear y editar las de Instagram y WhatsApp.</p>` : ''}
+        </section>` : ''}`,
     pie: !esLider() ? '' : html`
       <button class="icon-btn icon-btn--danger" type="button" data-action="persona-eliminar" data-id="${id}" aria-label="Archivar o eliminar">${icono('trash')}</button>
       <span class="spacer"></span>
@@ -235,7 +240,22 @@ async function darAcceso(id) {
   }
 }
 
+async function alternarPermiso(id, permiso) {
+  const p = persona(id);
+  const actuales = new Set(p.permisos || []);
+  if (actuales.has(permiso)) actuales.delete(permiso); else actuales.add(permiso);
+  try {
+    const { permisos } = await api('admin/permisos', { metodo: 'POST', cuerpo: { personaId: id, permisos: [...actuales] } });
+    guardar([{ c: 'personas', id, data: { ...p, permisos } }]);
+    toast(permisos.includes(permiso) ? `${p.nombre} ahora puede usar Contenido` : `${p.nombre} ya no usa Contenido`);
+    verPersona(id);
+  } catch (e) {
+    toast(e.message || 'No se pudo cambiar el permiso', { tipo: 'error' });
+  }
+}
+
 registrarAcciones({
+  'persona-permiso': (el) => alternarPermiso(el.dataset.id, el.dataset.p),
   'persona-nueva': () => formPersona(),
   'persona-ver': (el) => verPersona(el.dataset.id),
   'persona-editar': (el) => formPersona({ base: persona(el.dataset.id) }),

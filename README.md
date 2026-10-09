@@ -47,6 +47,8 @@ Cada persona entra con su nombre y un PIN de 4 a 8 dígitos. Hay dos niveles:
 
 Un líder crea accesos desde la app: Equipo → Agregar voluntario → "Darle acceso a la app ahora" (o, en alguien ya existente, su perfil → "Dar acceso"). La app muestra un PIN temporal una sola vez; la persona lo cambia al entrar. El nivel sale del "Rol en el equipo" y se puede cambiar editando el perfil (nadie puede cambiarse el suyo). Por consola sigue disponible: `node scripts/crear-acceso.mjs "Nombre" --rol voluntario --remote`.
 
+A un voluntario se le puede sumar el permiso **Contenido** (ver el calendario de publicaciones y crear/editar las de Instagram y WhatsApp) desde su perfil en Equipo → "Acceso a la app" → Contenido.
+
 Tras 5 intentos fallidos el nombre se bloquea 15 minutos.
 
 ## Datos y respaldo

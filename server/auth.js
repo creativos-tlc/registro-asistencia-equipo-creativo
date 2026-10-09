@@ -20,6 +20,16 @@ async function sha256(texto) {
   return hex(await crypto.subtle.digest('SHA-256', codificar(texto)));
 }
 
+export const PERMISOS_VALIDOS = ['contenido'];
+const leerPermisos = (texto) => { try { const p = JSON.parse(texto || '[]'); return Array.isArray(p) ? p.filter((x) => PERMISOS_VALIDOS.includes(x)) : []; } catch { return []; } };
+
+export async function cambiarPermisos(env, personaId, permisos) {
+  const limpios = [...new Set((Array.isArray(permisos) ? permisos : []).filter((p) => PERMISOS_VALIDOS.includes(p)))];
+  const r = await env.DB.prepare('UPDATE credenciales SET permisos = ? WHERE persona_id = ? AND activo = 1').bind(JSON.stringify(limpios), personaId).run();
+  if (!r.meta.changes) throw new HttpError(404, 'Esa persona no tiene acceso a la app');
+  return limpios;
+}
+
 export function validarPinNuevo(pin) {
   if (!/^\d{4,8}$/.test(String(pin || ''))) throw new HttpError(400, 'El PIN debe tener entre 4 y 8 dígitos');
   if (PINES_DEBILES.has(pin) || /^(\d)\1+$/.test(pin)) throw new HttpError(400, 'Ese PIN es demasiado fácil de adivinar');
@@ -90,7 +100,7 @@ export async function iniciarSesion(env, request, { nombre, pin }) {
 
   const esHttps = new URL(request.url).protocol === 'https:';
   return {
-    yo: { personaId: cred.persona_id, nombre: cred.nombre, rol: cred.rol, debeCambiarPin: !!cred.debe_cambiar },
+    yo: { personaId: cred.persona_id, nombre: cred.nombre, rol: cred.rol, permisos: leerPermisos(cred.permisos), debeCambiarPin: !!cred.debe_cambiar },
     cookie: cookieSesion(token, SESION_MS / 1000, esHttps),
   };
 }
@@ -100,14 +110,14 @@ export async function sesionActual(env, request) {
   if (!token) return null;
   const fila = await env.DB
     .prepare(
-      `SELECT s.persona_id, s.expira_en, c.nombre, c.rol, c.debe_cambiar
+      `SELECT s.persona_id, s.expira_en, c.nombre, c.rol, c.permisos, c.debe_cambiar
        FROM sesiones s JOIN credenciales c ON c.persona_id = s.persona_id
        WHERE s.token_hash = ? AND c.activo = 1`
     )
     .bind(await sha256(token))
     .first();
   if (!fila || fila.expira_en < Date.now()) return null;
-  return { personaId: fila.persona_id, nombre: fila.nombre, rol: fila.rol, debeCambiarPin: !!fila.debe_cambiar };
+  return { personaId: fila.persona_id, nombre: fila.nombre, rol: fila.rol, permisos: leerPermisos(fila.permisos), debeCambiarPin: !!fila.debe_cambiar };
 }
 
 export async function exigirSesion(env, request) {

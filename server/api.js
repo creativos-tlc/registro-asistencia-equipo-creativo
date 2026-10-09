@@ -1,4 +1,5 @@
 import {
+  cambiarPermisos,
   cambiarPin,
   cambiarRol,
   cerrarSesion,
@@ -23,9 +24,13 @@ const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas', 
 const ESCRITURA_VOLUNTARIO = new Set(['tareas']);
 const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas'];
 
+// Lo que suma cada permiso extra (lo da un líder desde el perfil de la persona).
+const PERMISO_COLECCIONES = { contenido: ['publicaciones'] };
+
 function puede(yo, operacion, coleccion) {
   if (yo.rol === 'lider') return true;
-  return (operacion === 'leer' ? LECTURA_VOLUNTARIO : ESCRITURA_VOLUNTARIO).has(coleccion);
+  if ((operacion === 'leer' ? LECTURA_VOLUNTARIO : ESCRITURA_VOLUNTARIO).has(coleccion)) return true;
+  return (yo.permisos || []).some((p) => (PERMISO_COLECCIONES[p] || []).includes(coleccion));
 }
 
 // Un voluntario ve quién está en el equipo, pero no sus datos de contacto ni notas.
@@ -151,6 +156,13 @@ export async function manejar({ request, env }) {
         if (personaId === yo.personaId) throw new HttpError(400, 'No puedes cambiar tu propio nivel de permisos');
         await cambiarRol(env, String(personaId), String(rol));
         return responder({ ok: true });
+      }
+
+      case 'POST admin/permisos': {
+        const yo = await exigirSesion(env, request);
+        if (yo.rol !== 'lider') throw new HttpError(403, 'Solo un líder puede cambiar permisos');
+        const { personaId, permisos } = await leerJSON(request, 1024);
+        return responder({ permisos: await cambiarPermisos(env, String(personaId), permisos) });
       }
 
       case 'POST admin/quitar-acceso': {

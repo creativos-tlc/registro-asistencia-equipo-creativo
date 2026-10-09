@@ -109,7 +109,8 @@ export const obtener = (c, id) => (estado.docs[c]?.[id] ? { id, ...estado.docs[c
 // ---------- escritura ----------
 /** ops: [{c, id, data}] — data null borra. Devuelve una función `deshacer`. */
 export class ErrorPermiso extends Error {}
-export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'tareas';
+export const tienePermiso = (p) => estado.yo?.rol === 'lider' || !!estado.yo?.permisos?.includes(p);
+export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'tareas' || (c === 'publicaciones' && tienePermiso('contenido'));
 
 export function guardar(ops) {
   if (ops.some((op) => !puedeEscribir(op.c))) throw new ErrorPermiso('Solo los líderes pueden hacer este cambio.');
@@ -243,6 +244,9 @@ export async function arrancar() {
       localStorage.removeItem(CLAVE_CACHE);
     }
     estado.yo = persona;
+    // Si cambió su nivel o sus permisos, lo que ya bajó no incluye lo nuevo que ahora puede ver: se vuelve a bajar todo.
+    const firma = (y) => JSON.stringify([y?.rol, [...(y?.permisos || [])].sort()]);
+    if (cache && cache.yo && cache.yo.personaId === persona.personaId && firma(cache.yo) !== firma(persona)) estado.cursor = 0;
     return 'ok';
   } catch (e) {
     if (e.status === 401) {
