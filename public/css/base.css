@@ -85,7 +85,7 @@ p { text-wrap: pretty; }
   position: relative; text-decoration: none;
 }
 .tab:hover { color: var(--tx-2); }
-.tab[aria-current="page"] { color: var(--accent); }
+.tab[aria-current="page"] { color: var(--accent-tx); }
 .tab[aria-current="page"]::before {
   content: ""; position: absolute; top: 0; left: 30%; right: 30%; height: 2px; background: var(--accent); border-radius: 0 0 2px 2px;
 }
@@ -136,7 +136,7 @@ p { text-wrap: pretty; }
   color: var(--tx-2); font-weight: 600; text-decoration: none;
 }
 .side__link:hover { background: var(--s3); color: var(--tx); }
-.side__link[aria-current="page"] { background: var(--accent-soft); color: var(--accent-hi); }
+.side__link[aria-current="page"] { background: var(--accent-soft); color: var(--accent-tx); }
 .side__foot { border-top: 1px solid var(--line); padding-top: var(--sp-4); }
 
 .who { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }

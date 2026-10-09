@@ -60,6 +60,16 @@ function pintarSync() {
   poner(b, html`<span class="sync__dot"></span><span class="sync__txt">${txt}</span>`);
 }
 
+// ---------- tema claro / oscuro ----------
+function pintarTema() {
+  const claro = window.tlcTema.efectivo() === 'claro';
+  const b = document.getElementById('temaBtn');
+  b.setAttribute('aria-label', claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro');
+  b.title = claro ? 'Modo oscuro' : 'Modo claro';
+  poner(b, icono(claro ? 'moon' : 'sun'));
+}
+document.addEventListener('tema-cambio', pintarTema);
+
 // ---------- menú de creación rápida ----------
 function menuCrear() {
   if (!esLider()) { acciones['tarea-nueva']({ dataset: {} }); return; }
@@ -83,6 +93,7 @@ function menuCrear() {
 registrarAcciones({
   'crear-menu': () => menuCrear(),
   'ir-ajustes': () => ir('ajustes'),
+  'tema-alternar': () => window.tlcTema.fijar(window.tlcTema.efectivo() === 'claro' ? 'oscuro' : 'claro'),
   'recargar': () => location.reload(),
   'sync-ahora': async () => { await sincronizarAhora(); const s = estadoSync(); toast(s.estado === 'off' ? 'Sin conexión. Se enviará al reconectar.' : 'Todo sincronizado', { tipo: s.estado === 'off' ? 'error' : 'ok' }); },
 });
@@ -99,6 +110,7 @@ async function entrar() {
   if (!obtener('equipos', EQUIPO_CREATIVO)) guardarDoc('equipos', EQUIPO_CREATIVO, EQUIPO_INICIAL);
   construirNav();
   pintarSync();
+  pintarTema();
   iniciarRouter();
   await bienvenidaDelDia(yo().nombre);
   if (esLider()) ofrecerImportacion();

@@ -51,6 +51,7 @@ function cambiarPinHoja() {
 }
 
 registrarAcciones({
+  'tema-fijar': (el) => { window.tlcTema.fijar(el.dataset.t); refrescar(); },
   'ajustes-respaldo': respaldo,
   'ajustes-restaurar': () => document.getElementById('archivoRespaldo').click(),
   'ajustes-sync': async () => { await sincronizarAhora(); refrescar(); },
@@ -87,6 +88,12 @@ export const vistaAjustes = {
             ${fila('lock', 'Cambiar mi PIN', 'Entre 4 y 8 números', 'ajustes-pin')}
             ${fila('logout', 'Cerrar sesión', 'Este teléfono dejará de tener acceso hasta que vuelvas a entrar', 'ajustes-salir')}
           </div></div></section>
+
+        <section class="section"><div class="section__head"><h3 class="section__title">Apariencia</h3></div>
+          <div class="seg seg--block" role="group" aria-label="Tema de la app">
+            ${[['oscuro', 'Oscuro'], ['claro', 'Claro'], ['auto', 'Automático']].map(([k, l]) => html`<button class="seg__btn" type="button" data-action="tema-fijar" data-t="${k}" aria-pressed="${window.tlcTema.preferencia() === k}">${l}</button>`)}
+          </div>
+          <p class="hint" style="margin-top:var(--sp-2)">Automático sigue el modo de tu teléfono. También puedes alternar con el ícono de arriba.</p></section>
 
         <section class="section"><div class="section__head"><h3 class="section__title">Sincronización</h3></div>
           <div class="panel"><div class="list">

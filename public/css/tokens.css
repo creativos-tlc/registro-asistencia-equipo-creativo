@@ -26,6 +26,8 @@
   --accent-ink: #1c1102;
   --accent-soft: rgba(245, 166, 35, 0.14);
   --accent-line: rgba(245, 166, 35, 0.45);
+  --accent-tx: #ffbb4d; /* acento cuando se usa como color de texto */
+  --mix: #fff; /* con qué se aclara/oscurece un color al usarlo como texto */
 
   /* Semánticos */
   --info: #5aa2ff;
@@ -83,4 +85,50 @@
   --tap: 44px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   --safe-t: env(safe-area-inset-top, 0px);
+}
+
+/* ============================================================
+   TEMA CLARO — se activa con <html data-tema="claro">.
+   Contraste sobre --s1/--bg/--s3: tx ≥ 15:1, tx-2 ≥ 7:1, tx-3 ≥ 4.6:1; colores de texto ≥ 4.5:1.
+   ============================================================ */
+:root[data-tema="claro"] {
+  color-scheme: light;
+
+  --bg: #f1f2f5;
+  --s1: #ffffff;
+  --s2: #f6f7f9;
+  --s3: #eceef2;
+  --s4: #ffffff;
+  --line: rgba(20, 24, 32, 0.1);
+  --line-2: rgba(20, 24, 32, 0.2);
+  --scrim: rgba(20, 24, 32, 0.45);
+
+  --tx: #12151b;
+  --tx-2: #454c5a;
+  --tx-3: #636b7a;
+
+  --accent-hi: #e8940c;
+  --accent-soft: rgba(245, 166, 35, 0.2);
+  --accent-line: rgba(160, 100, 0, 0.5);
+  --accent-tx: #8f5200;
+  --mix: #000;
+
+  --info: #1b66c4;
+  --ok: #0f7a54;
+  --bad: #c0361a;
+  --violet: #7545d6;
+  --teal: #0c7a70;
+  --pink: #c0346f;
+  --orange: #b25000;
+  --on-fmt: #ffffff;
+  --info-soft: rgba(27, 102, 196, 0.12);
+  --ok-soft: rgba(15, 122, 84, 0.12);
+  --bad-soft: rgba(192, 54, 26, 0.12);
+  --violet-soft: rgba(117, 69, 214, 0.12);
+  --teal-soft: rgba(12, 122, 112, 0.12);
+  --pink-soft: rgba(192, 52, 111, 0.12);
+  --gray-soft: rgba(70, 78, 92, 0.12);
+
+  --shadow-1: 0 1px 2px rgba(20, 24, 32, 0.12);
+  --shadow-2: 0 10px 30px rgba(20, 24, 32, 0.18);
 }
