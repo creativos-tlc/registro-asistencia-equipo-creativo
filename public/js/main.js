@@ -118,11 +118,14 @@ async function entrar() {
 
 iniciarAcciones();
 iniciarHoja();
+document.addEventListener('focusout', (e) => { if (e.target.matches?.('textarea.nb__txt')) setTimeout(() => { if (!document.activeElement?.closest?.('.notas')) solicitarRefresco(); }, 150); });
 
 suscribir((colecciones) => {
   if (colecciones.has('_sync')) pintarSync();
   if ([...colecciones].some((c) => c !== '_sync')) {
     if (colecciones.has('equipos')) construirNav();
+    // Mientras se escribe en la hoja de notas no se redibuja (se perdería el cursor); al salir de la línea se actualiza.
+    if (colecciones.size === 1 && colecciones.has('notas') && document.activeElement?.closest?.('.notas')) return;
     solicitarRefresco();
   }
 });

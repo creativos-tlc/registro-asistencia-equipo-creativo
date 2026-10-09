@@ -32,6 +32,26 @@ export const FORMATOS = {
 };
 export const claveFormato = (p) => (p.canal === 'whatsapp' ? 'whatsapp' : FORMATOS[p.formato] ? p.formato : 'post');
 
+/** Tipos de línea de la hoja de notas y colores para agrupar. */
+export const NOTA_TIPOS = {
+  h1:     { label: 'Título' },
+  h2:     { label: 'Subtítulo' },
+  p:      { label: 'Texto' },
+  check:  { label: 'Casilla' },
+  bullet: { label: 'Lista' },
+};
+export const NOTA_COLORES = {
+  ambar:    { label: 'Ámbar',    color: 'var(--accent)' },
+  azul:     { label: 'Azul',     color: 'var(--info)' },
+  verde:    { label: 'Verde',    color: 'var(--ok)' },
+  rosa:     { label: 'Rosa',     color: 'var(--pink)' },
+  violeta:  { label: 'Violeta',  color: 'var(--violet)' },
+  turquesa: { label: 'Turquesa', color: 'var(--teal)' },
+  naranja:  { label: 'Naranja',  color: 'var(--orange)' },
+  gris:     { label: 'Gris',     color: 'var(--tx-3)' },
+};
+export const HOJA_NOTAS = 'principal';
+
 export const ESTADOS_CONTENIDO = {
   idea:      { label: 'Idea',      tag: '' },
   listo:     { label: 'Listo',     tag: 'tag--info' },

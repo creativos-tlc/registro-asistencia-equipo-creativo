@@ -11,7 +11,7 @@ import {
 } from './auth.js';
 import { HttpError, leerJSON, responder } from './util.js';
 
-const COLECCIONES = new Set(['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'ajustes']);
+const COLECCIONES = new Set(['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'ajustes']);
 const ID_VALIDO = /^[\w:~.-]{1,90}$/;
 const MAX_OPS = 300;
 const MAX_DATA = 24 * 1024;
@@ -19,7 +19,7 @@ const LIMITE_PULL = 5000;
 
 // Punto único de permisos. Hoy solo entran líderes; cuando entren voluntarios se afina aquí.
 // Un voluntario ve el calendario y las tareas, y puede crear y asignar tareas. Nada más.
-const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas']);
+const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas', 'notas']);
 const ESCRITURA_VOLUNTARIO = new Set(['tareas']);
 const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas'];
 

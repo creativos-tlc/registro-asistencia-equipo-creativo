@@ -2,6 +2,7 @@
 import { esLider, guardar } from '../store.js';
 import { CANALES, FORMATOS } from '../model.js';
 import { exportarMes } from '../exportar.js';
+import { montarNotas, renderNotas } from './notas.js';
 import { distribuirSolapes, equipoActual, evento, itemsCalendario, publicacion, tarea } from '../datos.js';
 import { aISO, aMin, deMin, fechaLarga, hoy, html, icono, inicioMes, inicioSemana, leerISO, nombreDiaCorto, nombreMes, nuevoId, raw, sumarDias, sumarMeses, fechaDiaMes, plural, dif, diaSemana, clamp } from '../util.js';
 import { abrirHoja, acciones, registrarAcciones, toast, vacio } from '../ui.js';
@@ -160,10 +161,12 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
   // ---------- render ----------
   function render() {
     instancia = est;
-    const arr = items();
+    const esNotas = est.vista === 'notas' && !capasFijas;
+    const arr = esNotas ? [] : items();
     const dias = est.vista === 'semana' ? Array.from({ length: 7 }, (_, k) => sumarDias(inicioSemana(est.fecha), k)) : [est.fecha];
     let cuerpo;
-    if (est.vista === 'mes') cuerpo = vistaMes(arr);
+    if (esNotas) cuerpo = renderNotas();
+    else if (est.vista === 'mes') cuerpo = vistaMes(arr);
     else if (est.vista === 'agenda') cuerpo = vistaAgenda(arr);
     else cuerpo = cuadricula(dias, arr);
 
@@ -173,22 +176,23 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
       <div class="cal" data-cal="${id}">
         <div class="cal__tools">
           <div class="seg" role="tablist" aria-label="Vista del calendario">
-            ${[['mes', 'Mes'], ['semana', 'Semana'], ['dia', 'Día'], ['agenda', 'Agenda']].map(([k, l]) => html`<button class="seg__btn" type="button" role="tab" data-action="cal-vista" data-v="${k}" aria-selected="${est.vista === k}">${l}</button>`)}
+            ${[['mes', 'Mes'], ['semana', 'Semana'], ['dia', 'Día'], ['agenda', 'Agenda'], ...(capasFijas ? [] : [['notas', 'Notas']])].map(([k, l]) => html`<button class="seg__btn" type="button" role="tab" data-action="cal-vista" data-v="${k}" aria-selected="${est.vista === k}">${l}</button>`)}
           </div>
-          <div class="cal__nav">
+          ${esNotas ? '' : html`<div class="cal__nav">
             <button class="icon-btn" type="button" data-action="cal-prev" aria-label="Anterior">${icono('chev-l')}</button>
             <strong class="cal__titulo">${tituloPeriodo()}</strong>
             <button class="icon-btn" type="button" data-action="cal-next" aria-label="Siguiente">${icono('chev-r')}</button>
             <button class="btn btn--soft btn--sm" type="button" data-action="cal-hoy">Hoy</button>
-          </div>
+          </div>`}
         </div>
-        ${capasFijas ? '' : html`<div class="chips chips--scroll" role="group" aria-label="Qué mostrar">${Object.entries(CAPAS).filter(([k]) => k !== 'contenido' || tieneContenido).map(([k, v]) => html`<button class="chip chip--dot" type="button" style="--c:${v.color}" data-action="cal-capa" data-capa="${k}" aria-pressed="${est.capas.has(k)}">${v.label}</button>`)}</div>`}
+        ${capasFijas || esNotas ? '' : html`<div class="chips chips--scroll" role="group" aria-label="Qué mostrar">${Object.entries(CAPAS).filter(([k]) => k !== 'contenido' || tieneContenido).map(([k, v]) => html`<button class="chip chip--dot" type="button" style="--c:${v.color}" data-action="cal-capa" data-capa="${k}" aria-pressed="${est.capas.has(k)}">${v.label}</button>`)}</div>`}
         ${conCanal ? resumenFormatos() : ''}
         <div class="cal__body" id="calBody">${cuerpo}</div>
       </div>`;
   }
 
   function montar(raizVista) {
+    if (est.vista === 'notas' && !capasFijas) { montarNotas(raizVista); return; }
     const tg = raizVista.querySelector('.tg');
     if (tg) {
       const objetivo = est.scrollTg ?? est._scrollInicial;

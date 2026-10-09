@@ -117,6 +117,9 @@ export function agruparTareas(arr, h = hoy()) {
   return grupos.filter((g) => g.items.length);
 }
 
+// ---------- notas ----------
+export const bloquesNotas = () => [...lista('notas')].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+
 // ---------- contenido ----------
 export const publicaciones = () => lista('publicaciones');
 export const publicacion = (id) => obtener('publicaciones', id);

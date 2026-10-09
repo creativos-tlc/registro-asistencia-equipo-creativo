@@ -56,7 +56,12 @@ export function refrescar({ cambioDeRuta = false } = {}) {
   poner(raiz, vista.render({ param, consulta }));
   vista.montar?.(raiz, { param, consulta, mismaRuta });
 
-  if (mismaRuta) { window.scrollTo(0, scroll); restaurarFoco(idFoco, sel); }
+  if (mismaRuta) {
+    window.scrollTo(0, scroll);
+    // Si la vista ya movió el foco a otro elemento (p. ej. la línea nueva de una nota), se respeta.
+    const activo = document.activeElement;
+    if (!activo || activo === document.body || activo === raiz) restaurarFoco(idFoco, sel);
+  }
   else { window.scrollTo(0, 0); raiz.focus({ preventScroll: true }); }
 }
 
