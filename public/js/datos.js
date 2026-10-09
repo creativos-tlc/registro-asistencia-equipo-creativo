@@ -1,6 +1,6 @@
 /* Consultas y reglas de negocio sobre los datos. Las vistas nunca calculan por su cuenta. */
 import { lista, obtener } from './store.js';
-import { tipoDe, EQUIPO_INICIAL, EQUIPO_CREATIVO, DIAS_ASISTENCIA_PENDIENTE, CANALES } from './model.js';
+import { tipoDe, EQUIPO_INICIAL, EQUIPO_CREATIVO, DIAS_ASISTENCIA_PENDIENTE, CANALES, FORMATOS, claveFormato } from './model.js';
 import { aMin, dif, hoy, porNombre, sumarDias } from './util.js';
 
 // ---------- equipo ----------
@@ -123,7 +123,7 @@ export const publicacion = (id) => obtener('publicaciones', id);
 
 // ---------- calendario unificado ----------
 /** Normaliza eventos, tareas con fecha y publicaciones en un solo formato para dibujar. */
-export function itemsCalendario({ desde, hasta, capas = ['eventos', 'tareas', 'contenido'], canal = null }) {
+export function itemsCalendario({ desde, hasta, capas = ['eventos', 'tareas', 'contenido'], formato = null }) {
   const items = [];
   if (capas.includes('eventos')) {
     for (const e of eventos()) {
@@ -141,9 +141,11 @@ export function itemsCalendario({ desde, hasta, capas = ['eventos', 'tareas', 'c
   if (capas.includes('contenido')) {
     for (const p of publicaciones()) {
       if (p.fecha < desde || p.fecha > hasta) continue;
-      if (canal && p.canal !== canal) continue;
+      const clave = claveFormato(p);
+      if (formato && clave !== formato) continue;
       const c = CANALES[p.canal] || CANALES.instagram;
-      items.push({ clase: 'contenido', id: p.id, fecha: p.fecha, ini: p.hora || '', fin: '', titulo: p.titulo, color: c.color, icono: c.icono, sub: c.formatos[p.formato] || c.label, hecha: p.estado === 'publicado' });
+      const f = FORMATOS[clave];
+      items.push({ clase: 'contenido', id: p.id, fecha: p.fecha, ini: p.hora || '', fin: '', titulo: p.titulo, color: f.color, letra: f.letra, formato: clave, icono: c.icono, sub: c.formatos[p.formato] || c.label, hecha: p.estado === 'publicado' });
     }
   }
   return items.sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.ini || '').localeCompare(b.ini || '') || a.titulo.localeCompare(b.titulo, 'es'));

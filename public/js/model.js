@@ -20,9 +20,18 @@ export const ESTADOS_TAREA = {
 export const PRIORIDADES = { normal: 'Normal', alta: 'Alta' };
 
 export const CANALES = {
-  instagram: { label: 'Instagram', color: 'var(--pink)', icono: 'instagram', formatos: { post: 'Post de feed', historia: 'Historia', reel: 'Reel' } },
+  instagram: { label: 'Instagram', color: 'var(--pink)', icono: 'instagram', formatos: { post: 'Feed', historia: 'Historia', reel: 'Reel' } },
   whatsapp:  { label: 'WhatsApp',  color: 'var(--ok)',   icono: 'message',   formatos: { estado: 'Estado', mensaje: 'Mensaje', encuesta: 'Encuesta', video: 'Video', foto: 'Foto' } },
 };
+/** Cómo se distingue cada tipo de contenido de un vistazo: color + letra. */
+export const FORMATOS = {
+  post:     { letra: 'F', label: 'Feed',     plural: 'Feed',      color: 'var(--info)' },
+  reel:     { letra: 'R', label: 'Reel',     plural: 'Reels',     color: 'var(--pink)' },
+  historia: { letra: 'H', label: 'Historia', plural: 'Historias', color: 'var(--orange)' },
+  whatsapp: { letra: 'W', label: 'WhatsApp', plural: 'WhatsApp',  color: 'var(--ok)' },
+};
+export const claveFormato = (p) => (p.canal === 'whatsapp' ? 'whatsapp' : FORMATOS[p.formato] ? p.formato : 'post');
+
 export const ESTADOS_CONTENIDO = {
   idea:      { label: 'Idea',      tag: '' },
   listo:     { label: 'Listo',     tag: 'tag--info' },

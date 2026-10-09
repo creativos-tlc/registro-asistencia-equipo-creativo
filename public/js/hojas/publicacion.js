@@ -6,7 +6,7 @@ import { abrirHoja, cerrarHoja, confirmar, leerForm, marcarError, registrarAccio
 
 const opcionesFormato = (canal, actual) => Object.entries(CANALES[canal].formatos).map(([k, v]) => html`<option value="${k}" ${raw(k === actual ? 'selected' : '')}>${v}</option>`);
 
-export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal = 'instagram' } = {}) {
+export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal = 'instagram', formato = '' } = {}) {
   const b = base || {};
   const esNueva = !b.id;
   const c = b.canal || canal;
@@ -23,7 +23,7 @@ export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal =
           <div class="field"><label for="pu-hora">Hora <span class="opt">(opcional)</span></label><input class="input" id="pu-hora" name="hora" type="time" value="${b.hora ?? hora}"></div>
         </div>
         <div class="form-grid form-grid--2 keep">
-          <div class="field"><label for="pu-formato">Formato</label><select class="select" id="pu-formato" name="formato">${opcionesFormato(c, b.formato)}</select></div>
+          <div class="field"><label for="pu-formato">Formato</label><select class="select" id="pu-formato" name="formato">${opcionesFormato(c, b.formato || formato)}</select></div>
           <div class="field"><label for="pu-estado">Estado</label><select class="select" id="pu-estado" name="estado">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<option value="${k}" ${raw((b.estado || 'idea') === k ? 'selected' : '')}>${v.label}</option>`)}</select></div>
         </div>
         <div class="field"><label for="pu-resp">Responsable <span class="opt">(opcional)</span></label>
@@ -56,7 +56,7 @@ function guardarPublicacion() {
 }
 
 registrarAcciones({
-  'publicacion-nueva': (el) => formPublicacion({ fecha: el?.dataset.fecha || hoy(), hora: el?.dataset.hora || '', canal: el?.dataset.canal || 'instagram' }),
+  'publicacion-nueva': (el) => formPublicacion({ fecha: el?.dataset.fecha || hoy(), hora: el?.dataset.hora || '', canal: el?.dataset.canal || 'instagram', formato: el?.dataset.formato || '' }),
   'publicacion-editar': (el) => formPublicacion({ base: publicacion(el.dataset.id) }),
   'publicacion-guardar': guardarPublicacion,
   'publicacion-duplicar': (el) => {

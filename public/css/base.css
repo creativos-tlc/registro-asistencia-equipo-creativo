@@ -1,7 +1,7 @@
 /* ============ RESET + BASE ============ */
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 
 body {
   min-height: 100dvh;
@@ -11,6 +11,8 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  /* La página no se arrastra de lado (sí se puede ampliar con dos dedos). Las filas que se deslizan a propósito lo permiten abajo. */
+  touch-action: pan-y pinch-zoom;
 }
 
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -147,3 +149,5 @@ p { text-wrap: pretty; }
   html { scroll-behavior: auto; }
   .sheet[open], .toast, .fab, .btn, .chip, .row, .bienvenida { animation: none !important; transform: none !important; }
 }
+
+.chips--scroll, .tg { touch-action: pan-x pan-y pinch-zoom; }

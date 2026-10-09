@@ -272,3 +272,17 @@ button.row:hover, a.row:hover { background: var(--s2); }
 .bienvenida__saludo { font-size: var(--t-sm); font-weight: 600; color: var(--tx-2); }
 .bienvenida .btn { min-width: 11rem; margin-top: var(--sp-2); }
 @media (min-width: 720px) { .frase--grande blockquote { font-size: var(--t-2xl); } }
+
+/* ============ FORMATOS DE CONTENIDO: color + letra ============ */
+.fmt {
+  display: inline-grid; place-items: center; flex-shrink: 0;
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--c); color: var(--on-fmt);
+  font-size: var(--t-xs); font-weight: 800; line-height: 1;
+}
+.fmt--mini { width: 18px; height: 18px; border-radius: 5px; }
+.typebadge--letra { font-size: var(--t-md); font-weight: 800; }
+.fchip { gap: 8px; }
+.fchip .num { color: var(--tx-2); font-weight: 700; }
+.fchip[aria-pressed="true"] { background: color-mix(in srgb, var(--c, var(--accent)) 18%, var(--s2)); border-color: color-mix(in srgb, var(--c, var(--accent)) 65%, transparent); color: var(--tx); }
+.fchip[aria-pressed="true"] .num { color: var(--tx); }

@@ -1,6 +1,7 @@
 /* Calendario unificado. `fabricarCalendario` sirve tanto al Calendario general como a Contenido. */
 import { esLider, guardar } from '../store.js';
-import { CANALES } from '../model.js';
+import { CANALES, FORMATOS } from '../model.js';
+import { exportarMes } from '../exportar.js';
 import { distribuirSolapes, equipoActual, evento, itemsCalendario, publicacion, tarea } from '../datos.js';
 import { aISO, aMin, deMin, fechaLarga, hoy, html, icono, inicioMes, inicioSemana, leerISO, nombreDiaCorto, nombreMes, nuevoId, raw, sumarDias, sumarMeses, fechaDiaMes, plural, dif, diaSemana, clamp } from '../util.js';
 import { abrirHoja, acciones, registrarAcciones, toast, vacio } from '../ui.js';
@@ -23,7 +24,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     fecha: hoy(),
     sel: hoy(),
     capas: new Set(capasFijas || (prefs[id] && prefs[id].capas) || ['eventos', 'tareas', 'contenido']),
-    canal: null,
+    formato: null,
     capasFijas,
     conCanal,
     scrollTg: null,
@@ -35,7 +36,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     if (est.vista === 'dia') return [est.fecha, est.fecha];
     return [est.fecha, sumarDias(est.fecha, 29)];
   }
-  const items = () => { const [d, h] = rango(); return itemsCalendario({ desde: d, hasta: h, capas: [...est.capas].filter((c) => esLider() || c !== 'contenido'), canal: est.canal }); };
+  const items = () => { const [d, h] = rango(); return itemsCalendario({ desde: d, hasta: h, capas: [...est.capas].filter((c) => esLider() || c !== 'contenido'), formato: est.formato }); };
   const porFecha = (arr) => { const m = new Map(); arr.forEach((i) => { if (!m.has(i.fecha)) m.set(i.fecha, []); m.get(i.fecha).push(i); }); return m; };
 
   function tituloPeriodo() {
@@ -49,8 +50,10 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
   const attrsItem = (i) => raw(`data-action="cal-abrir" data-clase="${i.clase}" data-id="${i.id}"`);
   const attrsDrag = (i) => raw(`draggable="true" data-drag="${i.clase}:${i.id}"`);
 
+  const insignia = (i, mini = false) => html`<span class="fmt${mini ? ' fmt--mini' : ''}" style="--c:${i.color}" aria-hidden="true">${i.letra}</span>`;
+
   function chipMes(i) {
-    return html`<button class="mchip ${i.hecha ? 'mchip--hecha' : ''}" type="button" style="--c:${i.color}" ${attrsItem(i)} ${attrsDrag(i)} title="${i.titulo}">${i.ini ? html`<span class="mchip__h num">${i.ini}</span>` : icono(i.icono, 'i--sm')}<span class="trunc">${i.titulo}</span></button>`;
+    return html`<button class="mchip ${i.hecha ? 'mchip--hecha' : ''}" type="button" style="--c:${i.color}" ${attrsItem(i)} ${attrsDrag(i)} title="${i.titulo}">${i.letra ? insignia(i) : i.ini ? html`<span class="mchip__h num">${i.ini}</span>` : icono(i.icono, 'i--sm')}<span class="trunc">${i.titulo}</span></button>`;
   }
 
   function vistaMes(arr) {
@@ -73,7 +76,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
           <div class="mc ${fuera ? 'mc--fuera' : ''} ${f === hoy() ? 'mc--hoy' : ''} ${f === est.sel ? 'mc--sel' : ''} ${diaSemana(f) === 6 ? 'mc--dom' : ''}" role="gridcell" data-fecha="${f}">
             <button class="mc__num" type="button" data-action="cal-dia" data-fecha="${f}" aria-label="${fechaLarga(f)}${its.length ? `, ${plural(its.length, 'elemento', 'elementos')}` : ''}">${Number(f.slice(8))}</button>
             <div class="mc__chips">${its.slice(0, 3).map(chipMes)}${its.length > 3 ? html`<button class="mchip mchip--mas" type="button" data-action="cal-ver-dia" data-fecha="${f}">+${its.length - 3} más</button>` : ''}</div>
-            <div class="mc__dots" aria-hidden="true">${its.slice(0, 4).map((i) => html`<span class="dot" style="--c:${i.color}"></span>`)}</div>
+            <div class="mc__dots" aria-hidden="true">${its.slice(0, 6).map((i) => (i.letra ? insignia(i, true) : html`<span class="dot" style="--c:${i.color}"></span>`))}${its.length > 6 ? html`<span class="mc__mas">+</span>` : ''}</div>
           </div>`;
         })}</div>`)}
       </div>
@@ -89,7 +92,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
 
   function filaItem(i) {
     return html`<button class="row ${i.hecha ? 'row--done' : ''}" type="button" ${attrsItem(i)}>
-      <span class="typebadge" style="--c:${i.color}">${icono(i.icono)}</span>
+      ${i.letra ? html`<span class="typebadge typebadge--letra" style="--c:${i.color}" aria-hidden="true">${i.letra}</span>` : html`<span class="typebadge" style="--c:${i.color}">${icono(i.icono)}</span>`}
       <span class="row__main"><span class="row__title">${i.titulo}</span><span class="row__sub"><span class="num">${i.ini ? (i.fin ? `${i.ini} – ${i.fin}` : i.ini) : 'Todo el día'}</span><span>${i.sub}</span></span></span>
       ${icono('chev-r', 'row__chev')}</button>`;
   }
@@ -120,7 +123,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
               const blocks = distribuirSolapes(por.get(f) || []);
               const ahoraAqui = f === hoy() && minAhora >= desde * 60 && minAhora <= hasta * 60;
               return html`<div class="tg__col ${f === hoy() ? 'tg__col--hoy' : ''}" data-fecha="${f}" data-desde="${desde}">
-                ${blocks.map((b) => html`<button class="ev ${b.hecha ? 'ev--hecha' : ''}" type="button" style="--c:${b.color};top:${((b._ini - desde * 60) / 60) * HH}px;height:${Math.max(30, ((b._fin - b._ini) / 60) * HH - 3)}px;left:calc(${(b._col / b._cols) * 100}% + 2px);width:calc(${100 / b._cols}% - 4px)" ${attrsItem(b)} ${attrsDrag(b)} title="${b.titulo}"><span class="ev__t trunc">${b.titulo}</span><span class="ev__h num">${b.ini}${b.fin ? ` – ${b.fin}` : ''}</span></button>`)}
+                ${blocks.map((b) => html`<button class="ev ${b.hecha ? 'ev--hecha' : ''}" type="button" style="--c:${b.color};top:${((b._ini - desde * 60) / 60) * HH}px;height:${Math.max(30, ((b._fin - b._ini) / 60) * HH - 3)}px;left:calc(${(b._col / b._cols) * 100}% + 2px);width:calc(${100 / b._cols}% - 4px)" ${attrsItem(b)} ${attrsDrag(b)} title="${b.titulo}"><span class="ev__t trunc">${b.letra ? html`${insignia(b, true)} ` : ''}${b.titulo}</span><span class="ev__h num">${b.ini}${b.fin ? ` – ${b.fin}` : ''}</span></button>`)}
                 ${ahoraAqui ? html`<span class="tg__now" style="top:${((minAhora - desde * 60) / 60) * HH}px"></span>` : ''}
               </div>`;
             })}
@@ -137,6 +140,21 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
         <div class="section__head"><h3 class="section__title">${dif(f, hoy()) === 0 ? `Hoy · ${fechaLarga(f)}` : fechaLarga(f)}</h3></div>
         <div class="panel"><div class="list">${por.get(f).map(filaItem)}</div></div>
       </section>`)}`;
+  }
+
+  // Cuántos hay de cada formato en el período que se está viendo (el mes completo en la vista Mes).
+  function resumenFormatos() {
+    let desde; let hasta;
+    if (est.vista === 'mes') { desde = `${est.fecha.slice(0, 7)}-01`; hasta = `${est.fecha.slice(0, 7)}-31`; } else [desde, hasta] = rango();
+    const todos = itemsCalendario({ desde, hasta, capas: ['contenido'] });
+    const n = (k) => todos.filter((i) => i.formato === k).length;
+    return html`<div class="cal__formatos">
+      <div class="chips" role="group" aria-label="Filtrar por formato">
+        <button class="chip fchip" type="button" data-action="cal-formato" data-f="" aria-pressed="${!est.formato}">Todos <span class="num">${todos.length}</span></button>
+        ${Object.entries(FORMATOS).map(([k, f]) => html`<button class="chip fchip" type="button" style="--c:${f.color}" data-action="cal-formato" data-f="${k}" aria-pressed="${est.formato === k}"><span class="fmt fmt--mini" style="--c:${f.color}" aria-hidden="true">${f.letra}</span>${f.plural} <span class="num">${n(k)}</span></button>`)}
+      </div>
+      <button class="btn btn--soft btn--sm" type="button" data-action="cal-exportar">${icono('download', 'i--sm')} Descargar imagen</button>
+    </div>`;
   }
 
   // ---------- render ----------
@@ -165,10 +183,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
           </div>
         </div>
         ${capasFijas ? '' : html`<div class="chips chips--scroll" role="group" aria-label="Qué mostrar">${Object.entries(CAPAS).filter(([k]) => k !== 'contenido' || tieneContenido).map(([k, v]) => html`<button class="chip chip--dot" type="button" style="--c:${v.color}" data-action="cal-capa" data-capa="${k}" aria-pressed="${est.capas.has(k)}">${v.label}</button>`)}</div>`}
-        ${conCanal ? html`<div class="cal__canales"><div class="chips" role="group" aria-label="Canal">
-          <button class="chip" type="button" data-action="cal-canal" data-canal="" aria-pressed="${!est.canal}">Todos</button>
-          ${Object.entries(CANALES).map(([k, v]) => html`<button class="chip chip--dot" type="button" style="--c:${v.color}" data-action="cal-canal" data-canal="${k}" aria-pressed="${est.canal === k}">${v.label}</button>`)}</div>
-          <button class="btn btn--soft btn--sm" type="button" data-action="cal-exportar">${icono('download', 'i--sm')} Descargar imagen</button></div>` : ''}
+        ${conCanal ? resumenFormatos() : ''}
         <div class="cal__body" id="calBody">${cuerpo}</div>
       </div>`;
   }
@@ -207,7 +222,7 @@ function menuNuevoEn(fecha, hora = '') {
   const modulos = equipoActual().modulos || [];
   const atr = raw(`data-fecha="${fecha}" data-hora="${hora}"`);
   const it = (accion, ic, t, c) => html`<button class="menu__item" type="button" data-action="${accion}" ${atr}><span class="typebadge" style="--c:${c}">${icono(ic)}</span><span><strong>${t}</strong></span></button>`;
-  if (instancia && instancia.capasFijas && instancia.capasFijas.length === 1 && instancia.capasFijas[0] === 'contenido') { acciones['publicacion-nueva']({ dataset: { fecha, hora, canal: instancia.canal || 'instagram' } }); return; }
+  if (instancia && instancia.capasFijas && instancia.capasFijas.length === 1 && instancia.capasFijas[0] === 'contenido') { const f = instancia.formato; acciones['publicacion-nueva']({ dataset: { fecha, hora, canal: f === 'whatsapp' ? 'whatsapp' : 'instagram', formato: f && f !== 'whatsapp' ? f : '' } }); return; }
   abrirHoja({ titulo: `${fechaLarga(fecha)}${hora ? ` · ${hora}` : ''}`, cuerpo: html`<div class="menu">${it('evento-nuevo', 'calendar', 'Evento', 'var(--info)')}${it('tarea-nueva', 'tasks', 'Tarea con fecha', 'var(--tx-2)')}${modulos.includes('contenido') ? it('publicacion-nueva', 'image', 'Publicación', 'var(--pink)') : ''}</div>` });
 }
 
@@ -237,7 +252,7 @@ registrarAcciones({
     guardarPrefs({ [instancia.id]: { vista: instancia.vista, capas: [...instancia.capas] } });
     refrescar();
   },
-  'cal-canal': (el) => { instancia.canal = el.dataset.canal || null; refrescar(); },
+  'cal-formato': (el) => { instancia.formato = el.dataset.f || null; refrescar(); },
   'cal-dia': (el) => {
     const f = el.dataset.fecha;
     if (esAncho()) { menuNuevoEn(f); return; }
@@ -253,16 +268,16 @@ registrarAcciones({
     else acciones['publicacion-editar']({ dataset: { id } });
   },
   'cal-exportar': async () => {
-    const cuerpo = document.getElementById('calBody');
+    const mes = instancia.fecha.slice(0, 7);
+    toast('Preparando la imagen…');
     try {
-      if (!window.html2canvas) await new Promise((ok, mal) => { const s = document.createElement('script'); s.src = 'vendor/html2canvas.min.js'; s.onload = ok; s.onerror = mal; document.head.appendChild(s); });
-      toast('Generando imagen…');
-      const lienzo = await window.html2canvas(cuerpo, { backgroundColor: '#111318', scale: 2, useCORS: true });
-      const a = document.createElement('a');
-      a.download = `contenido-${instancia.fecha.slice(0, 7)}.png`;
-      a.href = lienzo.toDataURL('image/png');
-      a.click();
-    } catch { toast('No se pudo generar la imagen', { tipo: 'error' }); }
+      const todos = itemsCalendario({ desde: `${mes}-01`, hasta: `${mes}-31`, capas: ['contenido'] });
+      const resultado = await exportarMes({ mes, todos, formato: instancia.formato });
+      if (resultado === 'descargada') toast('Imagen descargada');
+    } catch (err) {
+      console.error(err);
+      toast('No se pudo crear la imagen. Intenta de nuevo.', { tipo: 'error' });
+    }
   },
 });
 

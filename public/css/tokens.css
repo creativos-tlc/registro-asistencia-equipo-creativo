@@ -34,6 +34,8 @@
   --violet: #b58cff;
   --teal: #35d0c0;
   --pink: #f26aa6;
+  --orange: #ff9a4d;
+  --on-fmt: #0a0b0e; /* letra sobre el color de un formato */
   --info-soft: rgba(90, 162, 255, 0.15);
   --ok-soft: rgba(60, 207, 142, 0.15);
   --bad-soft: rgba(255, 107, 74, 0.15);
