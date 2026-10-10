@@ -59,9 +59,15 @@
 }
 .select option { background: var(--s2); color: var(--tx); }
 
-.form-grid { display: grid; gap: var(--sp-4); }
-.form-grid--2 { grid-template-columns: 1fr 1fr; }
-@media (max-width: 480px) { .form-grid--2.keep { grid-template-columns: 1fr 1fr; } .form-grid--2:not(.keep) { grid-template-columns: 1fr; } }
+.form-grid { display: grid; gap: var(--sp-4); grid-template-columns: minmax(0, 1fr); }
+.form-grid > * { min-width: 0; }
+.form-grid--2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 480px) { .form-grid--2.keep { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .form-grid--2:not(.keep) { grid-template-columns: minmax(0, 1fr); } }
+
+/* Safari iOS: el campo de fecha trae un ancho propio y empuja el formulario fuera de la pantalla */
+.input { min-width: 0; max-width: 100%; }
+input[type="date"].input, input[type="time"].input, input[type="month"].input { -webkit-appearance: none; appearance: none; display: block; text-align: left; }
+input[type="date"].input::-webkit-date-and-time-value, input[type="time"].input::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }
 
 .check { display: flex; align-items: center; gap: var(--sp-3); min-height: var(--tap); cursor: pointer; }
 .check input { width: 22px; height: 22px; accent-color: var(--accent); flex-shrink: 0; }
@@ -83,7 +89,7 @@
 .chips--scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(var(--sp-4) * -1); padding-inline: var(--sp-4); }
 .chips--scroll::-webkit-scrollbar { display: none; }
 .chip {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+  position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
   border-radius: var(--r-full); background: var(--s2); border: 1px solid var(--line-2);
   color: var(--tx-2); font-size: var(--t-sm); font-weight: 600; white-space: nowrap; flex-shrink: 0;
   transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
@@ -174,7 +180,7 @@ button.row:hover, a.row:hover { background: var(--s2); }
 .sheet {
   border: 1px solid var(--line-2); padding: 0; color: var(--tx); background: var(--s1);
   width: 100%; max-width: none; height: -webkit-fit-content; height: fit-content; max-height: 92vh; max-height: 92dvh; margin: auto 0 0;
-  border-radius: 22px 22px 0 0; overflow: hidden; box-shadow: var(--shadow-2);
+  border-radius: 22px 22px 0 0; overflow: hidden; box-shadow: var(--shadow-2); touch-action: pan-y pinch-zoom;
 }
 .sheet[open] { display: flex; flex-direction: column; animation: hoja-sube var(--dur-2) var(--ease); }
 .sheet::backdrop { background: var(--scrim); animation: fundir var(--dur-2) var(--ease); }
@@ -182,7 +188,7 @@ button.row:hover, a.row:hover { background: var(--s2); }
 @keyframes fundir { from { opacity: 0; } to { opacity: 1; } }
 .sheet__head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-4) var(--sp-4) var(--sp-3) var(--sp-5); border-bottom: 1px solid var(--line); flex-shrink: 0; }
 .sheet__title { font-size: var(--t-lg); font-weight: 700; min-width: 0; }
-.sheet__body { padding: var(--sp-5); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; flex: 0 1 auto; min-height: 0; max-height: calc(92vh - 150px - var(--safe-b)); max-height: calc(92dvh - 150px - var(--safe-b)); display: flex; flex-direction: column; gap: var(--sp-5); }
+.sheet__body { padding: var(--sp-5); overflow-x: hidden; overflow-y: auto; touch-action: pan-y pinch-zoom; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; flex: 0 1 auto; min-height: 0; max-height: calc(92vh - 150px - var(--safe-b)); max-height: calc(92dvh - 150px - var(--safe-b)); display: flex; flex-direction: column; gap: var(--sp-5); }
 .sheet__body > * { flex-shrink: 0; }
 .sheet__foot { flex: none; display: flex; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5) calc(var(--sp-3) + var(--safe-b)); border-top: 1px solid var(--line); flex-shrink: 0; background: var(--s1); }
 .sheet__foot .btn--primary { flex: 1; }
