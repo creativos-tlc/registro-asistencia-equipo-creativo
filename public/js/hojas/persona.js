@@ -1,5 +1,5 @@
 import { api, esLider, guardar, yo } from '../store.js';
-import { AREAS_SUGERIDAS, EQUIPO_CREATIVO, ASISTENCIA } from '../model.js';
+import { AREAS_SUGERIDAS, EQUIPO_CREATIVO, ASISTENCIA, PERMISOS_ETIQUETA } from '../model.js';
 import { eventos, estadisticas, persona, personas, tareasDe } from '../datos.js';
 import { edadDe, fechaCorta, fechaRelativa, hoy, html, icono, norm, nuevoId, plural, raw, telLimpio } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
@@ -50,6 +50,7 @@ export function verPersona(id) {
           <div class="chips" style="margin-top:6px">
             <span class="tag ${p.rol === 'lider' ? 'tag--accent' : ''}">${p.rol === 'lider' ? 'Líder' : 'Voluntario'}</span>
             ${p.activo === false ? html`<span class="tag tag--bad">Archivado</span>` : ''}
+            ${p.enPrueba ? html`<span class="tag tag--info">En prueba</span>` : ''}
             ${p.tieneAcceso ? html`<span class="tag tag--info">${icono('lock', 'i--sm')} Tiene acceso</span>` : ''}
             ${s.racha >= 2 ? html`<span class="tag tag--accent">${icono('flame', 'i--sm')} ${s.racha} seguidas</span>` : ''}
           </div>
@@ -97,8 +98,11 @@ export function verPersona(id) {
           </div>
           ${p.tieneAcceso && p.rol !== 'lider' ? html`
             <p class="muted" style="font-size:var(--t-sm);margin:var(--sp-4) 0 var(--sp-2)">Además de calendario y tareas, puede tener:</p>
-            <div class="chips"><button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="contenido" aria-pressed="${(p.permisos || []).includes('contenido')}">${icono('image', 'i--sm')} Contenido</button></div>
-            <p class="hint" style="margin-top:var(--sp-2)">Contenido: ve el calendario de publicaciones y puede crear y editar las de Instagram y WhatsApp.</p>` : ''}
+            <div class="chips">
+              <button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="contenido" aria-pressed="${(p.permisos || []).includes('contenido')}">${icono('image', 'i--sm')} Contenido</button>
+              <button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="turnos" aria-pressed="${(p.permisos || []).includes('turnos')}">${icono('clipboard', 'i--sm')} Armar turnos</button>
+            </div>
+            <p class="hint" style="margin-top:var(--sp-2)">Contenido: ve el calendario de publicaciones y puede crear y editar las de Instagram y WhatsApp. Armar turnos: puede editar los turnos del domingo y quién no estará (todos los voluntarios ya pueden verlos).</p>` : ''}
         </section>` : ''}`,
     pie: !esLider() ? '' : html`
       <button class="icon-btn icon-btn--danger" type="button" data-action="persona-eliminar" data-id="${id}" aria-label="Archivar o eliminar">${icono('trash')}</button>
@@ -128,6 +132,7 @@ export function formPersona({ base = null } = {}) {
             <label class="chip chip--radio"><input class="sr-only" type="radio" name="rol" value="lider" ${raw(b.rol === 'lider' ? 'checked' : '')}>Líder</label>
           </div>
           <p class="hint" id="pe-rol-hint">${PERMISOS[b.rol || 'voluntario']}</p></div>
+        <label class="check"><input type="checkbox" name="enPrueba" ${raw(b.enPrueba ? 'checked' : '')}> Está en prueba (recién empezando)</label>
         ${esNueva ? html`<label class="check solo-lider"><input type="checkbox" name="acceso"> Darle acceso a la app ahora</label>
           <p class="hint" style="margin-top:calc(var(--sp-3) * -1)">Se genera un PIN temporal para que entre con su nombre. Puedes hacerlo después desde su perfil.</p>` : ''}
         <div class="form-grid form-grid--2">
@@ -172,6 +177,7 @@ async function guardarPersona() {
     nombre: d.nombre, apellidos: d.apellidos || '', rol, telefono: d.telefono || '', correo: d.correo || '',
     anioNac: anio, direccion: d.direccion || '', desde: d.desde || hoy(), emergencia: d.emergencia || '', notas: d.notas || '',
     areas: [...new Set([...marcadas, ...extras])],
+    enPrueba: !!d.enPrueba,
   };
   delete data.id;
   const personaId = id || nuevoId('per');
@@ -247,7 +253,7 @@ async function alternarPermiso(id, permiso) {
   try {
     const { permisos } = await api('admin/permisos', { metodo: 'POST', cuerpo: { personaId: id, permisos: [...actuales] } });
     guardar([{ c: 'personas', id, data: { ...p, permisos } }]);
-    toast(permisos.includes(permiso) ? `${p.nombre} ahora puede usar Contenido` : `${p.nombre} ya no usa Contenido`);
+    toast(permisos.includes(permiso) ? `${p.nombre} ahora puede usar ${PERMISOS_ETIQUETA[permiso] || permiso}` : `${p.nombre} ya no puede usar ${PERMISOS_ETIQUETA[permiso] || permiso}`);
     verPersona(id);
   } catch (e) {
     toast(e.message || 'No se pudo cambiar el permiso', { tipo: 'error' });

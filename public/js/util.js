@@ -28,6 +28,14 @@ export const inicioSemana = (iso) => { const d = leerISO(iso); d.setDate(d.getDa
 export const inicioMes = (iso) => `${iso.slice(0, 7)}-01`;
 export const sumarMeses = (iso, n) => { const d = leerISO(inicioMes(iso)); d.setMonth(d.getMonth() + n); return aISO(d); };
 export const diaSemana = (iso) => (leerISO(iso).getDay() + 6) % 7; // 0 = lunes
+/** El domingo de la semana de `iso` (hoy mismo si es domingo). */
+export const domingoDe = (iso) => sumarDias(iso, 6 - diaSemana(iso));
+export function domingosDelMes(mes) {
+  const lista = [];
+  let d = domingoDe(`${mes}-01`);
+  while (d.slice(0, 7) === mes) { lista.push(d); d = sumarDias(d, 7); }
+  return lista;
+}
 
 const fmt = (opts) => new Intl.DateTimeFormat('es-CL', opts);
 const F = {

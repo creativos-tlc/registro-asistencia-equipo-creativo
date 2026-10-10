@@ -52,6 +52,16 @@ export const NOTA_COLORES = {
 };
 export const HOJA_NOTAS = 'principal';
 
+/** Turnos del domingo: dos reuniones, más lo que se hace antes de empezar. Cada grupo tiene su color, como en la planilla. */
+export const GRUPOS_TURNO = {
+  dia:    { label: 'Antes de la reunión', color: 'var(--bad)',    orden: 0 },
+  r1:     { label: '1ra reunión',         color: 'var(--orange)', orden: 1 },
+  r2:     { label: '2da reunión',         color: 'var(--info)',   orden: 2 },
+  prueba: { label: 'En prueba',           color: 'var(--violet)', orden: 3 },
+};
+export const REUNIONES = { r1: '1ra', r2: '2da' };
+export const PERMISOS_ETIQUETA = { contenido: 'Contenido', turnos: 'Turnos' };
+
 export const ESTADOS_CONTENIDO = {
   idea:      { label: 'Idea',      tag: '' },
   listo:     { label: 'Listo',     tag: 'tag--info' },
@@ -71,16 +81,17 @@ export const MODULOS = {
   calendario: { label: 'Calendario', icono: 'calendar', ruta: 'calendario' },
   tareas:     { label: 'Tareas',     icono: 'tasks',    ruta: 'tareas' },
   equipo:     { label: 'Equipo',     icono: 'users',    ruta: 'equipo' },
+  turnos:     { label: 'Turnos',     icono: 'clipboard', ruta: 'turnos' },
   contenido:  { label: 'Contenido',  icono: 'image',    ruta: 'contenido' },
 };
 
 /** Pestañas que ve un voluntario con acceso. */
-export const MODULOS_VOLUNTARIO = ['calendario', 'tareas'];
+export const MODULOS_VOLUNTARIO = ['calendario', 'tareas', 'turnos'];
 
 export const EQUIPO_INICIAL = {
   nombre: 'Equipo Creativo',
   iglesia: 'The Life Church',
-  modulos: ['hoy', 'calendario', 'tareas', 'equipo', 'contenido'],
+  modulos: ['hoy', 'calendario', 'tareas', 'turnos', 'equipo', 'contenido'],
   color: '#f5a623',
 };
 

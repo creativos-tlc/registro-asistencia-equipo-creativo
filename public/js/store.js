@@ -5,7 +5,7 @@
  *  - Conflictos: gana el último cambio por registro (los registros son pequeños: una tarea, una asistencia).
  */
 
-export const COLECCIONES = ['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'ajustes'];
+export const COLECCIONES = ['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'roles', 'turnos', 'ausencias', 'ajustes'];
 const CLAVE_CACHE = 'tlc.cache.v1';
 const SOLAPE_MS = 5000;
 const INTERVALO_MS = 20000;
@@ -110,7 +110,8 @@ export const obtener = (c, id) => (estado.docs[c]?.[id] ? { id, ...estado.docs[c
 /** ops: [{c, id, data}] — data null borra. Devuelve una función `deshacer`. */
 export class ErrorPermiso extends Error {}
 export const tienePermiso = (p) => estado.yo?.rol === 'lider' || !!estado.yo?.permisos?.includes(p);
-export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'tareas' || (c === 'publicaciones' && tienePermiso('contenido'));
+const COLECCIONES_TURNOS = ['roles', 'turnos', 'ausencias'];
+export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'tareas' || (c === 'publicaciones' && tienePermiso('contenido')) || (COLECCIONES_TURNOS.includes(c) && tienePermiso('turnos'));
 
 export function guardar(ops) {
   if (ops.some((op) => !puedeEscribir(op.c))) throw new ErrorPermiso('Solo los líderes pueden hacer este cambio.');

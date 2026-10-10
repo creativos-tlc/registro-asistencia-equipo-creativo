@@ -185,15 +185,13 @@ export async function dibujarMes({ mes, todos, formato, canal }) {
 
 const aBlob = (lienzo) => new Promise((ok, mal) => lienzo.toBlob((b) => (b ? ok(b) : mal(new Error('No se pudo crear el PNG'))), 'image/png'));
 
-/** Crea la imagen del mes y la comparte (WhatsApp, Guardar imagen…) o, si no se puede, la descarga. */
-export async function exportarMes({ mes, todos, formato, canal }) {
-  const lienzo = await dibujarMes({ mes, todos, formato, canal });
+/** Comparte la imagen (WhatsApp, Guardar imagen…) o, si el teléfono no puede, la descarga. */
+export async function compartirLienzo(lienzo, nombre, titulo) {
   const blob = await aBlob(lienzo);
-  const nombre = `contenido-${mes}${formato ? `-${formato}` : canal ? `-${canal}` : ''}.png`;
   const archivo = new File([blob], nombre, { type: 'image/png' });
   if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
     try {
-      await navigator.share({ files: [archivo], title: `Contenido ${nombreMes(`${mes}-01`)}` });
+      await navigator.share({ files: [archivo], title: titulo });
       return 'compartida';
     } catch (e) {
       if (e && e.name === 'AbortError') return 'cancelada';
@@ -208,4 +206,153 @@ export async function exportarMes({ mes, todos, formato, canal }) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
   return 'descargada';
+}
+
+/** Crea la imagen del mes y la comparte. */
+export async function exportarMes({ mes, todos, formato, canal }) {
+  const lienzo = await dibujarMes({ mes, todos, formato, canal });
+  const nombre = `contenido-${mes}${formato ? `-${formato}` : canal ? `-${canal}` : ''}.png`;
+  return compartirLienzo(lienzo, nombre, `Contenido ${nombreMes(`${mes}-01`)}`);
+}
+
+// ---------- Turnos ----------
+const mezclar = (hex, fondo, alfa) => {
+  const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  if (!/^#[0-9a-f]{6}$/i.test(hex) || !/^#[0-9a-f]{6}$/i.test(fondo)) return hex;
+  const [a, b] = [p(hex), p(fondo)];
+  return `rgb(${a.map((v, i) => Math.round(v * alfa + b[i] * (1 - alfa))).join(',')})`;
+};
+
+function partirTexto(ctx, texto, ancho) {
+  const palabras = texto.split(' ');
+  const lineas = [];
+  let actual = '';
+  palabras.forEach((w) => {
+    const prueba = actual ? `${actual} ${w}` : w;
+    if (ctx.measureText(prueba).width <= ancho || !actual) actual = prueba; else { lineas.push(actual); actual = w; }
+  });
+  if (actual) lineas.push(actual);
+  return lineas;
+}
+
+/** Tabla de turnos: roles en filas, domingos en columnas, con los colores de cada reunión y el bloque "No estarán". */
+export async function dibujarTurnos({ titulo, subtitulo, fechas, filas, ausentes }) {
+  await cargarFuentes();
+  const c = { bg: token('--bg'), s1: token('--s1'), linea: token('--line-2'), tx: token('--tx'), tx2: token('--tx-2'), tx3: token('--tx-3') };
+  const MARGEN_T = 36;
+  const ancho_rol = 300;
+  const ancho_col = fechas.length === 1 ? 380 : 230;
+  const W = MARGEN_T * 2 + ancho_rol + ancho_col * fechas.length;
+  const medidor = document.createElement('canvas').getContext('2d');
+  medidor.font = '600 24px Outfit, system-ui, sans-serif';
+  const altoFila = (textos, rol = '') => Math.max(...textos.map((t) => partirTexto(medidor, t || '—', ancho_col - 28).length), rol ? partirTexto(medidor, rol, ancho_rol - 28).length : 1) * 30 + 22;
+
+  // Preparar contenido: filas = [{grupo:{label,color}}] | [{rol, textos:[...]}]
+  const bloques = [];
+  filas.forEach((f) => {
+    if (f.grupo) bloques.push({ grupo: f.grupo, alto: 52 });
+    else bloques.push({ ...f, alto: Math.max(altoFila(f.textos, f.rol), 56) });
+  });
+  const hayAus = ausentes.some((x) => x.length);
+  const altoAus = hayAus ? 52 + altoFila(ausentes.map((x) => x.join('\n').replace(/\n/g, ', '))) : 0;
+  const H = 130 + 60 + bloques.reduce((n, b) => n + b.alto, 0) + altoAus + 70;
+
+  const lienzo = document.createElement('canvas');
+  lienzo.width = W;
+  lienzo.height = H;
+  const ctx = lienzo.getContext('2d');
+  ctx.fillStyle = c.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = c.tx;
+  ctx.font = '800 46px Outfit, system-ui, sans-serif';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(titulo, MARGEN_T, 70);
+  ctx.fillStyle = c.tx2;
+  ctx.font = '500 24px Outfit, system-ui, sans-serif';
+  ctx.fillText(subtitulo, MARGEN_T, 108);
+
+  let y = 130;
+  // Encabezado de fechas
+  ctx.fillStyle = c.s1;
+  rect(ctx, MARGEN_T, y, W - MARGEN_T * 2, 56, 10);
+  ctx.fill();
+  ctx.fillStyle = c.tx2;
+  ctx.font = '700 22px Outfit, system-ui, sans-serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Rol', MARGEN_T + 16, y + 29);
+  ctx.textAlign = 'center';
+  fechas.forEach((f, i) => ctx.fillText(fechaDiaMesLargo(f), MARGEN_T + ancho_rol + ancho_col * i + ancho_col / 2, y + 29));
+  ctx.textAlign = 'left';
+  y += 64;
+
+  const xFin = W - MARGEN_T;
+  bloques.forEach((b) => {
+    if (b.grupo) {
+      const col = resolver(b.grupo.color);
+      ctx.fillStyle = col;
+      rect(ctx, MARGEN_T, y + 6, xFin - MARGEN_T, b.alto - 8, 10);
+      ctx.fill();
+      ctx.font = '800 24px Outfit, system-ui, sans-serif';
+      ctx.fillStyle = tintaSobre(col);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(b.grupo.label, MARGEN_T + 16, y + 6 + (b.alto - 8) / 2 + 1);
+    } else {
+      const col = resolver(b.color);
+      ctx.fillStyle = mezclar(col, c.bg, 0.16);
+      ctx.fillRect(MARGEN_T, y, xFin - MARGEN_T, b.alto);
+      ctx.strokeStyle = c.linea;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(MARGEN_T, y + b.alto); ctx.lineTo(xFin, y + b.alto); ctx.stroke();
+      ctx.fillStyle = c.tx;
+      ctx.font = '600 24px Outfit, system-ui, sans-serif';
+      ctx.textBaseline = 'alphabetic';
+      partirTexto(ctx, b.rol, ancho_rol - 28).forEach((l, k) => ctx.fillText(l, MARGEN_T + 16, y + 38 + k * 30));
+      b.textos.forEach((t, i) => {
+        const vacio = !t;
+        ctx.fillStyle = vacio ? c.tx3 : c.tx;
+        ctx.font = `${vacio ? 500 : 600} 24px Outfit, system-ui, sans-serif`;
+        ctx.textAlign = 'center';
+        partirTexto(ctx, t || '—', ancho_col - 28).forEach((l, k) => ctx.fillText(l, MARGEN_T + ancho_rol + ancho_col * i + ancho_col / 2, y + 38 + k * 30));
+        ctx.textAlign = 'left';
+      });
+    }
+    y += b.alto;
+  });
+
+  if (hayAus) {
+    const col = resolver('var(--tx-3)');
+    ctx.fillStyle = col;
+    rect(ctx, MARGEN_T, y + 6, xFin - MARGEN_T, 44, 10);
+    ctx.fill();
+    ctx.fillStyle = tintaSobre(col);
+    ctx.font = '800 24px Outfit, system-ui, sans-serif';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('No estarán', MARGEN_T + 16, y + 29);
+    ctx.textBaseline = 'alphabetic';
+    y += 52;
+    const textos = ausentes.map((x) => x.join(', '));
+    const alto = altoFila(textos);
+    ctx.fillStyle = mezclar(col, c.bg, 0.12);
+    ctx.fillRect(MARGEN_T, y, xFin - MARGEN_T, alto);
+    textos.forEach((t, i) => {
+      ctx.fillStyle = t ? c.tx : c.tx3;
+      ctx.font = '600 24px Outfit, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      partirTexto(ctx, t || '—', ancho_col - 28).forEach((l, k) => ctx.fillText(l, MARGEN_T + ancho_rol + ancho_col * i + ancho_col / 2, y + 38 + k * 30));
+      ctx.textAlign = 'left';
+    });
+  }
+
+  ctx.fillStyle = c.tx3;
+  ctx.font = '500 20px Outfit, system-ui, sans-serif';
+  ctx.fillText('Coordinación · Equipo Creativo TLC', MARGEN_T, H - 28);
+  return lienzo;
+}
+
+const fechaDiaMesLargo = (iso) => `Dom ${Number(iso.slice(8))} ${nombreMes(iso).split(' ')[0].slice(0, 3).toLowerCase()}`;
+
+export async function compartirTurnos(datos, nombreArchivo) {
+  const lienzo = await dibujarTurnos(datos);
+  return compartirLienzo(lienzo, nombreArchivo, datos.titulo);
 }

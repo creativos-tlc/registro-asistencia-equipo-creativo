@@ -49,6 +49,8 @@ Un líder crea accesos desde la app: Equipo → Agregar voluntario → "Darle ac
 
 A un voluntario se le puede sumar el permiso **Contenido** (ver el calendario de publicaciones y crear/editar las de Instagram y WhatsApp) desde su perfil en Equipo → "Acceso a la app" → Contenido.
 
+**Turnos** (pestaña para todos, solo lectura para voluntarios): roles × domingos, con "Slides Mensaje" antes de la reunión, 1ra y 2da reunión, "En prueba" y "No estarán". El permiso **Armar turnos** (Equipo → persona → Acceso a la app) deja armar el domingo, anotar quién no estará, editar los roles y compartir la imagen para WhatsApp. Colecciones `roles`, `turnos` (id `fecha~rol`) y `ausencias` (id `fecha~persona`). Septiembre 2026 se cargó con `node scripts/cargar-turnos.mjs --remote` (repetible sin duplicar).
+
 Tras 5 intentos fallidos el nombre se bloquea 15 minutos.
 
 ## Datos y respaldo

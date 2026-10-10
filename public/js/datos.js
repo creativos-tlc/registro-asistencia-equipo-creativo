@@ -117,6 +117,29 @@ export function agruparTareas(arr, h = hoy()) {
   return grupos.filter((g) => g.items.length);
 }
 
+// ---------- turnos ----------
+const ORDEN_GRUPO = { dia: 0, r1: 1, r2: 2, prueba: 3 };
+export const todosLosRoles = () => lista('roles');
+export const idTurno = (fecha, rolId) => `${fecha}~${rolId}`;
+export const personasDeTurno = (fecha, rolId) => obtener('turnos', idTurno(fecha, rolId))?.personas || [];
+export const ausenciasDe = (fecha) => lista('ausencias').filter((a) => a.fecha === fecha);
+
+/** Roles activos, y los dados de baja que tuvieron turnos en las fechas que se están viendo (para no perder el historial). */
+export function rolesParaFechas(fechas) {
+  const conTurno = new Set(lista('turnos').filter((t) => fechas.includes(t.fecha) && (t.personas || []).length).map((t) => t.rolId));
+  return lista('roles')
+    .filter((r) => r.activo !== false || conTurno.has(r.id))
+    .sort((a, b) => (ORDEN_GRUPO[a.grupo] ?? 9) - (ORDEN_GRUPO[b.grupo] ?? 9) || (a.orden ?? 0) - (b.orden ?? 0));
+}
+
+/** Quiénes sirven en cada reunión de ese domingo (para avisar si alguien ya sirve en la otra). */
+export function sirvenPorGrupo(fecha) {
+  const porGrupo = { dia: new Set(), r1: new Set(), r2: new Set(), prueba: new Set() };
+  const rolesPorId = new Map(lista('roles').map((r) => [r.id, r]));
+  lista('turnos').filter((t) => t.fecha === fecha).forEach((t) => (t.personas || []).forEach((p) => rolesPorId.get(t.rolId) && porGrupo[rolesPorId.get(t.rolId).grupo]?.add(p)));
+  return porGrupo;
+}
+
 // ---------- notas ----------
 export const bloquesNotas = () => [...lista('notas')].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 

@@ -35,6 +35,7 @@ function listaPersonas() {
     const etiquetas = [
       p.rol === 'lider' ? html`<span class="tag tag--accent">Líder</span>` : '',
       p.tieneAcceso ? html`<span class="tag tag--info" title="Puede entrar a la app">${icono('lock', 'i--sm')} Acceso</span>` : '',
+      p.enPrueba ? html`<span class="tag">En prueba</span>` : '',
       p.activo === false ? html`<span class="tag tag--bad">Archivado</span>` : '',
       s.racha >= 2 ? html`<span class="tag tag--accent" title="Asistencias seguidas">${icono('flame', 'i--sm')} ${s.racha} seguidas</span>` : '',
     ].filter(Boolean);

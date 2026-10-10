@@ -13,6 +13,7 @@ import { vistaCalendario } from './views/calendario.js';
 import { vistaTareas } from './views/tareas.js';
 import { vistaEquipo } from './views/equipo.js';
 import { vistaContenido } from './views/contenido.js';
+import { vistaTurnos } from './views/turnos.js';
 import { vistaAjustes } from './views/ajustes.js';
 import './hojas/evento.js';
 import './hojas/tarea.js';
@@ -25,6 +26,7 @@ registrar('calendario', vistaCalendario);
 registrar('tareas', vistaTareas);
 registrar('equipo', vistaEquipo);
 registrar('contenido', vistaContenido);
+registrar('turnos', vistaTurnos);
 registrar('ajustes', vistaAjustes);
 
 // ---------- navegación ----------

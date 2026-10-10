@@ -20,7 +20,7 @@ async function sha256(texto) {
   return hex(await crypto.subtle.digest('SHA-256', codificar(texto)));
 }
 
-export const PERMISOS_VALIDOS = ['contenido'];
+export const PERMISOS_VALIDOS = ['contenido', 'turnos'];
 const leerPermisos = (texto) => { try { const p = JSON.parse(texto || '[]'); return Array.isArray(p) ? p.filter((x) => PERMISOS_VALIDOS.includes(x)) : []; } catch { return []; } };
 
 export async function cambiarPermisos(env, personaId, permisos) {
