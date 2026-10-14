@@ -10,6 +10,7 @@ const CLAVE_CACHE = 'tlc.cache.v1';
 const SOLAPE_MS = 5000;
 const INTERVALO_MS = 20000;
 
+const FIRMA_COLECCIONES = COLECCIONES.join(',');
 const vacio = () => Object.fromEntries(COLECCIONES.map((c) => [c, {}]));
 const estado = {
   yo: null,
@@ -63,7 +64,7 @@ function persistir() {
 }
 function guardarYa() {
   try {
-    localStorage.setItem(CLAVE_CACHE, JSON.stringify({ v: 1, yo: estado.yo, docs: estado.docs, revs: estado.revs, outbox: estado.outbox, cursor: estado.cursor, ultimoSync: estado.ultimoSync }));
+    localStorage.setItem(CLAVE_CACHE, JSON.stringify({ v: 1, cols: FIRMA_COLECCIONES, yo: estado.yo, docs: estado.docs, revs: estado.revs, outbox: estado.outbox, cursor: estado.cursor, ultimoSync: estado.ultimoSync }));
   } catch (e) {
     console.warn('No se pudo guardar en este dispositivo', e);
   }
@@ -75,6 +76,8 @@ function cargarCache() {
   try {
     const c = JSON.parse(localStorage.getItem(CLAVE_CACHE) || 'null');
     if (!c || c.v !== 1) return null;
+    // Una versión anterior de la app descartaba las colecciones que no conocía y avanzaba el cursor igual: si la lista cambió, se baja todo de nuevo.
+    if (c.cols !== FIRMA_COLECCIONES) c.cursor = 0;
     return c;
   } catch { return null; }
 }

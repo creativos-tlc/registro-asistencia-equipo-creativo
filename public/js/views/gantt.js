@@ -2,7 +2,7 @@
    En el celular cada proyecto es una fila con su título arriba y una pista debajo, así no hace falta columna fija ni arrastrar de lado. */
 import { esLider, guardar } from '../store.js';
 import { EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
-import { nombreDe, personas, proyecto, proyectos } from '../datos.js';
+import { nombreDe, personas, proyecto, proyectos, tareasDeProyecto } from '../datos.js';
 import { clamp, dif, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
 
@@ -22,6 +22,7 @@ export function tituloGantt(fecha) {
   return `${fechaDiaMes(v.desde)} – ${fechaDiaMes(v.hasta)}`;
 }
 
+const avance = (id) => { const t = tareasDeProyecto(id); const h = t.filter((x) => x.estado === 'hecha').length; return { n: t.length, h, pct: t.length ? h / t.length : 0 }; };
 const dur = (p) => dif(p.fin, p.inicio) + 1;
 const nombresDe = (p) => (p.responsables || []).map(nombreDe);
 
@@ -70,12 +71,13 @@ export function renderGantt({ fecha }) {
     const fin = clamp(dif(p.fin, v.desde) + 1, 0, v.dias);
     const izq = p.inicio < v.desde; const der = p.fin > v.hasta;
     const e = estadoDe(p);
+    const av = avance(p.id);
     const color = NOTA_COLORES[p.color]?.color || 'var(--accent)';
     return html`
       <button class="gp ${p.hecho ? 'gp--hecho' : ''}" type="button" data-action="proyecto-abrir" data-id="${p.id}" style="--c:${color}">
         <span class="gp__cab"><span class="gp__tit trunc">${p.hecho ? icono('circle-check', 'i--sm') : ''}${p.titulo}</span>${quien(p)}</span>
-        <span class="gp__pista" aria-hidden="true">${hoyPos !== null ? html`<span class="gp__hoy" style="left:${hoyPos}%"></span>` : ''}<span class="gp__barra ${izq ? 'gp__barra--izq' : ''} ${der ? 'gp__barra--der' : ''}" style="left:${(ini / v.dias) * 100}%;width:max(8px, ${((fin - ini) / v.dias) * 100}%)"></span></span>
-        <span class="gp__meta"><span class="num">${fechaDiaMes(p.inicio)} → ${fechaDiaMes(p.fin)}</span><span>${plural(Math.max(1, Math.round(dur(p) / 7)), 'semana', 'semanas')}</span><span class="gp__est ${e.tono ? `gp__est--${e.tono}` : ''}">${e.txt}</span></span>
+        <span class="gp__pista" aria-hidden="true">${hoyPos !== null ? html`<span class="gp__hoy" style="left:${hoyPos}%"></span>` : ''}<span class="gp__barra ${izq ? 'gp__barra--izq' : ''} ${der ? 'gp__barra--der' : ''}" style="left:${(ini / v.dias) * 100}%;width:max(8px, ${((fin - ini) / v.dias) * 100}%)">${av.n ? html`<span class="gp__prog" style="width:${Math.round(av.pct * 100)}%"></span>` : ''}</span></span>
+        <span class="gp__meta"><span class="num">${fechaDiaMes(p.inicio)} → ${fechaDiaMes(p.fin)}</span><span>${plural(Math.max(1, Math.round(dur(p) / 7)), 'semana', 'semanas')}</span>${av.n ? html`<span class="num">${av.h}/${av.n} tareas</span>` : ''}<span class="gp__est ${e.tono ? `gp__est--${e.tono}` : ''}">${e.txt}</span></span>
       </button>`;
   };
 
@@ -91,6 +93,19 @@ export function renderGantt({ fecha }) {
 }
 
 // ---------- hojas ----------
+const listaTareas = (id, editable) => {
+  const ts = tareasDeProyecto(id);
+  return html`<div class="field"><span class="label">Tareas del proyecto${ts.length ? ` · ${ts.filter((t) => t.estado === 'hecha').length}/${ts.length}` : ''}</span>
+    ${ts.length ? html`<div class="pt">${ts.map((t) => html`
+      <button class="pt__fila ${t.estado === 'hecha' ? 'pt__fila--hecha' : ''}" type="button" data-action="tarea-editar" data-id="${t.id}">
+        ${icono(t.estado === 'hecha' ? 'circle-check' : 'circle')}
+        <span class="trunc">${t.titulo}</span>
+        <span class="pt__quien">${(t.asignados || []).map(nombreDe).join(', ')}${t.vence ? html` <span class="num">· ${fechaDiaMes(t.vence)}</span>` : ''}</span>
+      </button>`)}</div>` : html`<p class="hint">Aún no hay tareas en este proyecto.</p>`}
+    ${editable ? html`<button class="btn btn--soft btn--sm" type="button" data-action="tarea-nueva" data-proyecto="${id}" data-fecha="" style="align-self:flex-start">${icono('plus', 'i--sm')} Agregar tarea</button>` : ''}
+  </div>`;
+};
+
 function formProyecto({ base = null, inicio = '' } = {}) {
   const b = base || {};
   const esNuevo = !b.id;
@@ -113,6 +128,7 @@ function formProyecto({ base = null, inicio = '' } = {}) {
         <div class="field"><span class="label">Color en la línea de tiempo</span>
           <div class="chips">${COLORES.map(([k, c]) => html`<label class="chip chip--radio chip--dot" style="--c:${c.color}"><input class="sr-only" type="radio" name="color" value="${k}" ${raw((b.color || 'azul') === k ? 'checked' : '')}>${c.label}</label>`)}</div>
         </div>
+ ${esNuevo ? '' : listaTareas(b.id, true)}
         <label class="check"><input type="checkbox" name="hecho" ${raw(b.hecho ? 'checked' : '')}> Proyecto terminado</label>
         <div class="field"><label for="pr-det">Detalle <span class="opt">(opcional)</span></label><textarea class="textarea" id="pr-det" name="detalle" placeholder="Qué incluye, links, entregables…">${b.detalle || ''}</textarea></div>
       </form>`,
@@ -132,6 +148,7 @@ function verProyecto(p) {
       <div class="form-grid">
         <div class="field"><span class="label">Fechas</span><p>${fechaCorta(p.inicio)} → ${fechaCorta(p.fin)} · ${plural(dur(p), 'día', 'días')}</p><p class="gp__est ${e.tono ? `gp__est--${e.tono}` : ''}">${e.txt}</p></div>
         <div class="field"><span class="label">Responsables</span><p>${nombresDe(p).join(', ') || 'Sin responsable'}</p></div>
+        ${listaTareas(p.id, false)}
         ${p.detalle ? html`<div class="field"><span class="label">Detalle</span><p style="white-space:pre-wrap">${p.detalle}</p></div>` : ''}
       </div>`,
   });

@@ -143,6 +143,7 @@ export function sirvenPorGrupo(fecha) {
 // ---------- proyectos (carta Gantt) ----------
 export const proyectos = () => lista('proyectos');
 export const proyecto = (id) => obtener('proyectos', id);
+export const tareasDeProyecto = (id) => tareas().filter((t) => t.proyectoId === id).sort((a, b) => (a.estado === 'hecha') - (b.estado === 'hecha') || (a.vence || '9').localeCompare(b.vence || '9'));
 
 // ---------- notas ----------
 export const bloquesNotas = () => [...lista('notas')].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
@@ -165,7 +166,7 @@ export function itemsCalendario({ desde, hasta, capas = ['eventos', 'tareas', 'c
   if (capas.includes('tareas')) {
     for (const t of tareas()) {
       if (!t.vence || t.vence < desde || t.vence > hasta) continue;
-      items.push({ clase: 'tarea', id: t.id, fecha: t.vence, ini: '', fin: '', titulo: t.titulo, color: 'var(--tx-2)', icono: t.estado === 'hecha' ? 'circle-check' : 'circle', sub: 'Tarea', hecha: t.estado === 'hecha' });
+      items.push({ clase: 'tarea', id: t.id, fecha: t.vence, ini: '', fin: '', titulo: t.titulo, color: 'var(--tx-2)', icono: t.estado === 'hecha' ? 'circle-check' : 'circle', sub: t.proyectoId && proyecto(t.proyectoId) ? `Tarea · ${proyecto(t.proyectoId).titulo}` : 'Tarea', hecha: t.estado === 'hecha' });
     }
   }
   if (capas.includes('contenido')) {

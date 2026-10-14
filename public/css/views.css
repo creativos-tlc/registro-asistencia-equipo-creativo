@@ -309,3 +309,13 @@ button.mx--celda:hover { background: color-mix(in srgb, var(--c) 22%, var(--s1))
 .gp__est--ok { color: var(--ok); }
 :root[data-tema="claro"] .gp__est--warn { color: var(--orange-tx, #a85200); }
 
+.gp__prog { position: absolute; left: 0; top: 0; bottom: 0; border-radius: inherit; background: rgba(0, 0, 0, 0.28); }
+:root[data-tema="claro"] .gp__prog { background: rgba(0, 0, 0, 0.3); }
+.pt { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+.pt__fila { display: flex; align-items: center; gap: var(--sp-3); min-height: 44px; padding: 6px var(--sp-3); border-bottom: 1px solid var(--line); text-align: left; }
+.pt__fila:last-child { border-bottom: 0; }
+.pt__fila > .trunc { flex: 1; font-weight: 600; }
+.pt__fila--hecha > .trunc { text-decoration: line-through; color: var(--tx-3); }
+.pt__fila .i { color: var(--tx-3); }
+.pt__fila--hecha .i { color: var(--ok); }
+.pt__quien { flex-shrink: 0; max-width: 45%; font-size: var(--t-xs); color: var(--tx-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
