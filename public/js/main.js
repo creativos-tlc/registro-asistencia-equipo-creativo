@@ -20,6 +20,7 @@ import './hojas/tarea.js';
 import './hojas/publicacion.js';
 import './hojas/persona.js';
 import './hojas/asistencia.js';
+import './views/gantt.js';
 
 registrar('hoy', vistaHoy);
 registrar('calendario', vistaCalendario);
@@ -86,6 +87,7 @@ function menuCrear() {
     cuerpo: html`<div class="menu">
       ${esLider() ? item('evento-nuevo', 'calendar', 'Evento', 'Reunión, servicio, ensayo o grabación', 'var(--info)') : ''}
       ${item('tarea-nueva', 'tasks', 'Tarea', 'Asignar algo a alguien del equipo', 'var(--tx-2)')}
+      ${esLider() ? item('proyecto-nuevo', 'clipboard', 'Proyecto', 'Con inicio, entrega y responsables (Gantt)', 'var(--violet)') : ''}
       ${modulos.includes('contenido') ? item('publicacion-nueva', 'image', 'Publicación', 'Instagram o WhatsApp', 'var(--pink)') : ''}
       ${esLider() ? item('persona-nueva', 'user-plus', 'Voluntario', 'Sumar a alguien al equipo', 'var(--accent)') : ''}
     </div>`,

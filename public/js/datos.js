@@ -140,6 +140,10 @@ export function sirvenPorGrupo(fecha) {
   return porGrupo;
 }
 
+// ---------- proyectos (carta Gantt) ----------
+export const proyectos = () => lista('proyectos');
+export const proyecto = (id) => obtener('proyectos', id);
+
 // ---------- notas ----------
 export const bloquesNotas = () => [...lista('notas')].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 

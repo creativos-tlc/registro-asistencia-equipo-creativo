@@ -3,6 +3,7 @@ import { esLider, guardar, tienePermiso } from '../store.js';
 import { CANALES, FORMATOS } from '../model.js';
 import { exportarMes } from '../exportar.js';
 import { montarNotas, renderNotas } from './notas.js';
+import { pasoGantt, renderGantt, tituloGantt } from './gantt.js';
 import { distribuirSolapes, equipoActual, evento, itemsCalendario, publicacion, tarea } from '../datos.js';
 import { aISO, aMin, deMin, fechaLarga, hoy, html, icono, inicioMes, inicioSemana, leerISO, nombreDiaCorto, nombreMes, nuevoId, raw, sumarDias, sumarMeses, fechaDiaMes, plural, dif, diaSemana, clamp } from '../util.js';
 import { abrirHoja, acciones, registrarAcciones, toast, vacio } from '../ui.js';
@@ -45,6 +46,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
     if (est.vista === 'mes') return nombreMes(est.fecha);
     if (est.vista === 'semana') { const a = inicioSemana(est.fecha); return `${fechaDiaMes(a)} – ${fechaDiaMes(sumarDias(a, 6))}`; }
     if (est.vista === 'dia') return fechaLarga(est.fecha);
+    if (est.vista === 'gantt') return tituloGantt(est.fecha);
     return `Desde el ${fechaDiaMes(est.fecha)}`;
   }
 
@@ -171,10 +173,12 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
   function render() {
     instancia = est;
     const esNotas = est.vista === 'notas' && !capasFijas;
-    const arr = esNotas ? [] : items();
+    const esGantt = est.vista === 'gantt' && !capasFijas;
+    const arr = esNotas || esGantt ? [] : items();
     const dias = est.vista === 'semana' ? Array.from({ length: 7 }, (_, k) => sumarDias(inicioSemana(est.fecha), k)) : [est.fecha];
     let cuerpo;
     if (esNotas) cuerpo = renderNotas();
+    else if (esGantt) cuerpo = renderGantt(est);
     else if (est.vista === 'mes') cuerpo = vistaMes(arr);
     else if (est.vista === 'agenda') cuerpo = vistaAgenda(arr);
     else cuerpo = cuadricula(dias, arr);
@@ -185,7 +189,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
       <div class="cal" data-cal="${id}">
         <div class="cal__tools">
           <div class="seg" role="tablist" aria-label="Vista del calendario">
-            ${[['mes', 'Mes'], ['semana', 'Semana'], ['dia', 'Día'], ['agenda', 'Agenda'], ...(capasFijas ? [] : [['notas', 'Notas']])].map(([k, l]) => html`<button class="seg__btn" type="button" role="tab" data-action="cal-vista" data-v="${k}" aria-selected="${est.vista === k}">${l}</button>`)}
+            ${[['mes', 'Mes'], ['semana', 'Semana'], ['dia', 'Día'], ['agenda', 'Agenda'], ...(capasFijas ? [] : [['gantt', 'Gantt'], ['notas', 'Notas']])].map(([k, l]) => html`<button class="seg__btn" type="button" role="tab" data-action="cal-vista" data-v="${k}" aria-selected="${est.vista === k}">${l}</button>`)}
           </div>
           ${esNotas ? '' : html`<div class="cal__nav">
             <button class="icon-btn" type="button" data-action="cal-prev" aria-label="Anterior">${icono('chev-l')}</button>
@@ -194,7 +198,7 @@ export function fabricarCalendario({ id, titulo, capasFijas = null, conCanal = f
             <button class="btn btn--soft btn--sm" type="button" data-action="cal-hoy">Hoy</button>
           </div>`}
         </div>
-        ${capasFijas || esNotas ? '' : html`<div class="chips chips--scroll" role="group" aria-label="Qué mostrar">${Object.entries(CAPAS).filter(([k]) => k !== 'contenido' || tieneContenido).map(([k, v]) => html`<button class="chip chip--dot" type="button" style="--c:${v.color}" data-action="cal-capa" data-capa="${k}" aria-pressed="${est.capas.has(k)}">${v.label}</button>`)}</div>`}
+        ${capasFijas || esNotas || esGantt ? '' : html`<div class="chips chips--scroll" role="group" aria-label="Qué mostrar">${Object.entries(CAPAS).filter(([k]) => k !== 'contenido' || tieneContenido).map(([k, v]) => html`<button class="chip chip--dot" type="button" style="--c:${v.color}" data-action="cal-capa" data-capa="${k}" aria-pressed="${est.capas.has(k)}">${v.label}</button>`)}</div>`}
         ${conCanal ? resumenFormatos() : ''}
         <div class="cal__body" id="calBody">${cuerpo}</div>
       </div>`;
@@ -227,6 +231,7 @@ function paso(dir) {
   if (e.vista === 'mes') { e.fecha = sumarMeses(e.fecha, dir); e.sel = e.fecha.slice(0, 7) === hoy().slice(0, 7) ? hoy() : inicioMes(e.fecha); }
   else if (e.vista === 'semana') { e.fecha = sumarDias(e.fecha, 7 * dir); e.sel = e.fecha; }
   else if (e.vista === 'dia') { e.fecha = sumarDias(e.fecha, dir); e.sel = e.fecha; }
+  else if (e.vista === 'gantt') { e.fecha = pasoGantt(e.fecha, dir); e.sel = e.fecha; }
   else { e.fecha = sumarDias(e.fecha, 14 * dir); e.sel = e.fecha; }
 }
 
