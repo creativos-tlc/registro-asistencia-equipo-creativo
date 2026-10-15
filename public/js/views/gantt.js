@@ -146,18 +146,20 @@ const listaTareas = (id, editable) => {
   </div>`;
 };
 
-function formProyecto({ base = null, inicio = '' } = {}) {
+export function formProyecto({ base = null, inicio = '', titulo = '', lineas = [] } = {}) {
   const b = base || {};
   const esNuevo = !b.id;
-  const ini = b.inicio || inicio || hoy();
-  const fin = b.fin || sumarDias(ini, 14);
+  const desdeNota = esNuevo && lineas.length > 0; // viene de una nota: las fechas las elige la persona, no se proponen
+  const ini = b.inicio || inicio || (desdeNota ? '' : hoy());
+  const nombreProyecto = b.titulo || titulo || '';
+  const fin = b.fin || (ini && !desdeNota ? sumarDias(ini, 14) : '');
   const resp = new Set(b.responsables || []);
   abrirHoja({
     titulo: esNuevo ? 'Nuevo proyecto' : 'Editar proyecto',
     ancha: true,
     cuerpo: html`
-      <form id="fProyecto" class="form-grid" novalidate data-id="${b.id || ''}">
-        <div class="field"><label for="pr-titulo">Nombre del proyecto</label><input class="input" id="pr-titulo" name="titulo" value="${b.titulo || ''}" placeholder="Ej: Video aniversario" autocomplete="off" autofocus></div>
+      <form id="fProyecto" class="form-grid" novalidate data-id="${b.id || ''}" data-lineas="${encodeURIComponent(JSON.stringify(lineas))}">
+        <div class="field"><label for="pr-titulo">Nombre del proyecto</label><input class="input" id="pr-titulo" name="titulo" value="${nombreProyecto}" placeholder="Ej: Video aniversario" autocomplete="off" autofocus></div>
         <div class="form-grid form-grid--2 keep">
           <div class="field"><label for="pr-ini">Comienza</label><input class="input" id="pr-ini" name="inicio" type="date" value="${ini}"></div>
           <div class="field"><label for="pr-fin">Se entrega</label><input class="input" id="pr-fin" name="fin" type="date" value="${fin}"></div>
@@ -169,6 +171,9 @@ function formProyecto({ base = null, inicio = '' } = {}) {
           <div class="chips">${COLORES.map(([k, c]) => html`<label class="chip chip--radio chip--dot" style="--c:${c.color}"><input class="sr-only" type="radio" name="color" value="${k}" ${raw((b.color || 'azul') === k ? 'checked' : '')}>${c.label}</label>`)}</div>
         </div>
  ${esNuevo ? '' : listaTareas(b.id, true)}
+        ${esNuevo && lineas.length ? html`<div class="field"><label class="check"><input type="checkbox" name="crearTareas" checked> Crear ${plural(lineas.length, 'tarea', 'tareas')} con las líneas de la nota</label>
+          <div class="pt">${lineas.map((l) => html`<div class="pt__fila"><span class="trunc">${l.titulo}</span><span class="pt__quien">${l.asignados.map(nombreDe).join(', ')}</span></div>`)}</div>
+          <p class="hint">Quedan ligadas a este proyecto. Después le pones fecha a cada una desde la carta Gantt.</p></div>` : ''}
         <label class="check"><input type="checkbox" name="hecho" ${raw(b.hecho ? 'checked' : '')}> Proyecto terminado</label>
         <div class="field"><label for="pr-det">Detalle <span class="opt">(opcional)</span></label><textarea class="textarea" id="pr-det" name="detalle" placeholder="Qué incluye, links, entregables…">${b.detalle || ''}</textarea></div>
       </form>`,
@@ -207,9 +212,20 @@ function guardarProyecto() {
     equipoId: EQUIPO_CREATIVO, titulo: d.titulo, inicio: d.inicio, fin: d.fin, responsables,
     color: d.color || 'azul', hecho: !!form.hecho.checked, detalle: d.detalle || '',
   };
-  guardar([{ c: 'proyectos', id: previo?.id || nuevoId('pj'), data }]);
+  const idProyecto = previo?.id || nuevoId('pj');
+  const ops = [{ c: 'proyectos', id: idProyecto, data }];
+  let creadas = 0;
+  if (!previo && form.crearTareas?.checked) {
+    let lineas = [];
+    try { lineas = JSON.parse(decodeURIComponent(form.dataset.lineas || '[]')); } catch { /* sin líneas */ }
+    lineas.forEach((l) => {
+      ops.push({ c: 'tareas', id: nuevoId('ta'), data: { equipoId: EQUIPO_CREATIVO, titulo: l.titulo, detalle: '', asignados: l.asignados || [], inicio: '', vence: '', prioridad: 'normal', estado: l.hecha ? 'hecha' : 'pendiente', eventoId: '', proyectoId: idProyecto, creada: hoy(), hechaEn: l.hecha ? hoy() : '' } });
+      creadas++;
+    });
+  }
+  guardar(ops);
   cerrarHoja();
-  toast(previo ? 'Proyecto guardado' : 'Proyecto creado');
+  toast(previo ? 'Proyecto guardado' : creadas ? `Proyecto creado con ${plural(creadas, 'tarea', 'tareas')}` : 'Proyecto creado');
 }
 
 registrarAcciones({

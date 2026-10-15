@@ -143,6 +143,27 @@ export function sirvenPorGrupo(fecha) {
 // ---------- proyectos (carta Gantt) ----------
 export const proyectos = () => lista('proyectos');
 export const proyecto = (id) => obtener('proyectos', id);
+const norm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+/** Proyecto cuyo nombre coincide con el título de una nota (ignora tildes y mayúsculas). */
+export function proyectoPorTitulo(texto) {
+  const t = norm(texto);
+  if (!t) return null;
+  return proyectos().find((p) => norm(p.titulo) === t) || proyectos().find((p) => { const n = norm(p.titulo); return n.length >= 4 && (n.includes(t) || t.includes(n)); }) || null;
+}
+/** "Assets promoción - Daniel" → { titulo: 'Assets promoción', asignados: [id de Daniel] }. Si lo que sigue al guion no son nombres del equipo, no se toca. */
+export function analizarLinea(texto) {
+  const limpio = String(texto || '').trim();
+  const m = limpio.match(/^(.*\S)\s+[-–—]\s+([^-–—]+)$/);
+  if (!m) return { titulo: limpio, asignados: [] };
+  const ids = [];
+  for (const parte of m[2].split(/\s*(?:,|\sy\s|\se\s|\/)\s*/)) {
+    const k = norm(parte);
+    const p = personas().find((x) => norm(x.nombre) === k || norm(`${x.nombre} ${x.apellidos || ''}`) === k);
+    if (!p) return { titulo: limpio, asignados: [] };
+    if (!ids.includes(p.id)) ids.push(p.id);
+  }
+  return { titulo: m[1].trim(), asignados: ids };
+}
 export const tareasDeProyecto = (id) => tareas().filter((t) => t.proyectoId === id).sort((a, b) => (a.estado === 'hecha') - (b.estado === 'hecha') || (a.vence || '9').localeCompare(b.vence || '9'));
 
 // ---------- notas ----------

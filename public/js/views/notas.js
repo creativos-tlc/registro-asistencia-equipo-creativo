@@ -2,11 +2,12 @@
    Cada línea se guarda por separado, así dos personas escribiendo a la vez no se pisan entre sí. */
 import { esLider, guardar, obtener } from '../store.js';
 import { EQUIPO_CREATIVO, HOJA_NOTAS, NOTA_COLORES, NOTA_TIPOS } from '../model.js';
-import { bloquesNotas } from '../datos.js';
+import { analizarLinea, bloquesNotas, proyectoPorTitulo } from '../datos.js';
 import { html, icono, nuevoId, raw } from '../util.js';
 import { abrirHoja, cerrarHoja, registrarAcciones, toast } from '../ui.js';
 import { refrescar } from '../router.js';
 import { formTarea } from '../hojas/tarea.js';
+import { formProyecto } from './gantt.js';
 
 const est = { foco: null, enfocar: null, seleccion: false, sel: new Set() };
 const pendientes = new Map(); // id -> texto aún sin guardar
@@ -74,6 +75,7 @@ function barra() {
     ${bt('nota-color', 'Color', 'sliders')}
     ${bt('nota-subir', '', 'arrow-up', 'aria-label="Subir línea"')}${bt('nota-bajar', '', 'arrow-down', 'aria-label="Bajar línea"')}
     ${bt('nota-tarea', 'A tarea', 'tasks')}
+    ${bt('nota-proyecto', 'A proyecto', 'clipboard')}
     ${bt('nota-seleccionar', 'Seleccionar', 'list')}
     ${bt('nota-eliminar', '', 'trash', 'aria-label="Eliminar línea"')}`;
 }
@@ -100,6 +102,15 @@ export function renderNotas() {
       </div>
       ${edita && lineas.length ? html`<button class="btn btn--soft notas__mas" type="button" data-action="nota-agregar">${icono('plus', 'i--sm')} Agregar línea</button>` : ''}
     </div>`;
+}
+
+const esTitulo = (b) => b.tipo === 'h1' || b.tipo === 'h2';
+/** Título (Título o Subtítulo) más cercano por encima de una línea. */
+function tituloDe(id) {
+  const todos = bloquesNotas();
+  let i = todos.findIndex((b) => b.id === id);
+  while (i >= 0 && !esTitulo(todos[i])) i--;
+  return i >= 0 ? todos[i] : null;
 }
 
 function autoAjustar(ta) { ta.style.height = 'auto'; ta.style.height = `${ta.scrollHeight}px`; }
@@ -197,7 +208,26 @@ registrarAcciones({
     const ids = objetivos();
     const d = ids[0] && obtener('notas', ids[0]);
     if (!d || !d.texto?.trim()) { toast('Escribe algo en la línea para convertirla en tarea', { tipo: 'error' }); return; }
-    formTarea({ base: { titulo: d.texto.trim() } });
+    const a = analizarLinea(d.texto);
+    const titulo = tituloDe(d.id);
+    const proy = titulo ? proyectoPorTitulo(titulo.texto) : null;
+    formTarea({ base: { titulo: a.titulo, asignados: a.asignados }, proyectoId: proy?.id || '' });
+  },
+  'nota-proyecto': () => {
+    const ids = objetivos();
+    const d = ids[0] && obtener('notas', ids[0]);
+    if (!d) { toast('Toca el título del proyecto primero', { tipo: 'error' }); return; }
+    const todos = bloquesNotas();
+    let i = todos.findIndex((b) => b.id === d.id);
+    while (i >= 0 && !esTitulo(todos[i])) i--;
+    if (i < 0 || !todos[i].texto?.trim()) { toast('Pon un título (Título o Subtítulo) arriba de las líneas', { tipo: 'error' }); return; }
+    const lineas = [];
+    for (let j = i + 1; j < todos.length && !esTitulo(todos[j]); j++) {
+      const t = (todos[j].texto || '').trim();
+      if (!t) continue;
+      lineas.push({ ...analizarLinea(t), hecha: todos[j].tipo === 'check' && !!todos[j].hecho });
+    }
+    formProyecto({ titulo: todos[i].texto.trim(), lineas });
   },
   'nota-seleccionar': () => { est.seleccion = !est.seleccion; est.sel.clear(); if (est.seleccion && est.foco) est.sel.add(est.foco); refrescar(); },
   'nota-eliminar': () => {
