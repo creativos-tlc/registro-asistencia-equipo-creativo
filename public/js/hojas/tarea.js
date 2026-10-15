@@ -23,10 +23,13 @@ export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '
           ${personas().length ? '' : html`<p class="hint">Aún no hay voluntarios. Agrégalos en Equipo.</p>`}
         </div>
         <div class="form-grid form-grid--2 keep">
+          <div class="field"><label for="ta-inicio">Comienza <span class="opt">(opcional)</span></label><input class="input" id="ta-inicio" name="inicio" type="date" value="${b.inicio || ''}"></div>
           <div class="field"><label for="ta-vence">Fecha límite <span class="opt">(opcional)</span></label><input class="input" id="ta-vence" name="vence" type="date" value="${b.vence ?? fecha}"></div>
-          <div class="field"><label for="ta-prio">Prioridad</label><select class="select" id="ta-prio" name="prioridad">${Object.entries(PRIORIDADES).map(([k, v]) => html`<option value="${k}" ${raw((b.prioridad || 'normal') === k ? 'selected' : '')}>${v}</option>`)}</select></div>
         </div>
-        <div class="field"><label for="ta-estado">Estado</label><select class="select" id="ta-estado" name="estado">${Object.entries(ESTADOS_TAREA).map(([k, v]) => html`<option value="${k}" ${raw((b.estado || 'pendiente') === k ? 'selected' : '')}>${v.label}</option>`)}</select></div>
+        <div class="form-grid form-grid--2 keep">
+          <div class="field"><label for="ta-prio">Prioridad</label><select class="select" id="ta-prio" name="prioridad">${Object.entries(PRIORIDADES).map(([k, v]) => html`<option value="${k}" ${raw((b.prioridad || 'normal') === k ? 'selected' : '')}>${v}</option>`)}</select></div>
+          <div class="field"><label for="ta-estado">Estado</label><select class="select" id="ta-estado" name="estado">${Object.entries(ESTADOS_TAREA).map(([k, v]) => html`<option value="${k}" ${raw((b.estado || 'pendiente') === k ? 'selected' : '')}>${v.label}</option>`)}</select></div>
+        </div>
         <div class="field"><label for="ta-evento">Ligada a un evento <span class="opt">(opcional)</span></label>
           <select class="select" id="ta-evento" name="eventoId"><option value="">Ninguno</option>${proximos.map((e) => html`<option value="${e.id}" ${raw((b.eventoId || eventoId) === e.id ? 'selected' : '')}>${fechaCorta(e.fecha)} · ${e.titulo}</option>`)}</select></div>
         ${proys.length ? html`<div class="field"><label for="ta-proy">Proyecto <span class="opt">(opcional · aparece en la carta Gantt)</span></label>
@@ -45,10 +48,11 @@ function guardarTarea() {
   const form = document.getElementById('fTarea');
   const d = leerForm(form);
   if (!d.titulo) { marcarError(form.titulo, 'Escribe qué hay que hacer'); return; }
+  if (d.inicio && d.vence && d.vence < d.inicio) { marcarError(form.vence, 'La fecha límite no puede ser antes del comienzo'); return; }
   const previa = form.dataset.id ? tarea(form.dataset.id) : null;
   const asignados = [...form.querySelectorAll('input[name=asig]:checked')].map((i) => i.value);
   const data = {
-    equipoId: EQUIPO_CREATIVO, titulo: d.titulo, detalle: d.detalle || '', asignados, vence: d.vence || '', prioridad: d.prioridad, estado: d.estado,
+    equipoId: EQUIPO_CREATIVO, titulo: d.titulo, detalle: d.detalle || '', asignados, inicio: d.inicio || '', vence: d.vence || '', prioridad: d.prioridad, estado: d.estado,
     eventoId: d.eventoId || '', proyectoId: d.proyectoId || '', creada: previa?.creada || hoy(), hechaEn: d.estado === 'hecha' ? previa?.hechaEn || hoy() : '',
   };
   guardar([{ c: 'tareas', id: previa?.id || nuevoId('ta'), data }]);

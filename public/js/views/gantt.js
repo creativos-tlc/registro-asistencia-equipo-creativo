@@ -5,10 +5,23 @@ import { EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
 import { nombreDe, personas, proyecto, proyectos, tareasDeProyecto } from '../datos.js';
 import { clamp, dif, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
+import { refrescar } from '../router.js';
 
 const esAncho = () => matchMedia('(min-width: 720px)').matches;
 const semanas = () => (esAncho() ? 12 : 8);
 const COLORES = Object.entries(NOTA_COLORES).filter(([k]) => k !== 'gris');
+const CLAVE_TAREAS = 'tlc.gantt.tareas';
+const verTareas = () => { try { return localStorage.getItem(CLAVE_TAREAS) !== '0'; } catch { return true; } };
+
+function estadoTarea(t) {
+  const h = hoy();
+  if (t.estado === 'hecha') return { txt: 'Hecha', tono: 'ok' };
+  if (!t.vence) return { txt: 'Sin fecha', tono: 'mudo' };
+  if (t.vence < h) return { txt: `Atrasada ${plural(dif(h, t.vence), 'día', 'días')}`, tono: 'bad' };
+  const q = dif(t.vence, h);
+  if (q === 0) return { txt: 'Vence hoy', tono: 'warn' };
+  return { txt: `Vence en ${plural(q, 'día', 'días')}`, tono: q <= 3 ? 'warn' : '' };
+}
 
 /** Ventana visible: arranca una semana antes de la fecha de referencia para ver algo de lo reciente. */
 export function ventana(fecha) {
@@ -42,6 +55,8 @@ function quien(p) {
   return html`<span class="gp__quien" aria-label="${nombresDe(p).join(', ')}">${ver.map((id) => avatar(nombreDe(id), 'sm'))}${n.length > 3 ? html`<span class="gp__mas num">+${n.length - 3}</span>` : ''}</span>`;
 }
 
+export const estadoDeTarea = estadoTarea;
+
 export function renderGantt({ fecha }) {
   const v = ventana(fecha);
   const todos = proyectos().filter((p) => p.inicio && p.fin);
@@ -66,6 +81,27 @@ export function renderGantt({ fecha }) {
 
   const hoyPos = hoy() >= v.desde && hoy() <= v.hasta ? ((dif(hoy(), v.desde) + 0.5) / v.dias) * 100 : null;
 
+  const hoyPosT = hoyPos;
+  const filaTarea = (t, vv, color) => {
+    const et = estadoTarea(t);
+    const fin = t.vence ? dif(t.vence, vv.desde) : null;
+    const ini = t.inicio ? dif(t.inicio, vv.desde) : fin;
+    const dentro = t.vence && (t.inicio || t.vence) <= vv.hasta && t.vence >= vv.desde;
+    let marca = '';
+    if (dentro) {
+      if (t.inicio && t.inicio < t.vence) {
+        const a = clamp(ini, 0, vv.dias); const b = clamp(fin + 1, 0, vv.dias);
+        marca = html`<span class="gt__barra" style="left:${(a / vv.dias) * 100}%;width:max(6px, ${((b - a) / vv.dias) * 100}%)"></span>`;
+      } else {
+        marca = html`<span class="gt__hito" style="left:${((clamp(fin, 0, vv.dias - 1) + 0.5) / vv.dias) * 100}%"></span>`;
+      }
+    }
+    return html`<button class="gt ${t.estado === 'hecha' ? 'gt--hecha' : ''}" type="button" data-action="tarea-editar" data-id="${t.id}">
+      <span class="gt__cab">${icono(t.estado === 'hecha' ? 'circle-check' : 'circle', 'i--sm')}<span class="gt__tit trunc">${t.titulo}</span><span class="gt__est gp__est--${et.tono || 'normal'}">${et.txt}</span></span>
+      <span class="gt__pista" aria-hidden="true">${hoyPosT !== null ? html`<span class="gp__hoy" style="left:${hoyPosT}%"></span>` : ''}${marca}</span>
+    </button>`;
+  };
+
   const fila = (p) => {
     const ini = clamp(dif(p.inicio, v.desde), 0, v.dias);
     const fin = clamp(dif(p.fin, v.desde) + 1, 0, v.dias);
@@ -73,16 +109,20 @@ export function renderGantt({ fecha }) {
     const e = estadoDe(p);
     const av = avance(p.id);
     const color = NOTA_COLORES[p.color]?.color || 'var(--accent)';
-    return html`
-      <button class="gp ${p.hecho ? 'gp--hecho' : ''}" type="button" data-action="proyecto-abrir" data-id="${p.id}" style="--c:${color}">
+    const subfilas = verTareas() ? tareasDeProyecto(p.id).map((t) => filaTarea(t, v, color)) : [];
+    return html`<div class="gpw" style="--c:${color}">
+      <button class="gp ${p.hecho ? 'gp--hecho' : ''}" type="button" data-action="proyecto-abrir" data-id="${p.id}">
         <span class="gp__cab"><span class="gp__tit trunc">${p.hecho ? icono('circle-check', 'i--sm') : ''}${p.titulo}</span>${quien(p)}</span>
         <span class="gp__pista" aria-hidden="true">${hoyPos !== null ? html`<span class="gp__hoy" style="left:${hoyPos}%"></span>` : ''}<span class="gp__barra ${izq ? 'gp__barra--izq' : ''} ${der ? 'gp__barra--der' : ''}" style="left:${(ini / v.dias) * 100}%;width:max(8px, ${((fin - ini) / v.dias) * 100}%)">${av.n ? html`<span class="gp__prog" style="width:${Math.round(av.pct * 100)}%"></span>` : ''}</span></span>
         <span class="gp__meta"><span class="num">${fechaDiaMes(p.inicio)} → ${fechaDiaMes(p.fin)}</span><span>${plural(Math.max(1, Math.round(dur(p) / 7)), 'semana', 'semanas')}</span>${av.n ? html`<span class="num">${av.h}/${av.n} tareas</span>` : ''}<span class="gp__est ${e.tono ? `gp__est--${e.tono}` : ''}">${e.txt}</span></span>
-      </button>`;
+      </button>
+      ${subfilas}
+    </div>`;
   };
 
   return html`
     <div class="gantt" style="--n:${v.n}">
+      <div class="chips"><button class="chip" type="button" data-action="gantt-tareas" aria-pressed="${verTareas()}">${icono(verTareas() ? 'check' : 'list', 'i--sm')} Mostrar tareas</button></div>
       <div class="gantt__eje" aria-hidden="true">${eje}</div>
       <div class="gantt__cuerpo">
         ${visibles.length ? visibles.map(fila) : html`<p class="muted gantt__nada">Ningún proyecto cae en estas semanas.</p>`}
@@ -100,7 +140,7 @@ const listaTareas = (id, editable) => {
       <button class="pt__fila ${t.estado === 'hecha' ? 'pt__fila--hecha' : ''}" type="button" data-action="tarea-editar" data-id="${t.id}">
         ${icono(t.estado === 'hecha' ? 'circle-check' : 'circle')}
         <span class="trunc">${t.titulo}</span>
-        <span class="pt__quien">${(t.asignados || []).map(nombreDe).join(', ')}${t.vence ? html` <span class="num">· ${fechaDiaMes(t.vence)}</span>` : ''}</span>
+        <span class="pt__quien">${(t.asignados || []).map(nombreDe).join(', ')}<span class="gp__est gp__est--${estadoTarea(t).tono || 'normal'}">${(t.asignados || []).length ? ' · ' : ''}${estadoTarea(t).txt}</span></span>
       </button>`)}</div>` : html`<p class="hint">Aún no hay tareas en este proyecto.</p>`}
     ${editable ? html`<button class="btn btn--soft btn--sm" type="button" data-action="tarea-nueva" data-proyecto="${id}" data-fecha="" style="align-self:flex-start">${icono('plus', 'i--sm')} Agregar tarea</button>` : ''}
   </div>`;
@@ -179,6 +219,7 @@ registrarAcciones({
     if (!p) return;
     if (esLider()) formProyecto({ base: p }); else verProyecto(p);
   },
+  'gantt-tareas': () => { try { localStorage.setItem(CLAVE_TAREAS, verTareas() ? '0' : '1'); } catch { /* sin almacenamiento */ } refrescar(); },
   'proyecto-guardar': guardarProyecto,
   'proyecto-eliminar': async (el) => {
     const p = proyecto(el.dataset.id);
