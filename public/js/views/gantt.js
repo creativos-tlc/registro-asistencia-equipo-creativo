@@ -2,7 +2,7 @@
    En el celular cada proyecto es una fila con su título arriba y una pista debajo, así no hace falta columna fija ni arrastrar de lado. */
 import { esLider, guardar } from '../store.js';
 import { EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
-import { nombreDe, personas, proyecto, proyectos, tareas, tareasDeProyecto } from '../datos.js';
+import { nombreDe, personas, proyecto, proyectos, tarea, tareas, tareasDeProyecto } from '../datos.js';
 import { clamp, dif, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
 import { refrescar } from '../router.js';
@@ -156,19 +156,19 @@ const listaTareas = (id, editable) => {
   </div>`;
 };
 
-export function formProyecto({ base = null, inicio = '', titulo = '', lineas = [] } = {}) {
+export function formProyecto({ base = null, inicio = '', fin: finParam = '', titulo = '', lineas = [], responsables = [], sinFechas = false, desdeTarea = '' } = {}) {
   const b = base || {};
   const esNuevo = !b.id;
-  const desdeNota = esNuevo && lineas.length > 0; // viene de una nota: las fechas las elige la persona, no se proponen
+  const desdeNota = esNuevo && (lineas.length > 0 || sinFechas); // viene de una nota: las fechas las elige la persona, no se proponen
   const ini = b.inicio || inicio || (desdeNota ? '' : hoy());
   const nombreProyecto = b.titulo || titulo || '';
-  const fin = b.fin || (ini && !desdeNota ? sumarDias(ini, 14) : '');
-  const resp = new Set(b.responsables || []);
+  const fin = b.fin || finParam || (ini && !desdeNota ? sumarDias(ini, 14) : '');
+  const resp = new Set(b.responsables || responsables);
   abrirHoja({
     titulo: esNuevo ? 'Nuevo proyecto' : 'Editar proyecto',
     ancha: true,
     cuerpo: html`
-      <form id="fProyecto" class="form-grid" novalidate data-id="${b.id || ''}" data-lineas="${encodeURIComponent(JSON.stringify(lineas))}">
+      <form id="fProyecto" class="form-grid" novalidate data-id="${b.id || ''}" data-lineas="${encodeURIComponent(JSON.stringify(lineas))}" data-desde-tarea="${desdeTarea}">
         <div class="field"><label for="pr-titulo">Nombre del proyecto</label><input class="input" id="pr-titulo" name="titulo" value="${nombreProyecto}" placeholder="Ej: Video aniversario" autocomplete="off" autofocus></div>
         <div class="form-grid form-grid--2 keep">
           <div class="field"><label for="pr-ini">Comienza</label><input class="input" id="pr-ini" name="inicio" type="date" value="${ini}"></div>
@@ -233,9 +233,11 @@ function guardarProyecto() {
       creadas++;
     });
   }
+  const desdeTarea = !previo && form.dataset.desdeTarea ? tarea(form.dataset.desdeTarea) : null;
+  if (desdeTarea) ops.push({ c: 'tareas', id: desdeTarea.id, data: null });
   guardar(ops);
   cerrarHoja();
-  toast(previo ? 'Proyecto guardado' : creadas ? `Proyecto creado con ${plural(creadas, 'tarea', 'tareas')}` : 'Proyecto creado');
+  toast(previo ? 'Proyecto guardado' : desdeTarea ? `"${desdeTarea.titulo}" ahora es un proyecto` : creadas ? `Proyecto creado con ${plural(creadas, 'tarea', 'tareas')}` : 'Proyecto creado');
 }
 
 registrarAcciones({
@@ -246,6 +248,12 @@ registrarAcciones({
     if (esLider()) formProyecto({ base: p }); else verProyecto(p);
   },
   'gantt-tareas': () => { try { localStorage.setItem(CLAVE_TAREAS, verTareas() ? '0' : '1'); } catch { /* sin almacenamiento */ } refrescar(); },
+  'proyecto-desde-tarea': (el) => {
+    const t = tarea(el.dataset.id);
+    if (!t) return;
+    cerrarHoja();
+    formProyecto({ titulo: t.titulo, inicio: t.inicio || '', fin: t.vence || '', responsables: t.asignados || [], sinFechas: !(t.inicio && t.vence), desdeTarea: t.id });
+  },
   'proyecto-guardar': guardarProyecto,
   'proyecto-eliminar': async (el) => {
     const p = proyecto(el.dataset.id);

@@ -216,11 +216,12 @@ registrarAcciones({
   'nota-proyecto': () => {
     const ids = objetivos();
     const d = ids[0] && obtener('notas', ids[0]);
-    if (!d) { toast('Toca el título del proyecto primero', { tipo: 'error' }); return; }
+    if (!d) { toast('Toca una línea primero', { tipo: 'error' }); return; }
+    if (!d.texto?.trim()) { toast('Escribe algo en la línea primero', { tipo: 'error' }); return; }
+    // Una línea suelta se vuelve un proyecto por sí misma; un Título o Subtítulo se lleva las líneas de abajo como tareas.
+    if (!esTitulo(d)) { const a = analizarLinea(d.texto); formProyecto({ titulo: a.titulo, responsables: a.asignados, sinFechas: true }); return; }
     const todos = bloquesNotas();
-    let i = todos.findIndex((b) => b.id === d.id);
-    while (i >= 0 && !esTitulo(todos[i])) i--;
-    if (i < 0 || !todos[i].texto?.trim()) { toast('Pon un título (Título o Subtítulo) arriba de las líneas', { tipo: 'error' }); return; }
+    const i = todos.findIndex((b) => b.id === d.id);
     const lineas = [];
     for (let j = i + 1; j < todos.length && !esTitulo(todos[j]); j++) {
       const t = (todos[j].texto || '').trim();

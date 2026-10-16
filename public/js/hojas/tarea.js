@@ -34,6 +34,7 @@ export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '
           <select class="select" id="ta-evento" name="eventoId"><option value="">Ninguno</option>${proximos.map((e) => html`<option value="${e.id}" ${raw((b.eventoId || eventoId) === e.id ? 'selected' : '')}>${fechaCorta(e.fecha)} · ${e.titulo}</option>`)}</select></div>
         ${proys.length ? html`<div class="field"><label for="ta-proy">Proyecto <span class="opt">(opcional · aparece en la carta Gantt)</span></label>
           <select class="select" id="ta-proy" name="proyectoId"><option value="">Ninguno</option>${proys.map((p) => html`<option value="${p.id}" ${raw(proyActual === p.id ? 'selected' : '')}>${p.titulo}</option>`)}</select></div>` : ''}
+        ${esNueva ? '' : html`<div class="field"><button class="btn btn--soft btn--sm" type="button" data-action="proyecto-desde-tarea" data-id="${b.id}" style="align-self:flex-start">${icono('clipboard', 'i--sm')} Esto es un proyecto, no una tarea</button></div>`}
         <div class="field"><label for="ta-det">Detalle <span class="opt">(opcional)</span></label><textarea class="textarea" id="ta-det" name="detalle" placeholder="Links, medidas, referencias…">${b.detalle || ''}</textarea></div>
       </form>`,
     pie: html`
