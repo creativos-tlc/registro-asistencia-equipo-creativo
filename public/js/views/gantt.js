@@ -2,7 +2,7 @@
    En el celular cada proyecto es una fila con su título arriba y una pista debajo, así no hace falta columna fija ni arrastrar de lado. */
 import { esLider, guardar } from '../store.js';
 import { EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
-import { nombreDe, personas, proyecto, proyectos, tareasDeProyecto } from '../datos.js';
+import { nombreDe, personas, proyecto, proyectos, tareas, tareasDeProyecto } from '../datos.js';
 import { clamp, dif, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
 import { refrescar } from '../router.js';
@@ -10,7 +10,7 @@ import { refrescar } from '../router.js';
 const esAncho = () => matchMedia('(min-width: 720px)').matches;
 const semanas = () => (esAncho() ? 12 : 8);
 const COLORES = Object.entries(NOTA_COLORES).filter(([k]) => k !== 'gris');
-const CLAVE_TAREAS = 'tlc.gantt.tareas';
+const CLAVE_TAREAS = 'tlc.gantt.tareas2';
 const verTareas = () => { try { return localStorage.getItem(CLAVE_TAREAS) !== '0'; } catch { return true; } };
 
 function estadoTarea(t) {
@@ -102,6 +102,11 @@ export function renderGantt({ fecha }) {
     </button>`;
   };
 
+  // Tareas con fecha que no pertenecen a ningún proyecto: se ven igual, en su propio grupo.
+  const sueltas = !verTareas() ? [] : tareas()
+    .filter((t) => !t.proyectoId && t.estado !== 'hecha' && (t.vence || t.inicio) && (t.vence || t.inicio) >= v.desde && (t.inicio || t.vence) <= v.hasta)
+    .sort((a, b) => (a.vence || a.inicio).localeCompare(b.vence || b.inicio) || a.titulo.localeCompare(b.titulo, 'es'));
+
   const fila = (p) => {
     const ini = clamp(dif(p.inicio, v.desde), 0, v.dias);
     const fin = clamp(dif(p.fin, v.desde) + 1, 0, v.dias);
@@ -122,10 +127,15 @@ export function renderGantt({ fecha }) {
 
   return html`
     <div class="gantt" style="--n:${v.n}">
-      <div class="chips"><button class="chip" type="button" data-action="gantt-tareas" aria-pressed="${verTareas()}">${icono(verTareas() ? 'check' : 'list', 'i--sm')} Mostrar tareas</button></div>
+      <div class="chips"><button class="chip" type="button" data-action="gantt-tareas">${icono(verTareas() ? 'x' : 'list', 'i--sm')} ${verTareas() ? 'Ocultar tareas' : 'Mostrar tareas'}</button></div>
       <div class="gantt__eje" aria-hidden="true">${eje}</div>
       <div class="gantt__cuerpo">
         ${visibles.length ? visibles.map(fila) : html`<p class="muted gantt__nada">Ningún proyecto cae en estas semanas.</p>`}
+        ${sueltas.length ? html`<div class="gpw gpw--sueltas" style="--c:var(--tx-2)">
+          <div class="gp__cab gp__cab--grupo"><span class="gp__tit">Tareas sin proyecto</span><span class="gp__sin">${plural(sueltas.length, 'tarea', 'tareas')}</span></div>
+          ${sueltas.map((t) => filaTarea(t, v, 'var(--tx-2)'))}
+          <p class="hint" style="padding-left:var(--sp-4)">Toca una tarea y elige su proyecto para ordenarla.</p>
+        </div>` : ''}
       </div>
       ${fuera && visibles.length ? html`<p class="hint gantt__fuera">${plural(fuera, 'proyecto más fuera', 'proyectos más fuera')} de este período. Usa las flechas para verlos.</p>` : ''}
       ${esLider() ? html`<div class="gantt__pie"><button class="btn btn--soft btn--sm" type="button" data-action="proyecto-nuevo">${icono('plus', 'i--sm')} Nuevo proyecto</button></div>` : ''}

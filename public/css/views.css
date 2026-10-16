@@ -339,3 +339,6 @@ button.mx--celda:hover { background: color-mix(in srgb, var(--c) 22%, var(--s1))
 .gt--hecha .gt__barra, .gt--hecha .gt__hito { opacity: 0.35; }
 .gp__est--normal { color: var(--tx-2); }
 .gp__est--mudo { color: var(--tx-3); }
+
+.gp__cab--grupo { padding: var(--sp-3) 0 var(--sp-1); }
+.gpw--sueltas .gt { padding-left: 0; }
