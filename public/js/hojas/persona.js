@@ -101,6 +101,7 @@ export function verPersona(id) {
             <div class="chips">
               <button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="contenido" aria-pressed="${(p.permisos || []).includes('contenido')}">${icono('image', 'i--sm')} Contenido</button>
               <button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="turnos" aria-pressed="${(p.permisos || []).includes('turnos')}">${icono('clipboard', 'i--sm')} Armar turnos</button>
+              <button class="chip" type="button" data-action="persona-permiso" data-id="${id}" data-p="devocional" aria-pressed="${(p.permisos || []).includes('devocional')}">${icono('message', 'i--sm')} Devocional</button>
             </div>
             <p class="hint" style="margin-top:var(--sp-2)">Contenido: ve el calendario de publicaciones y puede crear y editar las de Instagram y WhatsApp. Armar turnos: puede editar los turnos del domingo y quién no estará (todos los voluntarios ya pueden verlos).</p>` : ''}
         </section>` : ''}`,

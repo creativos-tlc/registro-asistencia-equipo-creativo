@@ -60,7 +60,7 @@ export const GRUPOS_TURNO = {
   prueba: { label: 'En prueba',           color: 'var(--violet)', orden: 3 },
 };
 export const REUNIONES = { r1: '1ra', r2: '2da' };
-export const PERMISOS_ETIQUETA = { contenido: 'Contenido', turnos: 'Turnos' };
+export const PERMISOS_ETIQUETA = { contenido: 'Contenido', turnos: 'Turnos', devocional: 'Devocional' };
 
 export const ESTADOS_CONTENIDO = {
   idea:      { label: 'Idea',      tag: '' },

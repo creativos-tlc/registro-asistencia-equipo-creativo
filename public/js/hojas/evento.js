@@ -1,6 +1,6 @@
-import { esLider, guardar, lista } from '../store.js';
+import { esLider, guardar, lista, tienePermiso } from '../store.js';
 import { EQUIPO_CREATIVO, PLANTILLA_SERVICIO, TIPOS, tipoDe } from '../model.js';
-import { citados, evento, eventosOrdenados, listaTomada, nombreDe, personas, pideLista, resumenAsistencia, tareas } from '../datos.js';
+import { citados, devocional, evento, eventosOrdenados, listaTomada, nombreDe, personas, pideLista, resumenAsistencia, tareas } from '../datos.js';
 import { fechaLarga, fechaRelativa, html, hoy, icono, nuevoId, raw, sumarDias, rangoHora, plural, poner } from '../util.js';
 import { abrirHoja, actualizarHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
@@ -28,7 +28,7 @@ export function verEvento(id) {
       </div>
     </section>` : '';
 
-  const bloquePrograma = t.programa && (esLider() || programa.length) ? html`
+  const bloquePrograma = t.programa && !e.devocional && (esLider() || programa.length) ? html`
     <section class="section" style="margin:0">
       <div class="section__head"><h3 class="section__title">${e.tipo === 'servicio' ? 'Programa del servicio' : 'Agenda'}</h3>
         <button class="section__link solo-lider" type="button" data-action="programa-editar" data-id="${e.id}">${icono('edit', 'i--sm')} ${programa.length ? 'Editar' : 'Armar'}</button></div>
@@ -38,6 +38,18 @@ export function verEvento(id) {
           <span class="row__main"><span class="row__title">${f.titulo}</span>${f.responsableId ? html`<span class="row__sub">${nombreDe(f.responsableId)}</span>` : ''}</span>
         </li>`)}</ol></div>`
         : html`<p class="muted" style="font-size:var(--t-sm)">Aún no hay bloques. Arma el orden con horas y responsables${e.tipo === 'servicio' ? ', o copia el del domingo anterior' : ''}.</p>`}
+    </section>` : '';
+
+  const dv = e.devocional ? devocional(e.fecha) : null;
+  const bloqueDevocional = e.devocional ? html`
+    <section class="section" style="margin:0">
+      <div class="section__head"><h3 class="section__title">Lectura y versículos</h3>
+        ${tienePermiso('devocional') ? html`<button class="section__link" type="button" data-action="devocional-editar" data-id="${e.id}">${icono('edit', 'i--sm')} ${dv ? 'Editar' : 'Agregar'}</button>` : ''}</div>
+      ${dv && (dv.lectura || dv.versiculos || dv.nota) ? html`<div class="panel" style="padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3)">
+        ${dv.lectura ? html`<div><span class="label">Leemos</span><p style="font-weight:700">${dv.lectura}</p></div>` : ''}
+        ${dv.versiculos ? html`<div><span class="label">Para aprender</span><p style="white-space:pre-wrap">${dv.versiculos}</p></div>` : ''}
+        ${dv.nota ? html`<p class="muted" style="white-space:pre-wrap">${dv.nota}</p>` : ''}</div>`
+        : html`<p class="muted" style="font-size:var(--t-sm)">Aún no se ha publicado la lectura de este día.</p>`}
     </section>` : '';
 
   const bloqueTareas = html`
@@ -64,6 +76,7 @@ export function verEvento(id) {
         <div class="chips"><span class="tag tag--c" style="--c:${t.color}">${t.label}</span>${e.serieId ? html`<span class="tag">${icono('refresh', 'i--sm')} Se repite</span>` : ''}</div>
       </div>
       ${e.notas ? html`<p class="muted" style="white-space:pre-wrap">${e.notas}</p>` : ''}
+      ${bloqueDevocional}
       ${bloqueAsistencia}
       ${bloquePrograma}
       ${bloqueTareas}
@@ -116,6 +129,7 @@ export function formEvento({ base = null, fecha = hoy(), tipo = 'reunion', hora 
           <div class="chips">${chipsPersonas(b.participantes)}</div>
           <p class="hint">Si no eliges a nadie, cuenta todo el equipo.</p>
         </div>
+        <label class="check"><input type="checkbox" name="devocional" ${raw(b.devocional ? 'checked' : '')}> Es un devocional (se anota la lectura y los versículos)</label>
         <label class="check"><input type="checkbox" name="tomaLista" ${raw((b.tomaLista ?? t.asistencia) ? 'checked' : '')}> Tomar asistencia en este evento</label>
         <div class="field"><label for="ev-notas">Notas <span class="opt">(opcional)</span></label><textarea class="textarea" id="ev-notas" name="notas" placeholder="Qué hay que llevar, objetivos, links…">${b.notas || ''}</textarea></div>
         ${esNuevo ? html`
@@ -155,7 +169,7 @@ function guardarEvento() {
   const titulo = d.titulo || tipoDe(d.tipo).label;
   const base = {
     equipoId: EQUIPO_CREATIVO, tipo: d.tipo, titulo, fecha: d.fecha, horaInicio: d.horaInicio || '', horaFin: d.horaFin || '',
-    lugar: d.lugar || '', notas: d.notas || '', participantes: d.participantes, tomaLista: !!d.tomaLista,
+    lugar: d.lugar || '', notas: d.notas || '', participantes: d.participantes, tomaLista: !!d.tomaLista, devocional: !!d.devocional,
     programa: previo?.programa || [], serieId: previo?.serieId || null,
   };
   if (previo) {
@@ -176,6 +190,38 @@ function guardarEvento() {
   const undo = guardar(ops);
   cerrarHoja();
   toast(ops.length > 1 ? `${ops.length} eventos creados` : 'Evento creado', { accion: { texto: 'Deshacer', fn: undo } });
+}
+
+// ---------- lectura del devocional (la anota quien tenga el permiso Devocional) ----------
+function formDevocional(eventoId) {
+  const e = evento(eventoId);
+  if (!e) return;
+  const dv = devocional(e.fecha) || {};
+  abrirHoja({
+    titulo: 'Lectura y versículos',
+    cuerpo: html`
+      <form id="fDevocional" class="form-grid" novalidate data-evento="${e.id}">
+        <p class="muted" style="font-size:var(--t-sm)">${fechaLarga(e.fecha)}</p>
+        <div class="field"><label for="dv-lectura">¿Qué leemos?</label><input class="input" id="dv-lectura" name="lectura" value="${dv.lectura || ''}" placeholder="Ej: Juan 1–3" autocomplete="off" autofocus></div>
+        <div class="field"><label for="dv-vers">Versículos o capítulos para aprender <span class="opt">(opcional)</span></label><textarea class="textarea" id="dv-vers" name="versiculos" placeholder="Ej: Juan 1:1–5">${dv.versiculos || ''}</textarea></div>
+        <div class="field"><label for="dv-nota">Nota para el equipo <span class="opt">(opcional)</span></label><textarea class="textarea" id="dv-nota" name="nota" placeholder="Preguntas para pensar, qué traer…">${dv.nota || ''}</textarea></div>
+      </form>`,
+    pie: html`<span class="spacer"></span>
+      <button class="btn btn--soft" type="button" data-action="cerrar-hoja">Cancelar</button>
+      <button class="btn btn--primary" type="button" data-action="devocional-guardar" style="flex:0 0 auto">Guardar</button>`,
+  });
+}
+
+function guardarDevocional() {
+  const form = document.getElementById('fDevocional');
+  const d = leerForm(form);
+  const e = evento(form.dataset.evento);
+  if (!e) return;
+  if (!d.lectura && !d.versiculos && !d.nota) { marcarError(form.lectura, 'Escribe al menos qué leemos'); return; }
+  guardar([{ c: 'devocionales', id: e.fecha, data: { equipoId: EQUIPO_CREATIVO, fecha: e.fecha, lectura: d.lectura || '', versiculos: d.versiculos || '', nota: d.nota || '' } }]);
+  cerrarHoja();
+  toast('Lectura guardada');
+  verEvento(e.id);
 }
 
 // ---------- eliminar / duplicar ----------
@@ -257,6 +303,8 @@ function editarPrograma(id) {
 registrarAcciones({
   'evento-nuevo': (el) => formEvento({ fecha: el?.dataset.fecha || hoy(), tipo: el?.dataset.tipo || 'reunion', hora: el?.dataset.hora || '' }),
   'evento-ver': (el) => verEvento(el.dataset.id),
+  'devocional-editar': (el) => formDevocional(el.dataset.id),
+  'devocional-guardar': guardarDevocional,
   'evento-editar': (el) => formEvento({ base: evento(el.dataset.id), esNuevo: false }),
   'evento-guardar': guardarEvento,
   'evento-eliminar': (el) => eliminarEvento(el.dataset.id),

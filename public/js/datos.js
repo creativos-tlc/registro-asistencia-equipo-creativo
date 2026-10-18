@@ -140,6 +140,9 @@ export function sirvenPorGrupo(fecha) {
   return porGrupo;
 }
 
+// ---------- devocional (lectura y versículos de cada martes) ----------
+export const devocional = (fecha) => obtener('devocionales', fecha);
+
 // ---------- proyectos (carta Gantt) ----------
 export const proyectos = () => lista('proyectos');
 export const proyecto = (id) => obtener('proyectos', id);
@@ -181,7 +184,7 @@ export function itemsCalendario({ desde, hasta, capas = ['eventos', 'tareas', 'c
     for (const e of eventos()) {
       if (e.fecha < desde || e.fecha > hasta) continue;
       const t = tipoDe(e.tipo);
-      items.push({ clase: 'evento', id: e.id, fecha: e.fecha, ini: e.horaInicio || '', fin: e.horaFin || '', titulo: e.titulo, color: t.color, icono: t.icono, sub: t.label });
+      items.push({ clase: 'evento', id: e.id, fecha: e.fecha, ini: e.horaInicio || '', fin: e.horaFin || '', titulo: e.titulo, color: t.color, icono: t.icono, sub: e.devocional && devocional(e.fecha)?.lectura ? `${t.label} · ${devocional(e.fecha).lectura}` : t.label });
     }
   }
   if (capas.includes('tareas')) {

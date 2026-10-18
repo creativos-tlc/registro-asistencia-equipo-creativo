@@ -12,7 +12,7 @@ import {
 } from './auth.js';
 import { HttpError, leerJSON, responder } from './util.js';
 
-const COLECCIONES = new Set(['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos', 'ajustes']);
+const COLECCIONES = new Set(['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos', 'devocionales', 'ajustes']);
 const ID_VALIDO = /^[\w:~.-]{1,90}$/;
 const MAX_OPS = 300;
 const MAX_DATA = 24 * 1024;
@@ -20,12 +20,12 @@ const LIMITE_PULL = 5000;
 
 // Punto único de permisos. Hoy solo entran líderes; cuando entren voluntarios se afina aquí.
 // Un voluntario ve el calendario y las tareas, y puede crear y asignar tareas. Nada más.
-const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos']);
+const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos', 'devocionales']);
 const ESCRITURA_VOLUNTARIO = new Set(['tareas']);
 const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas'];
 
 // Lo que suma cada permiso extra (lo da un líder desde el perfil de la persona).
-const PERMISO_COLECCIONES = { contenido: ['publicaciones'], turnos: ['roles', 'turnos', 'ausencias'] };
+const PERMISO_COLECCIONES = { contenido: ['publicaciones'], turnos: ['roles', 'turnos', 'ausencias'], devocional: ['devocionales'] };
 
 function puede(yo, operacion, coleccion) {
   if (yo.rol === 'lider') return true;
