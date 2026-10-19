@@ -76,7 +76,10 @@ export const vistaInicio = {
     });
     // Publicaciones que tengo a cargo (aunque no tenga el permiso de Contenido)
     const pubs = publicaciones().filter((p) => p.responsableId === yoId && p.estado !== 'publicado').sort((a, b) => a.fecha.localeCompare(b.fecha));
-    const pubsAtrasadas = pubs.filter((p) => p.fecha < h);
+    const pubsAtrasadas = pubs.filter((p) => (p.entrega || p.fecha) < h && p.estado !== 'listo');
+    pubs.filter((p) => p.entrega && p.entrega >= h && p.entrega <= fin && p.estado !== 'listo').forEach((p) => {
+      items.push({ f: p.entrega, ord: '97:00', html: html`<button class="row" type="button" data-action="publicacion-asignada" data-id="${p.id}"><span class="typebadge" style="--c:var(--orange)">${icono('clock')}</span><span class="row__main"><span class="row__title">Entrega: ${p.titulo}</span><span class="row__sub">Se publica ${cuando(p.fecha).toLowerCase()}</span></span>${icono('chev-r', 'row__chev')}</button>` });
+    });
     pubs.filter((p) => p.fecha >= h && p.fecha <= fin).forEach((p) => {
       const c = CANALES[p.canal] || CANALES.instagram;
       items.push({ f: p.fecha, ord: p.hora || '98:00', html: html`<button class="row" type="button" data-action="publicacion-asignada" data-id="${p.id}"><span class="typebadge" style="--c:var(--pink)">${icono('image')}</span><span class="row__main"><span class="row__title">Publicar: ${p.titulo}</span><span class="row__sub">${c.label} · ${c.formatos[p.formato] || ''}${p.hora ? ` · ${p.hora}` : ''}</span></span>${icono('chev-r', 'row__chev')}</button>` });
@@ -112,7 +115,7 @@ export const vistaInicio = {
         </section>
 
         ${pubs.length ? html`<section class="section" style="margin:0"><div class="section__head"><h3 class="section__title">Publicaciones a tu cargo</h3></div>
-          <div class="panel panel--pub"><div class="list">${pubs.map((p) => { const c = CANALES[p.canal] || CANALES.instagram; const e = ESTADOS_CONTENIDO[p.estado || 'idea'] || ESTADOS_CONTENIDO.idea; return html`<button class="row" type="button" data-action="publicacion-asignada" data-id="${p.id}"><span class="typebadge" style="--c:var(--pink)">${icono(c.icono)}</span><span class="row__main"><span class="row__title">${p.titulo}</span><span class="row__sub"><span style="${p.fecha < h ? 'color:var(--bad)' : ''}">${p.fecha < h ? 'Era para el ' : 'Se publica '}${cuando(p.fecha).toLowerCase()}</span><span class="tag ${e.tag}">${e.label}</span></span></span>${icono('chev-r', 'row__chev')}</button>`; })}</div></div></section>` : ''}
+          <div class="panel panel--pub"><div class="list">${pubs.map((p) => { const c = CANALES[p.canal] || CANALES.instagram; const e = ESTADOS_CONTENIDO[p.estado || 'idea'] || ESTADOS_CONTENIDO.idea; return html`<button class="row" type="button" data-action="publicacion-asignada" data-id="${p.id}"><span class="typebadge" style="--c:var(--pink)">${icono(c.icono)}</span><span class="row__main"><span class="row__title">${p.titulo}</span><span class="row__sub"><span style="${(p.entrega || p.fecha) < h && p.estado !== 'listo' ? 'color:var(--bad)' : ''}">${p.entrega ? `Entrega ${cuando(p.entrega).toLowerCase()} · publica ${cuando(p.fecha).toLowerCase()}` : p.fecha < h ? `Era para el ${cuando(p.fecha).toLowerCase()}` : `Se publica ${cuando(p.fecha).toLowerCase()}`}</span><span class="tag ${e.tag}">${e.label}</span></span></span>${icono('chev-r', 'row__chev')}</button>`; })}</div></div></section>` : ''}
 
         ${bloqueCumples()}
 

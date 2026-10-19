@@ -18,7 +18,8 @@ function formPublicacionAsignada(id) {
       <form id="fPubAsignada" class="form-grid" novalidate data-id="${id}">
         <div class="row__sub" style="font-size:var(--t-md);color:var(--tx)">
           <span>${icono(c.icono)} ${c.label} · ${c.formatos[p.formato] || ''}</span>
-          <span>${icono('calendar')} ${fechaLarga(p.fecha)}${p.hora ? ` · ${p.hora}` : ''}</span>
+          ${p.entrega ? html`<span>${icono('clock')} Entrega: ${fechaLarga(p.entrega)}</span>` : ''}
+          <span>${icono('calendar')} Se publica: ${fechaLarga(p.fecha)}${p.hora ? ` · ${p.hora}` : ''}</span>
         </div>
         <div class="field"><span class="label">¿En qué va?</span>
           <div class="chips" role="radiogroup" aria-label="Estado de la publicación">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="estado" value="${k}" ${raw((p.estado || 'idea') === k ? 'checked' : '')}>${v.label}</label>`)}</div>
@@ -48,6 +49,7 @@ export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal =
           <div class="field"><label for="pu-fecha">Fecha</label><input class="input" id="pu-fecha" name="fecha" type="date" value="${b.fecha || fecha}"></div>
           <div class="field"><label for="pu-hora">Hora <span class="opt">(opcional)</span></label><input class="input" id="pu-hora" name="hora" type="time" value="${b.hora ?? hora}"></div>
         </div>
+        <div class="field"><label for="pu-entrega">Entrega del material <span class="opt">(opcional)</span></label><input class="input" id="pu-entrega" name="entrega" type="date" value="${b.entrega || ''}"><p class="hint">Cuándo debe estar lista para publicarse. Si hay responsable, a él o ella le aparece como su fecha de entrega.</p></div>
         <div class="field"><label for="pu-formato">Formato</label><select class="select" id="pu-formato" name="formato">${opcionesFormato(c, b.formato || formato)}</select></div>
         <div class="field"><span class="label">¿En qué va?</span>
           <div class="chips" role="radiogroup" aria-label="Estado de la publicación">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="estado" value="${k}" ${raw((b.estado || 'idea') === k ? 'checked' : '')}>${v.label}</label>`)}</div>
@@ -76,8 +78,9 @@ function guardarPublicacion() {
   const d = leerForm(form);
   if (!d.titulo) { marcarError(form.titulo, 'Escribe un título'); return; }
   if (!d.fecha) { marcarError(form.fecha, 'Elige una fecha'); return; }
+  if (d.entrega && d.entrega > d.fecha) { marcarError(form.entrega, 'La entrega debe ser antes de publicar (o el mismo día)'); return; }
   const id = form.dataset.id || nuevoId('pu');
-  guardar([{ c: 'publicaciones', id, data: { equipoId: EQUIPO_CREATIVO, canal: d.canal, formato: d.formato, titulo: d.titulo, fecha: d.fecha, hora: d.hora || '', estado: d.estado, responsableId: d.responsableId || '', detalle: d.detalle || '' } }]);
+  guardar([{ c: 'publicaciones', id, data: { equipoId: EQUIPO_CREATIVO, canal: d.canal, formato: d.formato, titulo: d.titulo, fecha: d.fecha, hora: d.hora || '', entrega: d.entrega || '', estado: d.estado, responsableId: d.responsableId || '', detalle: d.detalle || '' } }]);
   cerrarHoja();
   toast(form.dataset.id ? 'Publicación guardada' : 'Publicación creada');
 }

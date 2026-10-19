@@ -39,7 +39,7 @@ function tarjeta(t) {
         ${t.detalle ? html`<span class="kc__det">${t.detalle}</span>` : ''}
       </button>
       <div class="kc__pie">
-        ${t.vence ? html`<span class="kc__fecha ${vencida ? 'kc__fecha--bad' : ''}">${icono('calendar', 'i--sm')} ${fechaDiaMes(t.vence)}</span>` : html`<span class="kc__fecha kc__fecha--vacia">Sin fecha</span>`}
+        ${t.vence ? html`<span class="kc__fecha ${vencida ? 'kc__fecha--bad' : ''}">${icono('calendar', 'i--sm')} ${t.esPublicacion && t.entrega ? 'Entrega ' : ''}${fechaDiaMes(t.vence)}</span>${t.esPublicacion && t.entrega ? html`<span class="kc__sub">Publica ${fechaDiaMes(t.publica)}</span>` : ''}` : html`<span class="kc__fecha kc__fecha--vacia">Sin fecha</span>`}
         <span class="avatars">${(t.asignados || []).slice(0, 3).map((id) => avatar(nombreDe(id), 'sm'))}</span>
         <span class="kc__mover">
           ${ant ? html`<button class="icon-btn" type="button" data-action="tarea-mover" data-id="${t.id}" data-a="${ant}" aria-label="Pasar a ${ESTADOS_TAREA[ant].label}">${icono('chev-l', 'i--sm')}</button>` : ''}
@@ -76,7 +76,8 @@ function fila(t) {
       <button class="row__main" type="button" data-action="${t.esPublicacion ? 'publicacion-asignada' : 'tarea-editar'}" data-id="${t.id}" style="text-align:left">
         <span class="row__title">${canal ? html`<span class="tag tag--pub" style="margin-right:6px">${canal.label}</span>` : ''}${t.prioridad === 'alta' && t.estado !== 'hecha' ? html`<span class="tag tag--bad" style="margin-right:6px">Alta</span>` : ''}${t.titulo}</span>
         <span class="row__sub">
-          ${t.vence ? html`<span style="${vencida ? 'color:var(--bad)' : ''}">${icono('calendar')} ${fechaRelativa(t.vence)}</span>` : ''}
+          ${t.vence ? html`<span style="${vencida ? 'color:var(--bad)' : ''}">${icono('calendar')} ${t.esPublicacion && t.entrega ? 'Entrega ' : ''}${fechaRelativa(t.vence)}</span>` : ''}
+          ${t.esPublicacion && t.entrega ? html`<span>Publica ${fechaRelativa(t.publica).toLowerCase()}</span>` : ''}
           ${t.esPublicacion && t.estadoPub === 'listo' ? html`<span class="tag tag--ok">Lista para publicar</span>` : t.estado === 'en_curso' || t.estado === 'falta_info' ? html`<span class="tag ${ESTADOS_TAREA[t.estado].tag}">${ESTADOS_TAREA[t.estado].label}</span>` : ''}
         </span>
       </button>

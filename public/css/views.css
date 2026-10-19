@@ -422,3 +422,4 @@ a.kpi:active { transform: scale(0.98); }
 
 .kb__tabs .seg__btn { padding-inline: 4px; font-size: var(--t-sm); }
 .tag--pub { background: color-mix(in srgb, var(--pink) 20%, var(--s1)); color: var(--tx); }
+.kc__sub { font-size: var(--t-xs); color: var(--tx-2); }

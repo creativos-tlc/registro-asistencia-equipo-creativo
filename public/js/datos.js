@@ -187,7 +187,7 @@ export const TAREA_A_PUB = { pendiente: 'idea', en_curso: 'en_curso', falta_info
 export function publicacionesComoTareas() {
   return publicaciones().filter((p) => p.responsableId).map((p) => {
     const estado = PUB_A_TAREA[p.estado || 'idea'] || 'pendiente';
-    return { id: p.id, esPublicacion: true, titulo: p.titulo, detalle: p.detalle || '', asignados: [p.responsableId], vence: p.fecha, estado, estadoPub: p.estado || 'idea', hechaEn: estado === 'hecha' ? p.fecha : '', prioridad: 'normal', proyectoId: '', canal: p.canal, formato: p.formato };
+    return { id: p.id, esPublicacion: true, titulo: p.titulo, detalle: p.detalle || '', asignados: [p.responsableId], vence: p.entrega || p.fecha, estado, estadoPub: p.estado || 'idea', hechaEn: estado === 'hecha' ? p.fecha : '', entrega: p.entrega || '', publica: p.fecha, prioridad: 'normal', proyectoId: '', canal: p.canal, formato: p.formato };
   });
 }
 /** Tareas y publicaciones que aún hay que trabajar (la publicación ya lista o publicada no cuenta). */
