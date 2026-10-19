@@ -45,6 +45,7 @@ function atencion() {
   const avisos = [];
   const vencidas = tareasVencidas();
   if (vencidas.length) avisos.push(html`<button class="row" type="button" data-action="ir-tareas">${icono('alert', 'i--lg')}<span class="row__main"><span class="row__title">${plural(vencidas.length, 'tarea vencida', 'tareas vencidas')}</span><span class="row__sub">${vencidas.slice(0, 2).map((t) => t.titulo).join(' · ')}</span></span>${icono('chev-r', 'row__chev')}</button>`);
+  publicaciones().filter((p) => p.estado === 'falta_info').slice(0, 3).forEach((p) => avisos.push(html`<button class="row" type="button" data-action="publicacion-editar" data-id="${p.id}">${icono('message', 'i--lg')}<span class="row__main"><span class="row__title">Falta información para publicar</span><span class="row__sub">${p.titulo} · ${fechaRelativa(p.fecha)}</span></span>${icono('chev-r', 'row__chev')}</button>`));
   pendientesDeLista().slice(0, 3).forEach((e) => avisos.push(html`<button class="row" type="button" data-action="asistencia-abrir" data-id="${e.id}">${icono('tasks', 'i--lg')}<span class="row__main"><span class="row__title">Falta tomar asistencia</span><span class="row__sub">${e.titulo} · ${fechaRelativa(e.fecha)}</span></span>${icono('chev-r', 'row__chev')}</button>`));
   const dias = leerUltimoRespaldo();
   if (esLider() && (dias === null || dias >= DIAS_SIN_RESPALDO_AVISO)) {

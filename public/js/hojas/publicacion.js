@@ -22,10 +22,10 @@ export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal =
           <div class="field"><label for="pu-fecha">Fecha</label><input class="input" id="pu-fecha" name="fecha" type="date" value="${b.fecha || fecha}"></div>
           <div class="field"><label for="pu-hora">Hora <span class="opt">(opcional)</span></label><input class="input" id="pu-hora" name="hora" type="time" value="${b.hora ?? hora}"></div>
         </div>
-        <div class="form-grid form-grid--2 keep">
-          <div class="field"><label for="pu-formato">Formato</label><select class="select" id="pu-formato" name="formato">${opcionesFormato(c, b.formato || formato)}</select></div>
-          <div class="field"><label for="pu-estado">Estado</label><select class="select" id="pu-estado" name="estado">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<option value="${k}" ${raw((b.estado || 'idea') === k ? 'selected' : '')}>${v.label}</option>`)}</select></div>
-        </div>
+        <div class="field"><label for="pu-formato">Formato</label><select class="select" id="pu-formato" name="formato">${opcionesFormato(c, b.formato || formato)}</select></div>
+        <div class="field"><span class="label">¿En qué va?</span>
+          <div class="chips" role="radiogroup" aria-label="Estado de la publicación">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="estado" value="${k}" ${raw((b.estado || 'idea') === k ? 'checked' : '')}>${v.label}</label>`)}</div>
+          <p class="hint" id="pu-estado-ayuda">${ESTADOS_CONTENIDO[b.estado || 'idea']?.ayuda || ''}</p></div>
         <div class="field"><label for="pu-resp">Responsable <span class="opt">(opcional)</span></label>
           <select class="select" id="pu-resp" name="responsableId"><option value="">Sin asignar</option>${personas().map((p) => html`<option value="${p.id}" ${raw(b.responsableId === p.id ? 'selected' : '')}>${p.nombre}</option>`)}</select></div>
         <div class="field"><label for="pu-det">Texto o idea <span class="opt">(opcional)</span></label><textarea class="textarea" id="pu-det" name="detalle" placeholder="Copy, referencias, qué material se necesita…">${b.detalle || ''}</textarea></div>
@@ -41,6 +41,7 @@ export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal =
   const form = document.getElementById('fPub');
   form.addEventListener('change', (e) => {
     if (e.target.name === 'canal') poner(form.formato, opcionesFormato(e.target.value));
+    if (e.target.name === 'estado') document.getElementById('pu-estado-ayuda').textContent = ESTADOS_CONTENIDO[e.target.value]?.ayuda || '';
   });
 }
 

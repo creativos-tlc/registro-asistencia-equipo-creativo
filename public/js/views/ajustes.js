@@ -3,6 +3,8 @@ import { html, hoy, icono, raw } from '../util.js';
 import { abrirHoja, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 import { refrescar } from '../router.js';
 import { hayDatosAntiguos } from '../legacy.js';
+import { categoriasDisponibles } from '../model.js';
+import { eventos } from '../datos.js';
 
 const CLAVE_RESPALDO = 'tlc.ultimoRespaldo';
 const esLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
@@ -108,6 +110,12 @@ export const vistaAjustes = {
             ${hayDatosAntiguos() ? fila('users', 'Traer datos de la versión anterior', 'Datos que este teléfono tenía guardados antes de la actualización', 'legacy-abrir') : ''}
           </div></div>
           <input id="archivoRespaldo" type="file" accept="application/json,.json" hidden></section>` : ''}
+
+        ${esLider() ? html`<section class="section"><div class="section__head"><h3 class="section__title">Categorías de eventos</h3><button class="section__link" type="button" data-action="categoria-nueva">${icono('plus', 'i--sm')} Nueva</button></div>
+          <div class="panel"><div class="list">${categoriasDisponibles({ conOcultas: true }).map(([k, v]) => html`
+            <button class="row" type="button" data-action="categoria-editar" data-id="${k}"><span class="typebadge" style="--c:${v.color}">${icono(v.icono)}</span>
+              <span class="row__main"><span class="row__title">${v.label}</span><span class="row__sub">${eventos().filter((e) => e.tipo === k).length} eventos${v.asistencia ? ' · con asistencia' : ''}${v.programa ? ' · con programa' : ''}</span></span>${icono('chev-r', 'row__chev')}</button>`)}</div></div>
+          <p class="hint" style="margin-top:var(--sp-2)">Cada evento pertenece a una categoría (color, ícono y qué se espera de él). Puedes sumar las tuyas, cambiar las de fábrica u ocultar las que no uses.</p></section>` : ''}
 
         <section class="section"><div class="section__head"><h3 class="section__title">Enlaces</h3></div>
           <div class="panel"><div class="list">

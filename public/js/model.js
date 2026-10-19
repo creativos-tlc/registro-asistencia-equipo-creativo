@@ -10,7 +10,24 @@ export const TIPOS = {
   grabacion: { label: 'Grabación', plural: 'Grabaciones', color: 'var(--violet)', icono: 'video', asistencia: true,  programa: false, hora: ['10:00', '13:00'] },
   otro:      { label: 'Otro',     plural: 'Otros',     color: 'var(--tx-2)',   icono: 'calendar', asistencia: false, programa: false, hora: ['', ''] },
 };
-export const tipoDe = (t) => TIPOS[t] || TIPOS.otro;
+export const ICONOS_CATEGORIA = ['calendar', 'users', 'music', 'video', 'sun', 'image', 'flame', 'clipboard', 'message', 'cake', 'pin', 'tasks'];
+
+// Categorías de evento: las 5 de fábrica se pueden renombrar, recolorear u ocultar, y el equipo puede sumar las suyas.
+// Los cambios viven en la colección `categorias` (id = clave de fábrica o `cat_…`) y se cargan aquí con registrarCategorias().
+let personalizadas = {};
+export const registrarCategorias = (lista) => { personalizadas = Object.fromEntries((lista || []).map((c) => [c.id, c])); };
+const desdeRegistro = (c) => ({
+  label: c.nombre, plural: c.nombre, color: NOTA_COLORES[c.color]?.color || 'var(--tx-2)', icono: c.icono || 'calendar',
+  asistencia: !!c.asistencia, programa: !!c.programa, hora: [c.horaIni || '', c.horaFin || ''],
+});
+export const tipoDe = (t) => { const a = personalizadas[t]; const base = TIPOS[t]; return a ? { ...(base || TIPOS.otro), ...desdeRegistro(a) } : base || TIPOS.otro; };
+export const categoriaRegistro = (t) => personalizadas[t] || null;
+export const esDeFabrica = (t) => t in TIPOS;
+/** Todas las categorías, en orden: las de fábrica y luego las propias. Las ocultas solo salen si `conOcultas`. */
+export function categoriasDisponibles({ conOcultas = false, incluir = '' } = {}) {
+  const ids = [...Object.keys(TIPOS).filter((k) => k !== 'otro'), ...Object.keys(personalizadas).filter((k) => !(k in TIPOS)), 'otro'];
+  return ids.filter((k) => conOcultas || k === incluir || !personalizadas[k]?.oculta).map((k) => [k, tipoDe(k)]);
+}
 
 export const ESTADOS_TAREA = {
   pendiente: { label: 'Por hacer', icono: 'circle' },
@@ -63,10 +80,13 @@ export const REUNIONES = { r1: '1ra', r2: '2da' };
 export const TALLAS = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 export const PERMISOS_ETIQUETA = { contenido: 'Contenido', turnos: 'Turnos', devocional: 'Devocional' };
 
+/** Camino de una publicación. `falta_info` es la pausa para pedir lo que falta (copy, material, definiciones) sin perderla de vista. */
 export const ESTADOS_CONTENIDO = {
-  idea:      { label: 'Idea',      tag: '' },
-  listo:     { label: 'Listo',     tag: 'tag--info' },
-  publicado: { label: 'Publicado', tag: 'tag--ok' },
+  idea:       { label: 'Idea',                 tag: '',          color: 'var(--tx-3)',   ayuda: 'Una idea suelta, todavía sin trabajar.' },
+  en_curso:   { label: 'En curso',             tag: 'tag--info', color: 'var(--info)',   ayuda: 'Alguien ya está trabajando en ella.' },
+  falta_info: { label: 'Falta información',    tag: 'tag--bad',  color: 'var(--orange)', ayuda: 'Quien la hace necesita más datos, material o una definición. Cuéntalo en el texto y avisa a un líder.' },
+  listo:      { label: 'Lista para publicar',  tag: 'tag--ok',   color: 'var(--teal)',   ayuda: 'Terminada. Solo falta publicarla.' },
+  publicado:  { label: 'Publicada',            tag: 'tag--ok',   color: 'var(--ok)',     ayuda: 'Ya salió.' },
 };
 
 export const ASISTENCIA = {

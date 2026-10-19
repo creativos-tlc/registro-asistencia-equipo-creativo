@@ -5,7 +5,7 @@
  *  - Conflictos: gana el último cambio por registro (los registros son pequeños: una tarea, una asistencia).
  */
 
-export const COLECCIONES = ['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos', 'devocionales', 'ajustes'];
+export const COLECCIONES = ['equipos', 'personas', 'eventos', 'asistencia', 'tareas', 'publicaciones', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos', 'devocionales', 'categorias', 'ajustes'];
 const CLAVE_CACHE = 'tlc.cache.v1';
 const SOLAPE_MS = 5000;
 const INTERVALO_MS = 20000;

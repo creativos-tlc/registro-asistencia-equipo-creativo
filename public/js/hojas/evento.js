@@ -1,5 +1,5 @@
 import { esLider, guardar, lista, tienePermiso } from '../store.js';
-import { EQUIPO_CREATIVO, PLANTILLA_SERVICIO, TIPOS, tipoDe } from '../model.js';
+import { EQUIPO_CREATIVO, NOTA_COLORES, PLANTILLA_SERVICIO, categoriasDisponibles, tipoDe } from '../model.js';
 import { citados, devocional, evento, eventosOrdenados, listaTomada, nombreDe, personas, pideLista, resumenAsistencia, tareas } from '../datos.js';
 import { fechaLarga, fechaRelativa, html, hoy, icono, nuevoId, raw, sumarDias, rangoHora, plural, poner } from '../util.js';
 import { abrirHoja, actualizarHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
@@ -111,9 +111,16 @@ export function formEvento({ base = null, fecha = hoy(), tipo = 'reunion', hora 
     cuerpo: html`
       <form id="fEvento" class="form-grid" novalidate data-id="${esNuevo ? '' : b.id}">
         <div class="field">
-          <span class="label">Tipo</span>
-          <div class="chips">${Object.entries(TIPOS).map(([k, v]) => html`
-            <label class="chip chip--radio" style="--c:${v.color}"><input class="sr-only" type="radio" name="tipo" value="${k}" ${raw(k === tipoIni ? 'checked' : '')} data-h1="${v.hora[0]}" data-h2="${v.hora[1]}" data-lista="${v.asistencia ? 1 : 0}">${icono(v.icono, 'i--sm')}${v.label}</label>`)}</div>
+          <span class="label">Categoría</span>
+          <div class="chips">${categoriasDisponibles({ incluir: tipoIni }).map(([k, v]) => html`
+            <label class="chip chip--radio" style="--c:${v.color}"><input class="sr-only" type="radio" name="tipo" value="${k}" ${raw(k === tipoIni ? 'checked' : '')} data-h1="${v.hora[0]}" data-h2="${v.hora[1]}" data-lista="${v.asistencia ? 1 : 0}">${icono(v.icono, 'i--sm')}${v.label}</label>`)}
+            ${esLider() ? html`<button class="chip chip--nueva" type="button" data-action="evento-cat-nueva" aria-expanded="false">${icono('plus', 'i--sm')} Nueva</button>` : ''}</div>
+          <div class="cat-nueva" id="catNueva" hidden>
+            <label for="ev-catnombre" class="label">Nombre de la nueva categoría</label>
+            <input class="input" id="ev-catnombre" name="catNombre" placeholder="Ej: Sesión ADN, Junta creativa…" autocomplete="off">
+            <div class="chips">${Object.entries(NOTA_COLORES).map(([k, v], i) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="catColor" value="${k}" ${raw(i === 1 ? 'checked' : '')}>${v.label}</label>`)}</div>
+            <p class="hint">Se guarda con este evento y queda disponible para los siguientes. Puedes cambiarle el ícono o ajustarla después en Ajustes → Categorías.</p>
+          </div>
         </div>
         <div class="field"><label for="ev-titulo">Título</label><input class="input" id="ev-titulo" name="titulo" value="${b.titulo || ''}" placeholder="Ej: Reunión de lunes" autocomplete="off"></div>
         <div class="form-grid form-grid--2 keep">
@@ -166,20 +173,33 @@ function guardarEvento() {
   if (!d.fecha) { marcarError(form.fecha, 'Elige una fecha'); return; }
   if (d.horaInicio && d.horaFin && d.horaFin <= d.horaInicio) { marcarError(form.horaFin, 'Debe terminar después de empezar'); return; }
   const previo = form.dataset.id ? evento(form.dataset.id) : null;
-  const titulo = d.titulo || tipoDe(d.tipo).label;
+  // Categoría nueva escrita aquí mismo: se crea junto con el evento (si ya existe una con ese nombre, se usa esa).
+  let tipo = d.tipo;
+  const opsCategoria = [];
+  let nombreCategoria = '';
+  if (!document.getElementById('catNueva').hidden && d.catNombre) {
+    const existente = categoriasDisponibles({ conOcultas: true }).find(([, v]) => v.label.toLowerCase() === d.catNombre.toLowerCase());
+    if (existente) tipo = existente[0];
+    else {
+      tipo = nuevoId('cat');
+      nombreCategoria = d.catNombre;
+      opsCategoria.push({ c: 'categorias', id: tipo, data: { equipoId: EQUIPO_CREATIVO, nombre: d.catNombre, color: d.catColor || 'azul', icono: 'calendar', asistencia: !!d.tomaLista, programa: false, horaIni: d.horaInicio || '', horaFin: d.horaFin || '', oculta: false } });
+    }
+  }
+  const titulo = d.titulo || nombreCategoria || tipoDe(tipo).label;
   const base = {
-    equipoId: EQUIPO_CREATIVO, tipo: d.tipo, titulo, fecha: d.fecha, horaInicio: d.horaInicio || '', horaFin: d.horaFin || '',
+    equipoId: EQUIPO_CREATIVO, tipo, titulo, fecha: d.fecha, horaInicio: d.horaInicio || '', horaFin: d.horaFin || '',
     lugar: d.lugar || '', notas: d.notas || '', participantes: d.participantes, tomaLista: !!d.tomaLista, devocional: !!d.devocional,
     programa: previo?.programa || [], serieId: previo?.serieId || null,
   };
   if (previo) {
-    guardar([{ c: 'eventos', id: previo.id, data: base }]);
+    guardar([...opsCategoria, { c: 'eventos', id: previo.id, data: base }]);
     cerrarHoja();
     toast('Cambios guardados');
     return;
   }
   const paso = Number(d.repetir || 0);
-  const ops = [];
+  const ops = [...opsCategoria];
   if (paso && d.hasta && d.hasta >= d.fecha) {
     const serieId = nuevoId('ser');
     let f = d.fecha; let n = 0;
@@ -189,7 +209,8 @@ function guardarEvento() {
   }
   const undo = guardar(ops);
   cerrarHoja();
-  toast(ops.length > 1 ? `${ops.length} eventos creados` : 'Evento creado', { accion: { texto: 'Deshacer', fn: undo } });
+  const nEventos = ops.length - opsCategoria.length;
+  toast(nEventos > 1 ? `${nEventos} eventos creados` : 'Evento creado', { accion: { texto: 'Deshacer', fn: undo } });
 }
 
 // ---------- lectura del devocional (la anota quien tenga el permiso Devocional) ----------
@@ -303,6 +324,12 @@ function editarPrograma(id) {
 registrarAcciones({
   'evento-nuevo': (el) => formEvento({ fecha: el?.dataset.fecha || hoy(), tipo: el?.dataset.tipo || 'reunion', hora: el?.dataset.hora || '' }),
   'evento-ver': (el) => verEvento(el.dataset.id),
+  'evento-cat-nueva': (el) => {
+    const caja = document.getElementById('catNueva');
+    caja.hidden = !caja.hidden;
+    el.setAttribute('aria-expanded', String(!caja.hidden));
+    if (!caja.hidden) document.getElementById('ev-catnombre').focus();
+  },
   'devocional-editar': (el) => formDevocional(el.dataset.id),
   'devocional-guardar': guardarDevocional,
   'evento-editar': (el) => formEvento({ base: evento(el.dataset.id), esNuevo: false }),

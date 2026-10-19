@@ -212,7 +212,7 @@ export function itemsCalendario({ desde, hasta, capas = ['eventos', 'tareas', 'c
       if (canal && (p.canal || 'instagram') !== canal) continue;
       const c = CANALES[p.canal] || CANALES.instagram;
       const f = FORMATOS[clave];
-      items.push({ clase: 'contenido', id: p.id, fecha: p.fecha, ini: p.hora || '', fin: '', titulo: p.titulo, color: f.color, letra: f.letra, formato: clave, canal: p.canal || 'instagram', icono: c.icono, sub: c.formatos[p.formato] || c.label, hecha: p.estado === 'publicado' });
+      items.push({ clase: 'contenido', id: p.id, fecha: p.fecha, ini: p.hora || '', fin: '', titulo: p.titulo, color: f.color, letra: f.letra, formato: clave, canal: p.canal || 'instagram', icono: c.icono, sub: `${c.formatos[p.formato] || c.label}${p.estado === 'falta_info' ? ' · Falta información' : p.estado === 'listo' ? ' · Lista' : p.estado === 'en_curso' ? ' · En curso' : ''}`, hecha: p.estado === 'publicado' });
     }
   }
   return items.sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.ini || '').localeCompare(b.ini || '') || a.titulo.localeCompare(b.titulo, 'es'));
