@@ -10,7 +10,8 @@ body {
   font: 400 var(--t-md) / 1.5 var(--font);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  /* `clip` y no `hidden`: hidden convierte al body en contenedor de scroll y rompe las barras fijas (position: sticky). */
+  overflow-x: clip;
   /* La página no se arrastra de lado (sí se puede ampliar con dos dedos). Las filas que se deslizan a propósito lo permiten abajo. */
   touch-action: pan-y pinch-zoom;
 }
