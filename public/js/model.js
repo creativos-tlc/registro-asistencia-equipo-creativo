@@ -30,9 +30,10 @@ export function categoriasDisponibles({ conOcultas = false, incluir = '' } = {})
 }
 
 export const ESTADOS_TAREA = {
-  pendiente: { label: 'Por hacer', icono: 'circle' },
-  en_curso:  { label: 'En curso',  icono: 'clock' },
-  hecha:     { label: 'Hecha',     icono: 'circle-check' },
+  pendiente:  { label: 'Por hacer',         icono: 'circle',       color: 'var(--tx-3)',   tag: '',          ayuda: 'Aún no se empieza.' },
+  en_curso:   { label: 'En curso',          icono: 'clock',        color: 'var(--info)',   tag: 'tag--info', ayuda: 'Ya se está trabajando en ella.' },
+  falta_info: { label: 'Falta información', icono: 'alert',        color: 'var(--orange)', tag: 'tag--bad',  ayuda: 'Falta algo para avanzar: datos, material o una definición. Cuéntalo en el detalle y avisa a un líder.' },
+  hecha:      { label: 'Hecha',             icono: 'circle-check', color: 'var(--ok)',     tag: 'tag--ok',   ayuda: 'Terminada.' },
 };
 export const PRIORIDADES = { normal: 'Normal', alta: 'Alta' };
 

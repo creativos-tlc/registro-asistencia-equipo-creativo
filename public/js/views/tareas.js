@@ -10,8 +10,9 @@ const CLAVE_VISTA = 'tlc.tareas.vista';
 const leerVista = () => { try { return localStorage.getItem(CLAVE_VISTA) === 'tablero' ? 'tablero' : 'lista'; } catch { return 'lista'; } };
 const filtro = { persona: '', estado: 'abiertas', proyecto: '', vista: leerVista(), col: 'pendiente' };
 const COLUMNAS = [
-  { k: 'pendiente', label: 'Por hacer', color: 'var(--info)' },
-  { k: 'en_curso', label: 'En curso', color: 'var(--orange)' },
+  { k: 'pendiente', label: 'Por hacer', color: 'var(--tx-3)' },
+  { k: 'en_curso', label: 'En curso', color: 'var(--info)' },
+  { k: 'falta_info', label: 'Falta información', tab: 'Falta info', color: 'var(--orange)' },
   { k: 'hecha', label: 'Hechas', color: 'var(--ok)' },
 ];
 const textoBusqueda = (t) => `${t.titulo} ${t.detalle || ''}`.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -21,8 +22,9 @@ function tarjeta(t) {
   const vencida = t.estado !== 'hecha' && t.vence && t.vence < hoy();
   const proy = t.proyectoId ? proyecto(t.proyectoId) : null;
   const color = proy ? (NOTA_COLORES[proy.color]?.color || 'var(--accent)') : 'var(--tx-3)';
-  const sig = t.estado === 'pendiente' ? 'en_curso' : t.estado === 'en_curso' ? 'hecha' : null;
-  const ant = t.estado === 'hecha' ? 'en_curso' : t.estado === 'en_curso' ? 'pendiente' : null;
+  // Las flechas siguen el camino normal (por hacer → en curso → hecha); "Falta información" es una pausa a la que se llega desde el formulario o arrastrando.
+  const sig = t.estado === 'pendiente' ? 'en_curso' : t.estado === 'en_curso' || t.estado === 'falta_info' ? 'hecha' : null;
+  const ant = t.estado === 'hecha' || t.estado === 'falta_info' ? 'en_curso' : t.estado === 'en_curso' ? 'pendiente' : null;
   return html`
     <article class="kc ${t.estado === 'hecha' ? 'kc--hecha' : ''}" draggable="true" data-tdrag="${t.id}" data-q="${textoBusqueda(t)}" style="--c:${color}">
       <button class="kc__cuerpo" type="button" data-action="tarea-editar" data-id="${t.id}">
@@ -51,7 +53,7 @@ function tablero(arr) {
   const cols = COLUMNAS.map((c) => ({ ...c, items: por(c.k) }));
   return html`
     <div class="kb__tabs seg seg--block" role="tablist" aria-label="Columna">
-      ${cols.map((c) => html`<button class="seg__btn" type="button" role="tab" data-action="tareas-col" data-k="${c.k}" aria-selected="${filtro.col === c.k}">${c.label} <span class="num seg__n">${c.items.length}</span></button>`)}
+      ${cols.map((c) => html`<button class="seg__btn" type="button" role="tab" data-action="tareas-col" data-k="${c.k}" aria-selected="${filtro.col === c.k}">${c.tab || c.label} <span class="num seg__n">${c.items.length}</span></button>`)}
     </div>
     <div class="kb">
       ${cols.map((c) => html`
@@ -71,7 +73,7 @@ function fila(t) {
         <span class="row__title">${t.prioridad === 'alta' && t.estado !== 'hecha' ? html`<span class="tag tag--bad" style="margin-right:6px">Alta</span>` : ''}${t.titulo}</span>
         <span class="row__sub">
           ${t.vence ? html`<span style="${vencida ? 'color:var(--bad)' : ''}">${icono('calendar')} ${fechaRelativa(t.vence)}</span>` : ''}
-          ${t.estado === 'en_curso' ? html`<span class="tag tag--info">En curso</span>` : ''}
+          ${t.estado === 'en_curso' || t.estado === 'falta_info' ? html`<span class="tag ${ESTADOS_TAREA[t.estado].tag}">${ESTADOS_TAREA[t.estado].label}</span>` : ''}
         </span>
       </button>
       <span class="avatars" title="${(t.asignados || []).map(nombreDe).join(', ')}">${(t.asignados || []).slice(0, 3).map((id) => avatar(nombreDe(id), 'sm'))}</span>

@@ -26,10 +26,10 @@ export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '
           <div class="field"><label for="ta-inicio">Comienza <span class="opt">(opcional)</span></label><input class="input" id="ta-inicio" name="inicio" type="date" value="${b.inicio || ''}"></div>
           <div class="field"><label for="ta-vence">Fecha límite <span class="opt">(opcional)</span></label><input class="input" id="ta-vence" name="vence" type="date" value="${b.vence ?? fecha}"></div>
         </div>
-        <div class="form-grid form-grid--2 keep">
-          <div class="field"><label for="ta-prio">Prioridad</label><select class="select" id="ta-prio" name="prioridad">${Object.entries(PRIORIDADES).map(([k, v]) => html`<option value="${k}" ${raw((b.prioridad || 'normal') === k ? 'selected' : '')}>${v}</option>`)}</select></div>
-          <div class="field"><label for="ta-estado">Estado</label><select class="select" id="ta-estado" name="estado">${Object.entries(ESTADOS_TAREA).map(([k, v]) => html`<option value="${k}" ${raw((b.estado || 'pendiente') === k ? 'selected' : '')}>${v.label}</option>`)}</select></div>
-        </div>
+        <div class="field"><label for="ta-prio">Prioridad</label><select class="select" id="ta-prio" name="prioridad">${Object.entries(PRIORIDADES).map(([k, v]) => html`<option value="${k}" ${raw((b.prioridad || 'normal') === k ? 'selected' : '')}>${v}</option>`)}</select></div>
+        <div class="field"><span class="label">¿En qué va?</span>
+          <div class="chips" role="radiogroup" aria-label="Estado de la tarea">${Object.entries(ESTADOS_TAREA).map(([k, v]) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="estado" value="${k}" ${raw((b.estado || 'pendiente') === k ? 'checked' : '')}>${v.label}</label>`)}</div>
+          <p class="hint" id="ta-estado-ayuda">${ESTADOS_TAREA[b.estado || 'pendiente']?.ayuda || ''}</p></div>
         <div class="field"><label for="ta-evento">Ligada a un evento <span class="opt">(opcional)</span></label>
           <select class="select" id="ta-evento" name="eventoId"><option value="">Ninguno</option>${proximos.map((e) => html`<option value="${e.id}" ${raw((b.eventoId || eventoId) === e.id ? 'selected' : '')}>${fechaCorta(e.fecha)} · ${e.titulo}</option>`)}</select></div>
         ${proys.length ? html`<div class="field"><label for="ta-proy">Proyecto <span class="opt">(opcional · aparece en la carta Gantt)</span></label>
@@ -42,6 +42,9 @@ export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '
       <span class="spacer"></span>
       <button class="btn btn--soft" type="button" data-action="cerrar-hoja">Cancelar</button>
       <button class="btn btn--primary" type="button" data-action="tarea-guardar" style="flex:0 0 auto">${esNueva ? 'Crear tarea' : 'Guardar'}</button>`,
+  });
+  document.getElementById('fTarea').addEventListener('change', (e) => {
+    if (e.target.name === 'estado') document.getElementById('ta-estado-ayuda').textContent = ESTADOS_TAREA[e.target.value]?.ayuda || '';
   });
 }
 

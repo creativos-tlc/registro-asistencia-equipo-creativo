@@ -400,7 +400,7 @@ button.mx--celda:hover { background: color-mix(in srgb, var(--c) 22%, var(--s1))
 .kb__col.kb__col--sobre { outline: 2px dashed var(--c); }
 @media (min-width: 900px) {
   .kb__tabs { display: none; }
-  .kb { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+  .kb { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; }
   .kb__col { display: flex; }
   .kc { cursor: grab; }
 }
@@ -419,3 +419,5 @@ a.kpi:active { transform: scale(0.98); }
 .chip--nueva { border-style: dashed; color: var(--tx-2); }
 .cat-nueva { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); padding: var(--sp-3); border-radius: var(--r-md); background: var(--s2); border: 1px dashed var(--line-2); }
 .panel--pub { background: color-mix(in srgb, var(--pink) 8%, var(--s1)); border-color: color-mix(in srgb, var(--pink) 24%, var(--line)); }
+
+.kb__tabs .seg__btn { padding-inline: 4px; font-size: var(--t-sm); }
