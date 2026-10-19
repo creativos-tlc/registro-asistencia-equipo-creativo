@@ -180,6 +180,20 @@ export function analizarLinea(texto) {
 }
 export const tareasDeProyecto = (id) => tareas().filter((t) => t.proyectoId === id).sort((a, b) => (a.estado === 'hecha') - (b.estado === 'hecha') || (a.vence || '9').localeCompare(b.vence || '9'));
 
+// ---------- publicaciones como trabajo (una sola fuente: la publicación) ----------
+// Una publicación con responsable cuenta como trabajo de esa persona: se ve junto a sus tareas, sin crear ningún registro aparte.
+const PUB_A_TAREA = { idea: 'pendiente', en_curso: 'en_curso', falta_info: 'falta_info', listo: 'hecha', publicado: 'hecha' };
+export const TAREA_A_PUB = { pendiente: 'idea', en_curso: 'en_curso', falta_info: 'falta_info', hecha: 'listo' };
+export function publicacionesComoTareas() {
+  return publicaciones().filter((p) => p.responsableId).map((p) => {
+    const estado = PUB_A_TAREA[p.estado || 'idea'] || 'pendiente';
+    return { id: p.id, esPublicacion: true, titulo: p.titulo, detalle: p.detalle || '', asignados: [p.responsableId], vence: p.fecha, estado, estadoPub: p.estado || 'idea', hechaEn: estado === 'hecha' ? p.fecha : '', prioridad: 'normal', proyectoId: '', canal: p.canal, formato: p.formato };
+  });
+}
+/** Tareas y publicaciones que aún hay que trabajar (la publicación ya lista o publicada no cuenta). */
+export const trabajoAbierto = () => [...tareasAbiertas(), ...publicacionesComoTareas().filter((t) => t.estado !== 'hecha')];
+export const trabajoVencido = (h = hoy()) => trabajoAbierto().filter((t) => t.vence && t.vence < h);
+
 // ---------- notas ----------
 export const bloquesNotas = () => [...lista('notas')].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
 

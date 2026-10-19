@@ -421,3 +421,4 @@ a.kpi:active { transform: scale(0.98); }
 .panel--pub { background: color-mix(in srgb, var(--pink) 8%, var(--s1)); border-color: color-mix(in srgb, var(--pink) 24%, var(--line)); }
 
 .kb__tabs .seg__btn { padding-inline: 4px; font-size: var(--t-sm); }
+.tag--pub { background: color-mix(in srgb, var(--pink) 20%, var(--s1)); color: var(--tx); }

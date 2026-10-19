@@ -1,9 +1,9 @@
-import { agruparTareas, nombreDe, personas, proyecto, proyectos, tareas } from '../datos.js';
+import { TAREA_A_PUB, agruparTareas, nombreDe, personas, proyecto, proyectos, publicacion, publicacionesComoTareas, tareas } from '../datos.js';
 import { fechaDiaMes, fechaRelativa, hoy, html, icono, nuevoId, sumarDias } from '../util.js';
 import { acciones, avatar, registrarAcciones, toast, vacio } from '../ui.js';
 import { refrescar, ir } from '../router.js';
 import { guardar, yo } from '../store.js';
-import { ESTADOS_TAREA, EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
+import { CANALES, ESTADOS_TAREA, EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
 import { vistaCalendario } from './calendario.js';
 
 const CLAVE_VISTA = 'tlc.tareas.vista';
@@ -21,14 +21,17 @@ const textoBusqueda = (t) => `${t.titulo} ${t.detalle || ''}`.toLowerCase().norm
 function tarjeta(t) {
   const vencida = t.estado !== 'hecha' && t.vence && t.vence < hoy();
   const proy = t.proyectoId ? proyecto(t.proyectoId) : null;
-  const color = proy ? (NOTA_COLORES[proy.color]?.color || 'var(--accent)') : 'var(--tx-3)';
+  const canal = t.esPublicacion ? (CANALES[t.canal] || CANALES.instagram) : null;
+  const color = t.esPublicacion ? 'var(--pink)' : proy ? (NOTA_COLORES[proy.color]?.color || 'var(--accent)') : 'var(--tx-3)';
+  const accionAbrir = t.esPublicacion ? 'publicacion-asignada' : 'tarea-editar';
   // Las flechas siguen el camino normal (por hacer → en curso → hecha); "Falta información" es una pausa a la que se llega desde el formulario o arrastrando.
   const sig = t.estado === 'pendiente' ? 'en_curso' : t.estado === 'en_curso' || t.estado === 'falta_info' ? 'hecha' : null;
   const ant = t.estado === 'hecha' || t.estado === 'falta_info' ? 'en_curso' : t.estado === 'en_curso' ? 'pendiente' : null;
   return html`
     <article class="kc ${t.estado === 'hecha' ? 'kc--hecha' : ''}" draggable="true" data-tdrag="${t.id}" data-q="${textoBusqueda(t)}" style="--c:${color}">
-      <button class="kc__cuerpo" type="button" data-action="tarea-editar" data-id="${t.id}">
+      <button class="kc__cuerpo" type="button" data-action="${accionAbrir}" data-id="${t.id}">
         <span class="kc__tags">
+          ${canal ? html`<span class="kc__tag" style="--c:var(--pink)">${icono('image', 'i--sm')} Publicación · ${canal.label}</span>` : ''}
           ${proy ? html`<span class="kc__tag" style="--c:${color}">${proy.titulo}</span>` : ''}
           ${t.prioridad === 'alta' && t.estado !== 'hecha' ? html`<span class="kc__tag kc__tag--alta">Alta</span>` : ''}
         </span>
@@ -66,14 +69,15 @@ function tablero(arr) {
 
 function fila(t) {
   const vencida = t.estado !== 'hecha' && t.vence && t.vence < hoy();
+  const canal = t.esPublicacion ? (CANALES[t.canal] || CANALES.instagram) : null;
   return html`
     <div class="row ${t.estado === 'hecha' ? 'row--done' : ''}" data-q="${textoBusqueda(t)}">
-      <button class="icon-btn" type="button" data-action="tarea-toggle" data-id="${t.id}" aria-label="${t.estado === 'hecha' ? 'Reabrir' : 'Marcar como hecha'}: ${t.titulo}" style="margin-left:-8px;${t.estado === 'hecha' ? 'color:var(--ok)' : ''}">${icono(t.estado === 'hecha' ? 'circle-check' : 'circle', 'i--lg')}</button>
-      <button class="row__main" type="button" data-action="tarea-editar" data-id="${t.id}" style="text-align:left">
-        <span class="row__title">${t.prioridad === 'alta' && t.estado !== 'hecha' ? html`<span class="tag tag--bad" style="margin-right:6px">Alta</span>` : ''}${t.titulo}</span>
+      <button class="icon-btn" type="button" data-action="${t.esPublicacion ? 'publicacion-toggle' : 'tarea-toggle'}" data-id="${t.id}" aria-label="${t.estado === 'hecha' ? 'Reabrir' : 'Marcar como hecha'}: ${t.titulo}" style="margin-left:-8px;${t.estado === 'hecha' ? 'color:var(--ok)' : ''}">${icono(t.estado === 'hecha' ? 'circle-check' : 'circle', 'i--lg')}</button>
+      <button class="row__main" type="button" data-action="${t.esPublicacion ? 'publicacion-asignada' : 'tarea-editar'}" data-id="${t.id}" style="text-align:left">
+        <span class="row__title">${canal ? html`<span class="tag tag--pub" style="margin-right:6px">${canal.label}</span>` : ''}${t.prioridad === 'alta' && t.estado !== 'hecha' ? html`<span class="tag tag--bad" style="margin-right:6px">Alta</span>` : ''}${t.titulo}</span>
         <span class="row__sub">
           ${t.vence ? html`<span style="${vencida ? 'color:var(--bad)' : ''}">${icono('calendar')} ${fechaRelativa(t.vence)}</span>` : ''}
-          ${t.estado === 'en_curso' || t.estado === 'falta_info' ? html`<span class="tag ${ESTADOS_TAREA[t.estado].tag}">${ESTADOS_TAREA[t.estado].label}</span>` : ''}
+          ${t.esPublicacion && t.estadoPub === 'listo' ? html`<span class="tag tag--ok">Lista para publicar</span>` : t.estado === 'en_curso' || t.estado === 'falta_info' ? html`<span class="tag ${ESTADOS_TAREA[t.estado].tag}">${ESTADOS_TAREA[t.estado].label}</span>` : ''}
         </span>
       </button>
       <span class="avatars" title="${(t.asignados || []).map(nombreDe).join(', ')}">${(t.asignados || []).slice(0, 3).map((id) => avatar(nombreDe(id), 'sm'))}</span>
@@ -83,7 +87,7 @@ function fila(t) {
 export const vistaTareas = {
   titulo: 'Tareas',
   render() {
-    const todas = tareas();
+    const todas = [...tareas(), ...publicacionesComoTareas()];
     const yoId = yo().personaId;
     let arr = todas;
     if (filtro.persona === '_yo') arr = arr.filter((t) => (t.asignados || []).includes(yoId));
@@ -156,6 +160,15 @@ export const vistaTareas = {
 };
 
 function moverTarea(id, estado) {
+  const pub = publicacion(id);
+  if (pub) {
+    const nuevo = TAREA_A_PUB[estado];
+    if (!nuevo || pub.estado === nuevo) return;
+    const { id: _omitido, ...resto } = pub;
+    const undoPub = guardar([{ c: 'publicaciones', id, data: { ...resto, estado: nuevo } }]);
+    toast(`Publicación: ${ESTADOS_TAREA[estado].label.toLowerCase()}`, { accion: { texto: 'Deshacer', fn: undoPub }, ms: 2500 });
+    return;
+  }
   const t = tareas().find((x) => x.id === id);
   if (!t || t.estado === estado || !ESTADOS_TAREA[estado]) return;
   const hecha = estado === 'hecha';

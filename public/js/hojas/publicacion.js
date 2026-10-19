@@ -1,7 +1,7 @@
 import { guardar, tienePermiso } from '../store.js';
 import { CANALES, EQUIPO_CREATIVO, ESTADOS_CONTENIDO } from '../model.js';
 import { personas, publicacion } from '../datos.js';
-import { fechaLarga, html, hoy, icono, nuevoId, poner, raw, sumarDias } from '../util.js';
+import { extraerEnlaces, fechaLarga, html, hoy, icono, nuevoId, poner, raw, sumarDias } from '../util.js';
 import { abrirHoja, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
 const opcionesFormato = (canal, actual) => Object.entries(CANALES[canal].formatos).map(([k, v]) => html`<option value="${k}" ${raw(k === actual ? 'selected' : '')}>${v}</option>`);
@@ -23,7 +23,7 @@ function formPublicacionAsignada(id) {
         <div class="field"><span class="label">¿En qué va?</span>
           <div class="chips" role="radiogroup" aria-label="Estado de la publicación">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="estado" value="${k}" ${raw((p.estado || 'idea') === k ? 'checked' : '')}>${v.label}</label>`)}</div>
           <p class="hint" id="pa-ayuda">${ESTADOS_CONTENIDO[p.estado || 'idea']?.ayuda || ''}</p></div>
-        <div class="field"><label for="pa-det">Texto, material o lo que falta</label><textarea class="textarea" id="pa-det" name="detalle" placeholder="Copy, referencias, qué necesitas para terminarla…">${p.detalle || ''}</textarea></div>
+        <div class="field"><label for="pa-det">Texto, material o lo que falta</label><textarea class="textarea" id="pa-det" name="detalle" placeholder="Copy, referencias, qué necesitas para terminarla…">${p.detalle || ''}</textarea>${chipsEnlaces(p.detalle)}</div>
       </form>`,
     pie: html`<button class="btn btn--soft" type="button" data-action="cerrar-hoja">Cancelar</button><button class="btn btn--primary" type="button" data-action="publicacion-asignada-guardar">Guardar</button>`,
   });
@@ -54,7 +54,7 @@ export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal =
           <p class="hint" id="pu-estado-ayuda">${ESTADOS_CONTENIDO[b.estado || 'idea']?.ayuda || ''}</p></div>
         <div class="field"><label for="pu-resp">Responsable <span class="opt">(opcional)</span></label>
           <select class="select" id="pu-resp" name="responsableId"><option value="">Sin asignar</option>${personas().map((p) => html`<option value="${p.id}" ${raw(b.responsableId === p.id ? 'selected' : '')}>${p.nombre}</option>`)}</select></div>
-        <div class="field"><label for="pu-det">Texto o idea <span class="opt">(opcional)</span></label><textarea class="textarea" id="pu-det" name="detalle" placeholder="Copy, referencias, qué material se necesita…">${b.detalle || ''}</textarea></div>
+        <div class="field"><label for="pu-det">Texto o idea <span class="opt">(opcional)</span></label><textarea class="textarea" id="pu-det" name="detalle" placeholder="Copy, referencias, qué material se necesita…">${b.detalle || ''}</textarea>${chipsEnlaces(b.detalle)}</div>
       </form>`,
     pie: html`
       ${esNueva ? '' : html`
@@ -82,7 +82,17 @@ function guardarPublicacion() {
   toast(form.dataset.id ? 'Publicación guardada' : 'Publicación creada');
 }
 
+const chipsEnlaces = (texto) => { const e = extraerEnlaces(texto); return e.length ? html`<div class="chips" style="margin-top:var(--sp-2)">${e.map((u) => html`<a class="chip" href="${u}" target="_blank" rel="noopener noreferrer">${icono('link', 'i--sm')}<span class="trunc" style="max-width:220px">${u.replace(/^https?:\/\/(www\.)?/, '')}</span></a>`)}</div>` : ''; };
+
 registrarAcciones({
+  'publicacion-toggle': (el) => {
+    const p = publicacion(el.dataset.id);
+    if (!p) return;
+    const nuevo = p.estado === 'listo' || p.estado === 'publicado' ? 'en_curso' : 'listo';
+    const { id: _omitido, ...resto } = p;
+    const undo = guardar([{ c: 'publicaciones', id: p.id, data: { ...resto, estado: nuevo } }]);
+    toast(nuevo === 'listo' ? 'Lista para publicar' : 'Vuelve a estar en curso', { accion: { texto: 'Deshacer', fn: undo }, ms: 2500 });
+  },
   'publicacion-asignada': (el) => (tienePermiso('contenido') ? formPublicacion({ base: publicacion(el.dataset.id) }) : formPublicacionAsignada(el.dataset.id)),
   'publicacion-asignada-guardar': () => {
     const form = document.getElementById('fPubAsignada');

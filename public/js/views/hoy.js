@@ -1,6 +1,6 @@
 import { esLider, yo } from '../store.js';
 import { DIAS_SIN_RESPALDO_AVISO, tipoDe } from '../model.js';
-import { equipoActual, estadisticas, eventosOrdenados, listaTomada, nombreDe, pendientesDeLista, personas, proximoServicio, publicaciones, resumenAsistencia, tareasAbiertas, tareasVencidas } from '../datos.js';
+import { equipoActual, estadisticas, eventosOrdenados, listaTomada, nombreDe, pendientesDeLista, personas, proximoServicio, publicaciones, resumenAsistencia, tareasAbiertas, trabajoAbierto, trabajoVencido } from '../datos.js';
 import { dif, fechaLarga, fechaRelativa, hoy, html, icono, plural, rangoHora, raw, nombreDiaLargo, saludo, sumarDias } from '../util.js';
 import { vacio } from '../ui.js';
 import { leerUltimoRespaldo } from './ajustes.js';
@@ -43,8 +43,8 @@ function bloqueServicio() {
 
 function atencion() {
   const avisos = [];
-  const vencidas = tareasVencidas();
-  if (vencidas.length) avisos.push(html`<button class="row" type="button" data-action="ir-tareas">${icono('alert', 'i--lg')}<span class="row__main"><span class="row__title">${plural(vencidas.length, 'tarea vencida', 'tareas vencidas')}</span><span class="row__sub">${vencidas.slice(0, 2).map((t) => t.titulo).join(' · ')}</span></span>${icono('chev-r', 'row__chev')}</button>`);
+  const vencidas = trabajoVencido();
+  if (vencidas.length) avisos.push(html`<button class="row" type="button" data-action="ir-tareas">${icono('alert', 'i--lg')}<span class="row__main"><span class="row__title">${plural(vencidas.length, 'cosa vencida', 'cosas vencidas')}</span><span class="row__sub">${vencidas.slice(0, 2).map((t) => t.titulo).join(' · ')}</span></span>${icono('chev-r', 'row__chev')}</button>`);
   tareasAbiertas().filter((t) => t.estado === 'falta_info').slice(0, 3).forEach((t) => avisos.push(html`<button class="row" type="button" data-action="tarea-editar" data-id="${t.id}">${icono('message', 'i--lg')}<span class="row__main"><span class="row__title">Una tarea necesita información</span><span class="row__sub">${t.titulo}${(t.asignados || []).length ? ` · ${(t.asignados || []).map(nombreDe).join(', ')}` : ''}</span></span>${icono('chev-r', 'row__chev')}</button>`));
   publicaciones().filter((p) => p.estado === 'falta_info').slice(0, 3).forEach((p) => avisos.push(html`<button class="row" type="button" data-action="publicacion-editar" data-id="${p.id}">${icono('message', 'i--lg')}<span class="row__main"><span class="row__title">Falta información para publicar</span><span class="row__sub">${p.titulo} · ${fechaRelativa(p.fecha)}</span></span>${icono('chev-r', 'row__chev')}</button>`));
   pendientesDeLista().slice(0, 3).forEach((e) => avisos.push(html`<button class="row" type="button" data-action="asistencia-abrir" data-id="${e.id}">${icono('tasks', 'i--lg')}<span class="row__main"><span class="row__title">Falta tomar asistencia</span><span class="row__sub">${e.titulo} · ${fechaRelativa(e.fecha)}</span></span>${icono('chev-r', 'row__chev')}</button>`));
@@ -57,8 +57,8 @@ function atencion() {
 
 // Números del equipo, de un vistazo y cada uno de su color.
 function kpisLider() {
-  const abiertas = tareasAbiertas();
-  const vencidas = tareasVencidas();
+  const abiertas = trabajoAbierto();
+  const vencidas = trabajoVencido();
   const h = hoy();
   const semana = sumarDias(h, 6);
   const listas = eventosOrdenados().filter((e) => e.fecha <= h && listaTomada(e)).reverse().slice(0, 4);
@@ -82,7 +82,7 @@ export const vistaHoy = {
   render() {
     const persona = yo();
     const proximos = eventosOrdenados().filter((e) => e.fecha >= hoy()).slice(0, 6);
-    const misTareas = tareasAbiertas().filter((t) => (t.asignados || []).includes(persona.personaId)).sort((a, b) => (a.vence || '9').localeCompare(b.vence || '9')).slice(0, 5);
+    const misTareas = trabajoAbierto().filter((t) => (t.asignados || []).includes(persona.personaId)).sort((a, b) => (a.vence || '9').localeCompare(b.vence || '9')).slice(0, 5);
     const avisos = atencion();
     const hoyPubs = publicaciones().filter((p) => p.fecha === hoy() && p.estado !== 'publicado');
     const sinDatos = personas().length === 0 && eventosOrdenados().length === 0;
@@ -113,8 +113,8 @@ export const vistaHoy = {
           <section class="section" style="margin:0">
             <div class="section__head"><h3 class="section__title">Mis tareas</h3><a class="section__link" href="#/tareas">Todas ${icono('chev-r', 'i--sm')}</a></div>
             ${misTareas.length ? html`<div class="panel panel--tareas"><div class="list">${misTareas.map((t) => html`
-              <div class="row"><button class="icon-btn" type="button" data-action="tarea-toggle" data-id="${t.id}" aria-label="Marcar como hecha: ${t.titulo}" style="margin-left:-8px">${icono('circle')}</button>
-              <button class="row__main" type="button" data-action="tarea-editar" data-id="${t.id}" style="text-align:left"><span class="row__title">${t.titulo}</span><span class="row__sub">${t.vence ? (t.vence < hoy() ? html`<span style="color:var(--bad)">Venció ${fechaRelativa(t.vence).toLowerCase()}</span>` : `Vence ${fechaRelativa(t.vence).toLowerCase()}`) : 'Sin fecha'}</span></button></div>`)}</div></div>`
+              <div class="row"><button class="icon-btn" type="button" data-action="${t.esPublicacion ? 'publicacion-toggle' : 'tarea-toggle'}" data-id="${t.id}" aria-label="Marcar como hecha: ${t.titulo}" style="margin-left:-8px">${icono('circle')}</button>
+              <button class="row__main" type="button" data-action="${t.esPublicacion ? 'publicacion-asignada' : 'tarea-editar'}" data-id="${t.id}" style="text-align:left"><span class="row__title">${t.esPublicacion ? html`<span class="tag tag--pub" style="margin-right:6px">Publicación</span>` : ''}${t.titulo}</span><span class="row__sub">${t.vence ? (t.vence < hoy() ? html`<span style="color:var(--bad)">Venció ${fechaRelativa(t.vence).toLowerCase()}</span>` : `Vence ${fechaRelativa(t.vence).toLowerCase()}`) : 'Sin fecha'}</span></button></div>`)}</div></div>`
               : html`<div class="panel"><p class="muted" style="padding:var(--sp-5);font-size:var(--t-sm)">No tienes tareas asignadas. ¡Buen momento para adelantar algo!</p></div>`}
           </section>
           ${bloqueCumples()}

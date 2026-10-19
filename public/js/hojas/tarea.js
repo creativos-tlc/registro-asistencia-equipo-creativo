@@ -1,7 +1,7 @@
 import { guardar } from '../store.js';
 import { EQUIPO_CREATIVO, ESTADOS_TAREA, PRIORIDADES } from '../model.js';
 import { eventosOrdenados, nombreDe, personas, proyectos, tarea } from '../datos.js';
-import { fechaCorta, html, hoy, icono, nuevoId, raw, sumarDias } from '../util.js';
+import { extraerEnlaces, fechaCorta, html, hoy, icono, nuevoId, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
 export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '', proyectoId = '' } = {}) {
@@ -35,7 +35,7 @@ export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '
         ${proys.length ? html`<div class="field"><label for="ta-proy">Proyecto <span class="opt">(opcional · aparece en la carta Gantt)</span></label>
           <select class="select" id="ta-proy" name="proyectoId"><option value="">Ninguno</option>${proys.map((p) => html`<option value="${p.id}" ${raw(proyActual === p.id ? 'selected' : '')}>${p.titulo}</option>`)}</select></div>` : ''}
         ${esNueva ? '' : html`<div class="field"><button class="btn btn--soft btn--sm" type="button" data-action="proyecto-desde-tarea" data-id="${b.id}" style="align-self:flex-start">${icono('clipboard', 'i--sm')} Esto es un proyecto, no una tarea</button></div>`}
-        <div class="field"><label for="ta-det">Detalle <span class="opt">(opcional)</span></label><textarea class="textarea" id="ta-det" name="detalle" placeholder="Links, medidas, referencias…">${b.detalle || ''}</textarea></div>
+        <div class="field"><label for="ta-det">Detalle <span class="opt">(opcional)</span></label><textarea class="textarea" id="ta-det" name="detalle" placeholder="Links, medidas, referencias…">${b.detalle || ''}</textarea>${extraerEnlaces(b.detalle).length ? html`<div class="chips" style="margin-top:var(--sp-2)">${extraerEnlaces(b.detalle).map((u) => html`<a class="chip" href="${u}" target="_blank" rel="noopener noreferrer">${icono('link', 'i--sm')}<span class="trunc" style="max-width:220px">${u.replace(/^https?:\/\/(www\.)?/, '')}</span></a>`)}</div>` : ''}</div>
       </form>`,
     pie: html`
       ${esNueva ? '' : html`<button class="icon-btn icon-btn--danger" type="button" data-action="tarea-eliminar" data-id="${b.id}" aria-label="Eliminar tarea">${icono('trash')}</button>`}

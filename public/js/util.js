@@ -95,6 +95,8 @@ export function diasParaCumple(mmdd, desde = aISO(new Date())) {
   if (objetivo < hoyD) objetivo = new Date(hoyD.getFullYear() + 1, m - 1, d);
   return Math.round((objetivo - hoyD) / 86400000);
 }
+/** Enlaces http(s) que aparecen en un texto, sin repetir. */
+export const extraerEnlaces = (texto) => [...new Set(String(texto || '').match(/https?:\/\/[^\s<>"')]+/g) || [])];
 export const edadDe = (anio) => (anio ? new Date().getFullYear() - Number(anio) : null);
 export const debounce = (fn, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 export const telLimpio = (t) => String(t || '').replace(/[^\d+]/g, '');
