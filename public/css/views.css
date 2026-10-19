@@ -342,3 +342,18 @@ button.mx--celda:hover { background: color-mix(in srgb, var(--c) 22%, var(--s1))
 
 .gp__cab--grupo { padding: var(--sp-3) 0 var(--sp-1); }
 .gpw--sueltas .gt { padding-left: 0; }
+
+/* ---- Inicio del voluntario ---- */
+.inicio { display: flex; flex-direction: column; gap: var(--sp-5); max-width: 720px; }
+.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); }
+.kpi {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: var(--sp-3);
+  border-radius: var(--r-lg); border: 1px solid color-mix(in srgb, var(--c) 28%, var(--line));
+  background: color-mix(in srgb, var(--c) 14%, var(--s1));
+}
+.kpi__ic { display: grid; place-items: center; width: 28px; height: 28px; margin-bottom: 4px; border-radius: 50%; background: color-mix(in srgb, var(--c) 30%, var(--s1)); color: var(--tx); }
+.kpi__t { font-size: var(--t-xs); font-weight: 600; color: var(--tx-2); }
+.kpi__v { font-size: var(--t-2xl); font-weight: 800; line-height: 1.1; }
+.kpi__s { font-size: var(--t-xs); color: var(--tx-2); line-height: 1.25; }
+.turno-prox { display: flex; align-items: center; gap: var(--sp-3); text-decoration: none; }
+.inicio__dia { margin: var(--sp-3) 0 var(--sp-2); font-size: var(--t-sm); font-weight: 700; color: var(--tx-2); }

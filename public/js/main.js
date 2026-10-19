@@ -9,6 +9,7 @@ import { ofrecerImportacion } from './legacy.js';
 import { bienvenidaDelDia } from './bienvenida.js';
 
 import { vistaHoy } from './views/hoy.js';
+import { vistaInicio } from './views/inicio.js';
 import { vistaCalendario } from './views/calendario.js';
 import { vistaTareas } from './views/tareas.js';
 import { vistaEquipo } from './views/equipo.js';
@@ -22,7 +23,7 @@ import './hojas/persona.js';
 import './hojas/asistencia.js';
 import './views/gantt.js';
 
-registrar('hoy', vistaHoy);
+registrar('hoy', { get titulo() { return esLider() ? 'Hoy' : 'Inicio'; }, render: () => (esLider() ? vistaHoy : vistaInicio).render(), montar: (...a) => (esLider() ? vistaHoy : vistaInicio).montar?.(...a) });
 registrar('calendario', vistaCalendario);
 registrar('tareas', vistaTareas);
 registrar('equipo', vistaEquipo);
@@ -36,7 +37,7 @@ function construirNav() {
   const todos = (equipo.modulos || EQUIPO_INICIAL.modulos).filter((m) => MODULOS[m]);
   const modulos = esLider() ? todos : todos.filter((m) => MODULOS_VOLUNTARIO.includes(m) || (m === 'contenido' && tienePermiso('contenido')));
   limitarRutas(esLider() ? null : modulos.map((m) => MODULOS[m].ruta), modulos[0] ? MODULOS[modulos[0]].ruta : 'ajustes');
-  const enlace = (m, clase) => html`<a class="${clase}" href="#/${MODULOS[m].ruta}" data-nav="${m}">${icono(MODULOS[m].icono)}<span>${MODULOS[m].label}</span></a>`;
+  const enlace = (m, clase) => html`<a class="${clase}" href="#/${MODULOS[m].ruta}" data-nav="${m}">${icono(MODULOS[m].icono)}<span>${m === 'hoy' && !esLider() ? 'Inicio' : MODULOS[m].label}</span></a>`;
   const tabbar = document.getElementById('tabbar');
   tabbar.style.setProperty('--tabs', modulos.length);
   poner(tabbar, modulos.map((m) => enlace(m, 'tab')));

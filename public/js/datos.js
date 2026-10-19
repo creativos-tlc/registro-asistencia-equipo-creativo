@@ -63,16 +63,18 @@ export function pendientesDeLista(hasta = hoy()) {
 }
 
 /** Historial, porcentaje y racha de una persona. Justificar no penaliza ni corta la racha. */
-export function estadisticas(personaId, hasta = hoy()) {
+export function estadisticas(personaId, hasta = hoy(), fuente = null) {
+  const tomada = fuente ? fuente.tomada : listaTomada;
+  const marcaDe = fuente ? fuente.marca : marca;
   const p = persona(personaId);
   const historial = [];
   if (p) {
     for (const ev of eventosOrdenados()) {
-      if (ev.fecha > hasta || !pideLista(ev) || !listaTomada(ev)) continue;
+      if (ev.fecha > hasta || !pideLista(ev) || !tomada(ev)) continue;
       if (p.desde && ev.fecha < p.desde) continue;
       const cit = ev.participantes?.length ? ev.participantes.includes(personaId) : citados(ev).some((c) => c.id === personaId);
       if (!cit) continue;
-      historial.push({ evento: ev, estado: marca(ev.id, personaId) || 'a' });
+      historial.push({ evento: ev, estado: marcaDe(ev.id, personaId) || 'a' });
     }
   }
   const cuenta = { p: 0, a: 0, j: 0 };

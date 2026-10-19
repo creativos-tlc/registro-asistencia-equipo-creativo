@@ -137,6 +137,18 @@ export async function manejar({ request, env }) {
         return responder(await pull(env, yo, url));
       }
 
+      // Cada persona puede ver su propia asistencia sin ver la de los demás: solo qué listas se tomaron y su marca en cada una.
+      case 'GET mi-asistencia': {
+        const yo = await exigirSesion(env, request);
+        const { results } = await env.DB
+          .prepare(`SELECT json_extract(data, '$.eventoId') AS e, json_extract(data, '$.personaId') AS p, json_extract(data, '$.estado') AS s FROM registros WHERE coleccion = 'asistencia' AND borrado = 0`)
+          .all();
+        const listas = new Set();
+        const marcas = {};
+        for (const r of results) { listas.add(r.e); if (r.p === yo.personaId) marcas[r.e] = r.s; }
+        return responder({ listas: [...listas], marcas });
+      }
+
       case 'POST sync': {
         const yo = await exigirSesion(env, request);
         return responder(await push(env, yo, request));
