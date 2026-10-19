@@ -46,6 +46,9 @@ function paraRol(yo, coleccion, data, id) {
   return copia;
 }
 
+function responsableDe(texto) { try { return JSON.parse(texto).responsableId || null; } catch { return null; } }
+const ESTADOS_PUBLICACION = ['idea', 'en_curso', 'falta_info', 'listo', 'publicado'];
+
 function verificarOrigen(request, url) {
   const origen = request.headers.get('origin');
   if (origen && new URL(origen).host !== url.host) throw new HttpError(403, 'Origen no permitido');
@@ -60,7 +63,8 @@ async function pull(env, yo, url) {
     )
     .bind(desde, LIMITE_PULL)
     .all();
-  const visibles = results.filter((r) => puede(yo, 'leer', r.c));
+  // Quien no tiene el permiso de Contenido igual recibe las publicaciones que tiene a su cargo (y los borrados, que no traen datos).
+  const visibles = results.filter((r) => puede(yo, 'leer', r.c) || (r.c === 'publicaciones' && (r.borrado || responsableDe(r.data) === yo.personaId)));
   const registros = visibles.map((r) => ({
     c: r.c,
     id: r.id,
@@ -83,7 +87,12 @@ async function push(env, yo, request) {
     if (!COLECCIONES.has(op.c)) throw new HttpError(400, `Colección desconocida: ${op.c}`);
     if (!ID_VALIDO.test(op.id || '')) throw new HttpError(400, 'Id inválido');
     const propia = op.c === 'personas' && op.id === yo.personaId && yo.rol !== 'lider' && !puede(yo, 'escribir', op.c);
-    if (!propia && !puede(yo, 'escribir', op.c)) throw new HttpError(403, 'No tienes permiso para modificar esto');
+    let aCargo = false;
+    if (!propia && op.c === 'publicaciones' && yo.rol !== 'lider' && !puede(yo, 'escribir', op.c) && op.data && typeof op.data === 'object') {
+      const f = await env.DB.prepare(`SELECT data FROM registros WHERE coleccion = 'publicaciones' AND id = ? AND borrado = 0`).bind(op.id).first();
+      aCargo = !!f && responsableDe(f.data) === yo.personaId;
+    }
+    if (!propia && !aCargo && !puede(yo, 'escribir', op.c)) throw new HttpError(403, 'No tienes permiso para modificar esto');
     const borrar = op.data === null || op.data === undefined;
     let texto = borrar ? '{}' : JSON.stringify(op.data);
     if (propia) {
@@ -97,6 +106,15 @@ async function push(env, yo, request) {
         const v = op.data[k];
         if (v === null || v === '' || typeof v === 'string' || typeof v === 'number') actual[k] = typeof v === 'string' ? v.slice(0, 500) : v;
       }
+      op = { ...op, data: actual };
+      texto = JSON.stringify(actual);
+    }
+    if (aCargo) {
+      // Quien tiene a cargo una publicación solo puede cambiar en qué va y su texto; fecha, responsable y formato siguen siendo de los líderes.
+      const f = await env.DB.prepare(`SELECT data FROM registros WHERE coleccion = 'publicaciones' AND id = ?`).bind(op.id).first();
+      const actual = JSON.parse(f.data);
+      if (ESTADOS_PUBLICACION.includes(op.data.estado)) actual.estado = op.data.estado;
+      if (typeof op.data.detalle === 'string') actual.detalle = op.data.detalle.slice(0, 4000);
       op = { ...op, data: actual };
       texto = JSON.stringify(actual);
     }

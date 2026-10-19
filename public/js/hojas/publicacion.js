@@ -1,10 +1,36 @@
-import { guardar } from '../store.js';
+import { guardar, tienePermiso } from '../store.js';
 import { CANALES, EQUIPO_CREATIVO, ESTADOS_CONTENIDO } from '../model.js';
 import { personas, publicacion } from '../datos.js';
-import { html, hoy, icono, nuevoId, poner, raw, sumarDias } from '../util.js';
+import { fechaLarga, html, hoy, icono, nuevoId, poner, raw, sumarDias } from '../util.js';
 import { abrirHoja, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
 const opcionesFormato = (canal, actual) => Object.entries(CANALES[canal].formatos).map(([k, v]) => html`<option value="${k}" ${raw(k === actual ? 'selected' : '')}>${v}</option>`);
+
+/** Para quien tiene a cargo una publicación sin ser de Contenido: ve lo esencial y solo cambia en qué va y su texto. */
+function formPublicacionAsignada(id) {
+  const p = publicacion(id);
+  if (!p) return;
+  const c = CANALES[p.canal] || CANALES.instagram;
+  abrirHoja({
+    titulo: p.titulo,
+    ancha: true,
+    cuerpo: html`
+      <form id="fPubAsignada" class="form-grid" novalidate data-id="${id}">
+        <div class="row__sub" style="font-size:var(--t-md);color:var(--tx)">
+          <span>${icono(c.icono)} ${c.label} · ${c.formatos[p.formato] || ''}</span>
+          <span>${icono('calendar')} ${fechaLarga(p.fecha)}${p.hora ? ` · ${p.hora}` : ''}</span>
+        </div>
+        <div class="field"><span class="label">¿En qué va?</span>
+          <div class="chips" role="radiogroup" aria-label="Estado de la publicación">${Object.entries(ESTADOS_CONTENIDO).map(([k, v]) => html`<label class="chip chip--radio chip--dot" style="--c:${v.color}"><input class="sr-only" type="radio" name="estado" value="${k}" ${raw((p.estado || 'idea') === k ? 'checked' : '')}>${v.label}</label>`)}</div>
+          <p class="hint" id="pa-ayuda">${ESTADOS_CONTENIDO[p.estado || 'idea']?.ayuda || ''}</p></div>
+        <div class="field"><label for="pa-det">Texto, material o lo que falta</label><textarea class="textarea" id="pa-det" name="detalle" placeholder="Copy, referencias, qué necesitas para terminarla…">${p.detalle || ''}</textarea></div>
+      </form>`,
+    pie: html`<button class="btn btn--soft" type="button" data-action="cerrar-hoja">Cancelar</button><button class="btn btn--primary" type="button" data-action="publicacion-asignada-guardar">Guardar</button>`,
+  });
+  document.getElementById('fPubAsignada').addEventListener('change', (e) => {
+    if (e.target.name === 'estado') document.getElementById('pa-ayuda').textContent = ESTADOS_CONTENIDO[e.target.value]?.ayuda || '';
+  });
+}
 
 export function formPublicacion({ base = null, fecha = hoy(), hora = '', canal = 'instagram', formato = '' } = {}) {
   const b = base || {};
@@ -57,6 +83,17 @@ function guardarPublicacion() {
 }
 
 registrarAcciones({
+  'publicacion-asignada': (el) => (tienePermiso('contenido') ? formPublicacion({ base: publicacion(el.dataset.id) }) : formPublicacionAsignada(el.dataset.id)),
+  'publicacion-asignada-guardar': () => {
+    const form = document.getElementById('fPubAsignada');
+    const d = leerForm(form);
+    const p = publicacion(form.dataset.id);
+    if (!p) return;
+    const { id: _omitido, ...resto } = p;
+    guardar([{ c: 'publicaciones', id: p.id, data: { ...resto, estado: d.estado || p.estado, detalle: d.detalle || '' } }]);
+    cerrarHoja();
+    toast(d.estado === 'falta_info' ? 'Avisado: falta información' : 'Publicación guardada');
+  },
   'publicacion-nueva': (el) => formPublicacion({ fecha: el?.dataset.fecha || hoy(), hora: el?.dataset.hora || '', canal: el?.dataset.canal || 'instagram', formato: el?.dataset.formato || '' }),
   'publicacion-editar': (el) => formPublicacion({ base: publicacion(el.dataset.id) }),
   'publicacion-guardar': guardarPublicacion,

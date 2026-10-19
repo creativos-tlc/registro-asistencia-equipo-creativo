@@ -1,8 +1,8 @@
 /* Inicio de cada voluntario: sus números, sus tareas y lo que viene en la semana, para estar al día sin buscar. */
 import { api, lista, yo } from '../store.js';
-import { GRUPOS_TURNO, tipoDe } from '../model.js';
+import { CANALES, ESTADOS_CONTENIDO, GRUPOS_TURNO, tipoDe } from '../model.js';
 import { bloqueCumples } from './cumples.js';
-import { equipoActual, estadisticas, persona, eventosOrdenados, nombreDe, tareas, todosLosRoles } from '../datos.js';
+import { equipoActual, estadisticas, persona, publicaciones, eventosOrdenados, nombreDe, tareas, todosLosRoles } from '../datos.js';
 import { dif, fechaCorta, fechaLarga, hoy, html, icono, nombreDiaLargo, plural, raw, saludo, sumarDias } from '../util.js';
 import { vacio } from '../ui.js';
 import { solicitarRefresco } from '../router.js';
@@ -74,6 +74,13 @@ export const vistaInicio = {
     estaSemana.forEach((t) => {
       items.push({ f: t.vence, ord: '99:99', html: html`<div class="row"><button class="icon-btn" type="button" data-action="tarea-toggle" data-id="${t.id}" aria-label="Marcar como hecha: ${t.titulo}" style="margin-left:-8px">${icono('circle')}</button><button class="row__main" type="button" data-action="tarea-editar" data-id="${t.id}" style="text-align:left"><span class="row__title">${t.titulo}</span><span class="row__sub">Entrega de tu tarea</span></button></div>` });
     });
+    // Publicaciones que tengo a cargo (aunque no tenga el permiso de Contenido)
+    const pubs = publicaciones().filter((p) => p.responsableId === yoId && p.estado !== 'publicado').sort((a, b) => a.fecha.localeCompare(b.fecha));
+    const pubsAtrasadas = pubs.filter((p) => p.fecha < h);
+    pubs.filter((p) => p.fecha >= h && p.fecha <= fin).forEach((p) => {
+      const c = CANALES[p.canal] || CANALES.instagram;
+      items.push({ f: p.fecha, ord: p.hora || '98:00', html: html`<button class="row" type="button" data-action="publicacion-asignada" data-id="${p.id}"><span class="typebadge" style="--c:var(--pink)">${icono('image')}</span><span class="row__main"><span class="row__title">Publicar: ${p.titulo}</span><span class="row__sub">${c.label} · ${c.formatos[p.formato] || ''}${p.hora ? ` · ${p.hora}` : ''}</span></span>${icono('chev-r', 'row__chev')}</button>` });
+    });
     const dias = [...new Set(items.map((i) => i.f))].sort();
 
     return html`
@@ -84,7 +91,7 @@ export const vistaInicio = {
         </div>
 
         <div class="kpis">
-          ${kpi('var(--info)', 'tasks', 'Por hacer', abiertas.length, atrasadas.length ? `${atrasadas.length} atrasadas` : estaSemana.length ? `${estaSemana.length} esta semana` : 'Todo al día')}
+          ${kpi('var(--info)', 'tasks', 'Por hacer', abiertas.length + pubs.length, (atrasadas.length + pubsAtrasadas.length) ? `${atrasadas.length + pubsAtrasadas.length} atrasadas` : (estaSemana.length + pubs.filter((p) => p.fecha >= h && p.fecha <= fin).length) ? `${estaSemana.length + pubs.filter((p) => p.fecha >= h && p.fecha <= fin).length} esta semana` : 'Todo al día')}
           ${kpi('var(--ok)', 'circle-check', 'Cumplidas', hechas.length, cumple === null ? 'Aún sin tareas' : `${cumple}% de las tuyas`)}
           ${kpi('var(--orange)', 'flame', 'Asistencia', est ? (est.porcentaje === null ? '—' : `${est.porcentaje}%`) : '…', est ? (est.racha ? `Racha de ${est.racha}` : est.total ? `${est.total} reuniones` : 'Sin reuniones aún') : 'Cargando')}
         </div>
@@ -103,6 +110,9 @@ export const vistaInicio = {
           ${dias.length ? dias.map((f) => html`<p class="inicio__dia">${cuando(f)}</p><div class="panel"><div class="list">${items.filter((i) => i.f === f).sort((a, b) => a.ord.localeCompare(b.ord)).map((i) => i.html)}</div></div>`)
             : html`<div class="panel">${vacio({ icon: 'calendar', titulo: 'Semana tranquila', texto: 'No hay nada agendado para ti en los próximos 7 días.' })}</div>`}
         </section>
+
+        ${pubs.length ? html`<section class="section" style="margin:0"><div class="section__head"><h3 class="section__title">Publicaciones a tu cargo</h3></div>
+          <div class="panel panel--pub"><div class="list">${pubs.map((p) => { const c = CANALES[p.canal] || CANALES.instagram; const e = ESTADOS_CONTENIDO[p.estado || 'idea'] || ESTADOS_CONTENIDO.idea; return html`<button class="row" type="button" data-action="publicacion-asignada" data-id="${p.id}"><span class="typebadge" style="--c:var(--pink)">${icono(c.icono)}</span><span class="row__main"><span class="row__title">${p.titulo}</span><span class="row__sub"><span style="${p.fecha < h ? 'color:var(--bad)' : ''}">${p.fecha < h ? 'Era para el ' : 'Se publica '}${cuando(p.fecha).toLowerCase()}</span><span class="tag ${e.tag}">${e.label}</span></span></span>${icono('chev-r', 'row__chev')}</button>`; })}</div></div></section>` : ''}
 
         ${bloqueCumples()}
 
