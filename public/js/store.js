@@ -114,10 +114,10 @@ export const obtener = (c, id) => (estado.docs[c]?.[id] ? { id, ...estado.docs[c
 export class ErrorPermiso extends Error {}
 export const tienePermiso = (p) => estado.yo?.rol === 'lider' || !!estado.yo?.permisos?.includes(p);
 const COLECCIONES_TURNOS = ['roles', 'turnos', 'ausencias'];
-export const puedeEscribir = (c) => estado.yo?.rol === 'lider' || c === 'tareas' || (c === 'publicaciones' && tienePermiso('contenido')) || (COLECCIONES_TURNOS.includes(c) && tienePermiso('turnos')) || (c === 'devocionales' && tienePermiso('devocional'));
+export const puedeEscribir = (c, id) => estado.yo?.rol === 'lider' || (c === 'personas' && !!id && id === estado.yo?.personaId) || c === 'tareas' || (c === 'publicaciones' && tienePermiso('contenido')) || (COLECCIONES_TURNOS.includes(c) && tienePermiso('turnos')) || (c === 'devocionales' && tienePermiso('devocional'));
 
 export function guardar(ops) {
-  if (ops.some((op) => !puedeEscribir(op.c))) throw new ErrorPermiso('Solo los líderes pueden hacer este cambio.');
+  if (ops.some((op) => !puedeEscribir(op.c, op.id))) throw new ErrorPermiso('Solo los líderes pueden hacer este cambio.');
   const previos = [];
   const tocadas = new Set();
   for (const op of ops) {

@@ -22,7 +22,9 @@ const LIMITE_PULL = 5000;
 // Un voluntario ve el calendario y las tareas, y puede crear y asignar tareas. Nada más.
 const LECTURA_VOLUNTARIO = new Set(['equipos', 'personas', 'eventos', 'tareas', 'notas', 'roles', 'turnos', 'ausencias', 'proyectos', 'devocionales']);
 const ESCRITURA_VOLUNTARIO = new Set(['tareas']);
-const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas'];
+const CAMPOS_PRIVADOS = ['telefono', 'correo', 'direccion', 'anioNac', 'emergencia', 'notas', 'fechaNac', 'alergias', 'talla'];
+// Lo que cada persona puede cambiar de su propia ficha (nunca su rol, sus permisos ni su fecha de ingreso).
+const CAMPOS_PROPIOS = ['telefono', 'correo', 'fechaNac', 'anioNac', 'direccion', 'alergias', 'talla', 'emergencia'];
 
 // Lo que suma cada permiso extra (lo da un líder desde el perfil de la persona).
 const PERMISO_COLECCIONES = { contenido: ['publicaciones'], turnos: ['roles', 'turnos', 'ausencias'], devocional: ['devocionales'] };
@@ -34,9 +36,12 @@ function puede(yo, operacion, coleccion) {
 }
 
 // Un voluntario ve quién está en el equipo, pero no sus datos de contacto ni notas.
-function paraRol(yo, coleccion, data) {
+function paraRol(yo, coleccion, data, id) {
   if (yo.rol === 'lider' || coleccion !== 'personas' || !data) return data;
+  if (id === yo.personaId) return data; // cada quien ve su propia ficha completa
   const copia = { ...data };
+  // El cumpleaños se comparte sin el año; lo demás de la ficha es solo para líderes.
+  if (typeof data.fechaNac === 'string' && data.fechaNac.length >= 10) copia.cumple = data.fechaNac.slice(5, 10);
   CAMPOS_PRIVADOS.forEach((c) => delete copia[c]);
   return copia;
 }
@@ -62,7 +67,7 @@ async function pull(env, yo, url) {
     rev: r.rev,
     t: r.t,
     borrado: !!r.borrado,
-    data: r.borrado ? null : paraRol(yo, r.c, JSON.parse(r.data)),
+    data: r.borrado ? null : paraRol(yo, r.c, JSON.parse(r.data), r.id),
   }));
   const ultimo = results.length ? results[results.length - 1].t : desde;
   return { ahora: Date.now(), cursor: ultimo, hayMas: results.length === LIMITE_PULL, registros };
@@ -74,12 +79,27 @@ async function push(env, yo, request) {
   if (ops.length > MAX_OPS) throw new HttpError(413, 'Demasiados cambios en una sola solicitud');
   const ahora = Date.now();
   const stmts = [];
-  for (const op of ops) {
+  for (let op of ops) {
     if (!COLECCIONES.has(op.c)) throw new HttpError(400, `Colección desconocida: ${op.c}`);
     if (!ID_VALIDO.test(op.id || '')) throw new HttpError(400, 'Id inválido');
-    if (!puede(yo, 'escribir', op.c)) throw new HttpError(403, 'No tienes permiso para modificar esto');
+    const propia = op.c === 'personas' && op.id === yo.personaId && yo.rol !== 'lider' && !puede(yo, 'escribir', op.c);
+    if (!propia && !puede(yo, 'escribir', op.c)) throw new HttpError(403, 'No tienes permiso para modificar esto');
     const borrar = op.data === null || op.data === undefined;
-    const texto = borrar ? '{}' : JSON.stringify(op.data);
+    let texto = borrar ? '{}' : JSON.stringify(op.data);
+    if (propia) {
+      // Solo sus datos personales: el resto de la ficha se conserva tal como está en el servidor.
+      if (borrar || typeof op.data !== 'object') throw new HttpError(403, 'No puedes borrar tu ficha');
+      const fila = await env.DB.prepare(`SELECT data FROM registros WHERE coleccion = 'personas' AND id = ? AND borrado = 0`).bind(op.id).first();
+      if (!fila) throw new HttpError(404, 'No se encontró tu ficha');
+      const actual = JSON.parse(fila.data);
+      for (const k of CAMPOS_PROPIOS) {
+        if (!(k in op.data)) continue;
+        const v = op.data[k];
+        if (v === null || v === '' || typeof v === 'string' || typeof v === 'number') actual[k] = typeof v === 'string' ? v.slice(0, 500) : v;
+      }
+      op = { ...op, data: actual };
+      texto = JSON.stringify(actual);
+    }
     if (texto.length > MAX_DATA) throw new HttpError(413, 'Un registro es demasiado grande');
     const equipo = !borrar && typeof op.data.equipoId === 'string' ? op.data.equipoId.slice(0, 60) : null;
     stmts.push(

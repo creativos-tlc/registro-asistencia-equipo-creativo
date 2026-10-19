@@ -79,6 +79,22 @@ export const iniciales = (n) => { const p = String(n || '?').trim().split(/\s+/)
 export const porNombre = (a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' });
 export const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 export function tonoDe(texto) { let h = 0; for (const c of String(texto)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+/** Edad exacta a partir de la fecha de nacimiento (AAAA-MM-DD). */
+export function edadExacta(iso) {
+  if (!iso) return null;
+  const n = leerISO(iso); const h = new Date();
+  let e = h.getFullYear() - n.getFullYear();
+  if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) e--;
+  return e;
+}
+/** Días que faltan para el próximo cumpleaños ('MM-DD'); 0 = hoy. */
+export function diasParaCumple(mmdd, desde = aISO(new Date())) {
+  const [m, d] = mmdd.split('-').map(Number);
+  const hoyD = leerISO(desde);
+  let objetivo = new Date(hoyD.getFullYear(), m - 1, d);
+  if (objetivo < hoyD) objetivo = new Date(hoyD.getFullYear() + 1, m - 1, d);
+  return Math.round((objetivo - hoyD) / 86400000);
+}
 export const edadDe = (anio) => (anio ? new Date().getFullYear() - Number(anio) : null);
 export const debounce = (fn, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 export const telLimpio = (t) => String(t || '').replace(/[^\d+]/g, '');

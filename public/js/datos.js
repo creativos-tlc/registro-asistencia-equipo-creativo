@@ -1,7 +1,7 @@
 /* Consultas y reglas de negocio sobre los datos. Las vistas nunca calculan por su cuenta. */
 import { lista, obtener } from './store.js';
 import { tipoDe, EQUIPO_INICIAL, EQUIPO_CREATIVO, DIAS_ASISTENCIA_PENDIENTE, CANALES, FORMATOS, claveFormato } from './model.js';
-import { aMin, dif, hoy, porNombre, sumarDias } from './util.js';
+import { aMin, dif, diasParaCumple, hoy, porNombre, sumarDias } from './util.js';
 
 // ---------- equipo ----------
 export const equipoActual = () => obtener('equipos', EQUIPO_CREATIVO) || { id: EQUIPO_CREATIVO, ...EQUIPO_INICIAL };
@@ -140,6 +140,15 @@ export function sirvenPorGrupo(fecha) {
   const rolesPorId = new Map(lista('roles').map((r) => [r.id, r]));
   lista('turnos').filter((t) => t.fecha === fecha).forEach((t) => (t.personas || []).forEach((p) => rolesPorId.get(t.rolId) && porGrupo[rolesPorId.get(t.rolId).grupo]?.add(p)));
   return porGrupo;
+}
+
+// ---------- cumpleaños ----------
+/** Quiénes cumplen en los próximos `dias` días. Los líderes ven la fecha completa; los voluntarios solo día y mes (`cumple`). */
+export function cumpleaneros(dias = 30) {
+  return personas()
+    .map((p) => { const mmdd = p.fechaNac ? p.fechaNac.slice(5) : p.cumple || null; return mmdd ? { persona: p, mmdd, dias: diasParaCumple(mmdd, hoy()) } : null; })
+    .filter((x) => x && x.dias <= dias)
+    .sort((a, b) => a.dias - b.dias || a.persona.nombre.localeCompare(b.persona.nombre, 'es'));
 }
 
 // ---------- devocional (lectura y versículos de cada martes) ----------

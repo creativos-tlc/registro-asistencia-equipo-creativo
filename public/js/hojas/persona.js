@@ -1,7 +1,7 @@
 import { api, esLider, guardar, yo } from '../store.js';
-import { AREAS_SUGERIDAS, EQUIPO_CREATIVO, ASISTENCIA, PERMISOS_ETIQUETA } from '../model.js';
+import { AREAS_SUGERIDAS, EQUIPO_CREATIVO, ASISTENCIA, PERMISOS_ETIQUETA, TALLAS } from '../model.js';
 import { eventos, estadisticas, persona, personas, tareasDe } from '../datos.js';
-import { edadDe, fechaCorta, fechaRelativa, hoy, html, icono, norm, nuevoId, plural, raw, telLimpio } from '../util.js';
+import { edadDe, edadExacta, fechaCorta, fechaDiaMes, fechaRelativa, hoy, html, icono, norm, nuevoId, plural, raw, telLimpio } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 import { lista } from '../store.js';
 
@@ -33,7 +33,7 @@ export function verPersona(id) {
   const p = persona(id);
   if (!p) return;
   const s = estadisticas(id);
-  const edad = edadDe(p.anioNac);
+  const edad = p.fechaNac ? edadExacta(p.fechaNac) : edadDe(p.anioNac);
   const tareasAbiertas = tareasDe(id).filter((t) => t.estado !== 'hecha');
   const proximos = eventos().filter((e) => e.fecha >= hoy() && (e.participantes || []).includes(id)).sort((a, b) => a.fecha.localeCompare(b.fecha)).slice(0, 4);
   const tel = telLimpio(p.telefono);
@@ -62,7 +62,9 @@ export function verPersona(id) {
         ${tel ? dato('message', 'WhatsApp', 'Escribir por WhatsApp', `https://wa.me/${tel.replace(/^\+/, '')}`) : ''}
         ${dato('mail', 'Correo', p.correo, p.correo ? `mailto:${p.correo}` : '')}
         ${dato('pin', 'Dirección', p.direccion)}
-        ${dato('cake', 'Nacimiento', p.anioNac ? `${p.anioNac} · ${plural(edad, 'año', 'años')}` : '')}
+        ${p.fechaNac ? dato('cake', 'Cumpleaños', `${fechaDiaMes(p.fechaNac)} de ${p.fechaNac.slice(0, 4)} · ${plural(edad, 'año', 'años')}`) : dato('cake', 'Nacimiento', p.anioNac ? `${p.anioNac} · ${plural(edad, 'año', 'años')}` : '')}
+        ${p.alergias ? html`<div class="row row--aviso" style="min-height:52px">${icono('alert')}<span class="row__main"><span class="row__sub">Alergias y salud</span><span class="row__title" style="white-space:pre-wrap">${p.alergias}</span></span></div>` : ''}
+        ${dato('info', 'Talla de polera', p.talla)}
         ${dato('calendar', 'En el equipo desde', p.desde ? fechaCorta(p.desde) : '')}
         ${dato('alert', 'Contacto de emergencia', p.emergencia)}
         ${!p.telefono && !p.correo && !p.direccion && !p.anioNac && esLider() ? html`<p class="muted" style="padding:var(--sp-4)">Aún no hay datos de contacto. Toca Editar para completarlos.</p>` : ''}
@@ -141,9 +143,11 @@ export function formPersona({ base = null } = {}) {
           <div class="field"><label for="pe-mail">Correo <span class="opt">(opcional)</span></label><input class="input" id="pe-mail" name="correo" type="email" inputmode="email" value="${b.correo || ''}" autocomplete="off"></div>
         </div>
         <div class="form-grid form-grid--2 keep">
-          <div class="field"><label for="pe-anio">Año de nacimiento <span class="opt">(opcional)</span></label><input class="input" id="pe-anio" name="anioNac" type="number" inputmode="numeric" min="1930" max="${new Date().getFullYear()}" value="${b.anioNac || ''}" placeholder="1995"></div>
+          <div class="field"><label for="pe-nac">Fecha de nacimiento <span class="opt">(opcional)</span></label><input class="input" id="pe-nac" name="fechaNac" type="date" value="${b.fechaNac || ''}"></div>
           <div class="field"><label for="pe-desde">Se incorporó</label><input class="input" id="pe-desde" name="desde" type="date" value="${b.desde || hoy()}"></div>
         </div>
+        <div class="field"><label for="pe-alerg">Alergias y salud <span class="opt">(importante)</span></label><textarea class="textarea" id="pe-alerg" name="alergias" placeholder="Alergias, medicamentos, condiciones que el equipo deba saber…" style="min-height:72px">${b.alergias || ''}</textarea><p class="hint">Solo lo ven los líderes.</p></div>
+        <div class="field"><label for="pe-talla">Talla de polera <span class="opt">(opcional)</span></label><select class="select" id="pe-talla" name="talla"><option value="">Sin indicar</option>${TALLAS.map((t) => html`<option value="${t}" ${raw(b.talla === t ? 'selected' : '')}>${t}</option>`)}</select></div>
         <div class="field"><label for="pe-dir">Dirección <span class="opt">(opcional)</span></label><input class="input" id="pe-dir" name="direccion" value="${b.direccion || ''}" autocomplete="off"></div>
         <div class="field"><span class="label">Áreas donde ayuda</span>
           <div class="chips">${[...AREAS_SUGERIDAS, ...extras].map((a) => html`<label class="chip chip--check"><input class="sr-only" type="checkbox" name="area" value="${a}" ${raw(areas.has(a) ? 'checked' : '')}>${a}</label>`)}</div>
@@ -159,6 +163,8 @@ export function formPersona({ base = null } = {}) {
   });
 }
 
+const previaAnio = (form) => (form.dataset.id ? persona(form.dataset.id)?.anioNac ?? null : null);
+
 async function guardarPersona() {
   const form = document.getElementById('fPersona');
   const d = leerForm(form);
@@ -166,8 +172,9 @@ async function guardarPersona() {
   const id = form.dataset.id;
   const otras = personas({ inactivas: true }).filter((p) => p.id !== id);
   if (otras.some((p) => norm(p.nombre) === norm(d.nombre) && norm(p.apellidos) === norm(d.apellidos))) { marcarError(form.nombre, 'Ya existe alguien con ese nombre. Agrega el apellido para distinguirlos.'); return; }
-  const anio = d.anioNac ? Number(d.anioNac) : null;
-  if (anio && (anio < 1930 || anio > new Date().getFullYear())) { marcarError(form.anioNac, 'Revisa el año de nacimiento'); return; }
+  const anioFecha = d.fechaNac ? Number(d.fechaNac.slice(0, 4)) : null;
+  if (anioFecha && (anioFecha < 1930 || d.fechaNac > hoy())) { marcarError(form.fechaNac, 'Revisa la fecha de nacimiento'); return; }
+  const anio = anioFecha || (d.fechaNac ? null : previaAnio(form));
   const marcadas = [...form.closest('.sheet__body').querySelectorAll('input[name=area]:checked')].map((i) => i.value);
   const extras = d.areaExtra ? d.areaExtra.split(',').map((x) => x.trim()).filter(Boolean) : [];
   const previa = id ? persona(id) : null;
@@ -176,7 +183,7 @@ async function guardarPersona() {
     ...(previa || {}),
     equipoId: EQUIPO_CREATIVO, equipos: previa?.equipos || [EQUIPO_CREATIVO], activo: previa ? previa.activo !== false : true,
     nombre: d.nombre, apellidos: d.apellidos || '', rol, telefono: d.telefono || '', correo: d.correo || '',
-    anioNac: anio, direccion: d.direccion || '', desde: d.desde || hoy(), emergencia: d.emergencia || '', notas: d.notas || '',
+    fechaNac: d.fechaNac || '', alergias: d.alergias || '', talla: d.talla || '', anioNac: anio, direccion: d.direccion || '', desde: d.desde || hoy(), emergencia: d.emergencia || '', notas: d.notas || '',
     areas: [...new Set([...marcadas, ...extras])],
     enPrueba: !!d.enPrueba,
   };
@@ -206,6 +213,46 @@ async function guardarPersona() {
   guardar([{ c: 'personas', id: personaId, data }]);
   toast(id ? 'Perfil guardado' : `${d.nombre} se sumó al equipo`);
   if (id) verPersona(id); else cerrarHoja();
+}
+
+// ---------- mi perfil (cada persona edita sus propios datos) ----------
+export function formMiPerfil() {
+  const b = persona(yo().personaId) || {};
+  abrirHoja({
+    titulo: 'Mis datos',
+    ancha: true,
+    cuerpo: html`
+      <form id="fMiPerfil" class="form-grid" novalidate>
+        <p class="muted" style="font-size:var(--t-sm)">Estos datos ayudan a cuidarte y a avisarte mejor. Solo los ven los líderes, y tu cumpleaños se muestra al equipo sin el año.</p>
+        <div class="form-grid form-grid--2">
+          <div class="field"><label for="mp-tel">Teléfono</label><input class="input" id="mp-tel" name="telefono" type="tel" inputmode="tel" value="${b.telefono || ''}" placeholder="+56 9 1234 5678" autocomplete="off"></div>
+          <div class="field"><label for="mp-mail">Correo</label><input class="input" id="mp-mail" name="correo" type="email" inputmode="email" value="${b.correo || ''}" autocomplete="off"></div>
+        </div>
+        <div class="field"><label for="mp-nac">Fecha de nacimiento</label><input class="input" id="mp-nac" name="fechaNac" type="date" value="${b.fechaNac || ''}"></div>
+        <div class="field"><label for="mp-alerg">Alergias y salud <span class="opt">(importante)</span></label><textarea class="textarea" id="mp-alerg" name="alergias" placeholder="Alergias, medicamentos, algo que el equipo deba saber…" style="min-height:72px">${b.alergias || ''}</textarea></div>
+        <div class="form-grid form-grid--2 keep">
+          <div class="field"><label for="mp-talla">Talla de polera</label><select class="select" id="mp-talla" name="talla"><option value="">Sin indicar</option>${TALLAS.map((t) => html`<option value="${t}" ${raw(b.talla === t ? 'selected' : '')}>${t}</option>`)}</select></div>
+        </div>
+        <div class="field"><label for="mp-dir">Dirección</label><input class="input" id="mp-dir" name="direccion" value="${b.direccion || ''}" autocomplete="off"></div>
+        <div class="field"><label for="mp-emg">Contacto de emergencia</label><input class="input" id="mp-emg" name="emergencia" value="${b.emergencia || ''}" placeholder="Nombre y teléfono" autocomplete="off"></div>
+      </form>`,
+    pie: html`<button class="btn btn--soft" type="button" data-action="cerrar-hoja">Cancelar</button><button class="btn btn--primary" type="button" data-action="mi-perfil-guardar">Guardar</button>`,
+  });
+}
+
+function guardarMiPerfil() {
+  const form = document.getElementById('fMiPerfil');
+  const d = leerForm(form);
+  const id = yo().personaId;
+  const previa = persona(id);
+  if (!previa) return;
+  const anioFecha = d.fechaNac ? Number(d.fechaNac.slice(0, 4)) : null;
+  if (anioFecha && (anioFecha < 1930 || d.fechaNac > hoy())) { marcarError(form.fechaNac, 'Revisa la fecha de nacimiento'); return; }
+  const data = { ...previa, telefono: d.telefono || '', correo: d.correo || '', fechaNac: d.fechaNac || '', anioNac: anioFecha || (d.fechaNac ? null : previa.anioNac ?? null), alergias: d.alergias || '', talla: d.talla || '', direccion: d.direccion || '', emergencia: d.emergencia || '' };
+  delete data.id;
+  guardar([{ c: 'personas', id, data }]);
+  cerrarHoja();
+  toast('Tus datos quedaron guardados');
 }
 
 // ---------- archivar / eliminar ----------
@@ -263,6 +310,8 @@ async function alternarPermiso(id, permiso) {
 
 registrarAcciones({
   'persona-permiso': (el) => alternarPermiso(el.dataset.id, el.dataset.p),
+  'mi-perfil': () => formMiPerfil(),
+  'mi-perfil-guardar': guardarMiPerfil,
   'persona-nueva': () => formPersona(),
   'persona-ver': (el) => verPersona(el.dataset.id),
   'persona-editar': (el) => formPersona({ base: persona(el.dataset.id) }),
