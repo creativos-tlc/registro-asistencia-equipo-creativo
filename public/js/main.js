@@ -1,7 +1,7 @@
 import { arrancar, comenzar, alExpirarSesion, suscribir, estadoSync, sincronizarAhora, yo, esLider, tienePermiso, obtener, lista, poner as guardarDoc } from './store.js';
 import { EQUIPO_CREATIVO, EQUIPO_INICIAL, MODULOS, MODULOS_VOLUNTARIO, registrarCategorias } from './model.js';
-import { equipoActual } from './datos.js';
-import { html, icono, poner } from './util.js';
+import { equipoActual, personas } from './datos.js';
+import { html, icono, poner, registrarIniciales } from './util.js';
 import { acciones, avatar, iniciarAcciones, iniciarHoja, registrarAcciones, abrirHoja, cerrarHoja, toast } from './ui.js';
 import { mostrarAcceso } from './gate.js';
 import { iniciarRouter, limitarRutas, registrar, solicitarRefresco, ir } from './router.js';
@@ -114,6 +114,7 @@ async function entrar() {
   document.getElementById('shell').hidden = false;
   await comenzar();
   registrarCategorias(lista('categorias'));
+  registrarIniciales(personas({ inactivas: true }).map((p) => p.nombre));
   if (!obtener('equipos', EQUIPO_CREATIVO)) guardarDoc('equipos', EQUIPO_CREATIVO, EQUIPO_INICIAL);
   construirNav();
   pintarSync();
@@ -130,6 +131,7 @@ document.addEventListener('focusout', (e) => { if (e.target.matches?.('textarea.
 suscribir((colecciones) => {
   if (colecciones.has('_sync')) pintarSync();
   if (colecciones.has('categorias')) registrarCategorias(lista('categorias'));
+  if (colecciones.has('personas')) registrarIniciales(personas({ inactivas: true }).map((p) => p.nombre));
   if ([...colecciones].some((c) => c !== '_sync')) {
     if (colecciones.has('equipos')) construirNav();
     // Mientras se escribe en la hoja de notas no se redibuja (se perdería el cursor); al salir de la línea se actualiza.

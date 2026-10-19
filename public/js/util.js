@@ -78,6 +78,30 @@ export const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, 
 export const iniciales = (n) => { const p = String(n || '?').trim().split(/\s+/); return ((p[0]?.[0] || '') + (p[1]?.[0] || p[0]?.[1] || '')).toUpperCase(); };
 export const porNombre = (a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es', { sensitivity: 'base' });
 export const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+// Iniciales únicas: si dos personas empiezan igual (Daniel y David, Sofía y Sorimar), cada una toma su primera letra
+// más la primera letra que la distingue (DN y DV, SF y SR). Se calcula con la lista del equipo.
+let inicialesUnicas = new Map();
+export function registrarIniciales(nombres) {
+  const lista = [...new Set((nombres || []).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  const grupos = new Map();
+  lista.forEach((n) => { const k = iniciales(n); grupos.set(k, [...(grupos.get(k) || []), n]); });
+  const mapa = new Map();
+  const usadas = new Set();
+  grupos.forEach((ns, k) => { if (ns.length === 1) { mapa.set(ns[0], k); usadas.add(k); } });
+  grupos.forEach((ns, k) => {
+    if (ns.length === 1) return;
+    ns.forEach((n) => {
+      const letras = [...n.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z]/g, '').toUpperCase()];
+      let elegida = null;
+      for (let i = 1; i < letras.length && !elegida; i++) { const c = letras[0] + letras[i]; if (c !== k && !usadas.has(c)) elegida = c; }
+      mapa.set(n, elegida || k);
+      usadas.add(elegida || k);
+    });
+  });
+  inicialesUnicas = mapa;
+}
+export const inicialesDe = (nombre) => inicialesUnicas.get(nombre) || iniciales(nombre);
+
 export function tonoDe(texto) { let h = 0; for (const c of String(texto)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
 /** Edad exacta a partir de la fecha de nacimiento (AAAA-MM-DD). */
 export function edadExacta(iso) {

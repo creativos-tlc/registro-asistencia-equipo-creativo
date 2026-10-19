@@ -1,6 +1,6 @@
 /* Pantalla de acceso: elegir nombre → PIN → (si es temporal) crear PIN propio. */
 import { api, ingresar, cambiarPin, ErrorApi } from './store.js';
-import { html, icono, poner } from './util.js';
+import { html, icono, poner, registrarIniciales } from './util.js';
 import { avatar, marcarError } from './ui.js';
 import { bloqueFrase } from './bienvenida.js';
 
@@ -39,6 +39,7 @@ export function mostrarAcceso() {
         cont.querySelector('#reintentar').addEventListener('click', pantallaNombres);
         return;
       }
+      registrarIniciales(personas.map((p) => p.nombre));
       pintar(html`
         ${bloqueFrase()}
         <div><h2>¿Quién eres?</h2><p>Elige tu nombre para entrar.</p></div>

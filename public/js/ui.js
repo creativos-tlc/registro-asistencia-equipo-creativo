@@ -1,5 +1,5 @@
 /* Piezas de interfaz compartidas: hojas, avisos, confirmación, avatar, formularios. */
-import { html, icono, iniciales, poner, tonoDe, raw } from './util.js';
+import { html, icono, inicialesDe, poner, tonoDe, raw } from './util.js';
 import { ErrorPermiso } from './store.js';
 
 // ---------- acciones (delegación de clics por data-action) ----------
@@ -126,7 +126,7 @@ export function ocupado(boton, fn) {
 
 // ---------- fragmentos ----------
 export const avatar = (nombre, tam = '') =>
-  html`<span class="avatar ${tam ? `avatar--${tam}` : ''}" style="--h:hsl(${tonoDe(nombre)} 65% 62%)" aria-hidden="true">${iniciales(nombre)}</span>`;
+  html`<span class="avatar ${tam ? `avatar--${tam}` : ''}" style="--h:hsl(${tonoDe(nombre)} 65% 62%)" title="${nombre}" aria-hidden="true">${inicialesDe(nombre)}</span>`;
 
 export const vacio = ({ icon = 'calendar', titulo, texto = '', boton = null }) => html`
   <div class="empty">
