@@ -5,6 +5,7 @@ import { refrescar, ir } from '../router.js';
 import { guardar, yo } from '../store.js';
 import { CANALES, ESTADOS_TAREA, EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
 import { vistaCalendario } from './calendario.js';
+import { opsAvisoLideres, quien } from '../hojas/avisos.js';
 
 const CLAVE_VISTA = 'tlc.tareas.vista';
 const leerVista = () => { try { return localStorage.getItem(CLAVE_VISTA) === 'tablero' ? 'tablero' : 'lista'; } catch { return 'lista'; } };
@@ -166,14 +167,14 @@ function moverTarea(id, estado) {
     const nuevo = TAREA_A_PUB[estado];
     if (!nuevo || pub.estado === nuevo) return;
     const { id: _omitido, ...resto } = pub;
-    const undoPub = guardar([{ c: 'publicaciones', id, data: { ...resto, estado: nuevo } }]);
+    const undoPub = guardar([{ c: 'publicaciones', id, data: { ...resto, estado: nuevo } }, ...(nuevo === 'falta_info' ? opsAvisoLideres({ tipo: 'info', texto: `${quien()} marcó "Falta información" en la publicación: ${pub.titulo}`, ref: { c: 'publicaciones', id } }) : [])]);
     toast(`Publicación: ${ESTADOS_TAREA[estado].label.toLowerCase()}`, { accion: { texto: 'Deshacer', fn: undoPub }, ms: 2500 });
     return;
   }
   const t = tareas().find((x) => x.id === id);
   if (!t || t.estado === estado || !ESTADOS_TAREA[estado]) return;
   const hecha = estado === 'hecha';
-  const undo = guardar([{ c: 'tareas', id, data: { ...t, estado, hechaEn: hecha ? hoy() : '' } }]);
+  const undo = guardar([{ c: 'tareas', id, data: { ...t, estado, hechaEn: hecha ? hoy() : '' } }, ...(estado === 'falta_info' ? opsAvisoLideres({ tipo: 'info', texto: `${quien()} marcó "Falta información" en la tarea: ${t.titulo}`, ref: { c: 'tareas', id } }) : [])]);
   toast(`Pasó a ${ESTADOS_TAREA[estado].label.toLowerCase()}`, { accion: { texto: 'Deshacer', fn: undo }, ms: 2500 });
 }
 

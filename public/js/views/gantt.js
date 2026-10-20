@@ -6,6 +6,7 @@ import { nombreDe, personas, proyecto, proyectos, tarea, tareas, tareasDeProyect
 import { clamp, dif, enlazar, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
 import { refrescar } from '../router.js';
+import { nuevosEn, opsAviso, quien as quienSoy } from '../hojas/avisos.js';
 
 const esAncho = () => matchMedia('(min-width: 720px)').matches;
 const semanas = () => (esAncho() ? 12 : 8);
@@ -235,6 +236,13 @@ function guardarProyecto() {
   }
   const desdeTarea = !previo && form.dataset.desdeTarea ? tarea(form.dataset.desdeTarea) : null;
   if (desdeTarea) ops.push({ c: 'tareas', id: desdeTarea.id, data: null });
+  const nuevosResp = nuevosEn(previo?.responsables, responsables);
+  ops.push(...opsAviso(nuevosResp, { tipo: 'proyecto', texto: `${quienSoy()} te sumó al proyecto: ${data.titulo}`, ref: { c: 'proyectos', id: idProyecto } }));
+  if (creadas) {
+    const porPersona = new Map();
+    ops.filter((o) => o.c === 'tareas' && o.data).forEach((o) => (o.data.asignados || []).forEach((p) => porPersona.set(p, (porPersona.get(p) || 0) + 1)));
+    porPersona.forEach((n, p) => { if (!nuevosResp.includes(p)) ops.push(...opsAviso([p], { tipo: 'tarea', texto: `${quienSoy()} te asignó ${plural(n, 'tarea', 'tareas')} del proyecto: ${data.titulo}`, ref: { c: 'proyectos', id: idProyecto } })); });
+  }
   guardar(ops);
   cerrarHoja();
   toast(previo ? 'Proyecto guardado' : desdeTarea ? `"${desdeTarea.titulo}" ahora es un proyecto` : creadas ? `Proyecto creado con ${plural(creadas, 'tarea', 'tareas')}` : 'Proyecto creado');

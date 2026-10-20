@@ -22,6 +22,7 @@ import './hojas/publicacion.js';
 import './hojas/persona.js';
 import './hojas/asistencia.js';
 import './hojas/categoria.js';
+import { pintarCampana } from './hojas/avisos.js';
 import './views/gantt.js';
 
 registrar('hoy', { get titulo() { return esLider() ? 'Hoy' : 'Inicio'; }, render: () => (esLider() ? vistaHoy : vistaInicio).render(), montar: (...a) => (esLider() ? vistaHoy : vistaInicio).montar?.(...a) });
@@ -117,6 +118,7 @@ async function entrar() {
   registrarIniciales(personas({ inactivas: true }).map((p) => p.nombre));
   if (!obtener('equipos', EQUIPO_CREATIVO)) guardarDoc('equipos', EQUIPO_CREATIVO, EQUIPO_INICIAL);
   construirNav();
+  pintarCampana();
   pintarSync();
   pintarTema();
   iniciarRouter();
@@ -130,6 +132,7 @@ document.addEventListener('focusout', (e) => { if (e.target.matches?.('textarea.
 
 suscribir((colecciones) => {
   if (colecciones.has('_sync')) pintarSync();
+  if (colecciones.has('avisos')) pintarCampana();
   if (colecciones.has('categorias')) registrarCategorias(lista('categorias'));
   if (colecciones.has('personas')) registrarIniciales(personas({ inactivas: true }).map((p) => p.nombre));
   if ([...colecciones].some((c) => c !== '_sync')) {

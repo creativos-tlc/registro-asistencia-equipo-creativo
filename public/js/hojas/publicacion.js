@@ -2,6 +2,7 @@ import { guardar, tienePermiso } from '../store.js';
 import { CANALES, EQUIPO_CREATIVO, ESTADOS_CONTENIDO } from '../model.js';
 import { personas, publicacion } from '../datos.js';
 import { extraerEnlaces, fechaLarga, html, hoy, icono, nuevoId, poner, raw, sumarDias } from '../util.js';
+import { nuevosEn, opsAviso, opsAvisoLideres, quien } from './avisos.js';
 import { abrirHoja, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
 const opcionesFormato = (canal, actual) => Object.entries(CANALES[canal].formatos).map(([k, v]) => html`<option value="${k}" ${raw(k === actual ? 'selected' : '')}>${v}</option>`);
@@ -80,7 +81,12 @@ function guardarPublicacion() {
   if (!d.fecha) { marcarError(form.fecha, 'Elige una fecha'); return; }
   if (d.entrega && d.entrega > d.fecha) { marcarError(form.entrega, 'La entrega debe ser antes de publicar (o el mismo día)'); return; }
   const id = form.dataset.id || nuevoId('pu');
-  guardar([{ c: 'publicaciones', id, data: { equipoId: EQUIPO_CREATIVO, canal: d.canal, formato: d.formato, titulo: d.titulo, fecha: d.fecha, hora: d.hora || '', entrega: d.entrega || '', estado: d.estado, responsableId: d.responsableId || '', detalle: d.detalle || '' } }]);
+  const previa = form.dataset.id ? publicacion(form.dataset.id) : null;
+  const avisos = [
+    ...opsAviso(nuevosEn(previa?.responsableId ? [previa.responsableId] : [], d.responsableId ? [d.responsableId] : []), { tipo: 'publicacion', texto: `${quien()} te asignó la publicación: ${d.titulo}${d.entrega ? ` (entrega ${fechaLarga(d.entrega).toLowerCase()})` : ''}`, ref: { c: 'publicaciones', id } }),
+    ...(d.estado === 'falta_info' && previa?.estado !== 'falta_info' ? opsAvisoLideres({ tipo: 'info', texto: `${quien()} marcó "Falta información" en la publicación: ${d.titulo}`, ref: { c: 'publicaciones', id } }) : []),
+  ];
+  guardar([{ c: 'publicaciones', id, data: { equipoId: EQUIPO_CREATIVO, canal: d.canal, formato: d.formato, titulo: d.titulo, fecha: d.fecha, hora: d.hora || '', entrega: d.entrega || '', estado: d.estado, responsableId: d.responsableId || '', detalle: d.detalle || '' } }, ...avisos]);
   cerrarHoja();
   toast(form.dataset.id ? 'Publicación guardada' : 'Publicación creada');
 }
@@ -103,7 +109,8 @@ registrarAcciones({
     const p = publicacion(form.dataset.id);
     if (!p) return;
     const { id: _omitido, ...resto } = p;
-    guardar([{ c: 'publicaciones', id: p.id, data: { ...resto, estado: d.estado || p.estado, detalle: d.detalle || '' } }]);
+    const avisoInfo = d.estado === 'falta_info' && p.estado !== 'falta_info' ? opsAvisoLideres({ tipo: 'info', texto: `${quien()} marcó "Falta información" en la publicación: ${p.titulo}`, ref: { c: 'publicaciones', id: p.id } }) : [];
+    guardar([{ c: 'publicaciones', id: p.id, data: { ...resto, estado: d.estado || p.estado, detalle: d.detalle || '' } }, ...avisoInfo]);
     cerrarHoja();
     toast(d.estado === 'falta_info' ? 'Avisado: falta información' : 'Publicación guardada');
   },

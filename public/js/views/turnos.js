@@ -6,6 +6,7 @@ import { ausenciasDe, idTurno, persona, personas, personasDeTurno, rolesParaFech
 import { domingoDe, domingosDelMes, fechaDiaMes, fechaLarga, hoy, html, icono, inicioMes, nombreMes, nuevoId, raw, sumarDias, sumarMeses } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
 import { refrescar } from '../router.js';
+import { nuevosEn, opsAviso, quien } from '../hojas/avisos.js';
 import { compartirTurnos } from '../exportar.js';
 
 const CLAVE = 'tlc.turnos.vista';
@@ -172,7 +173,9 @@ function guardarElegidos() {
   const { fecha, rol } = f.dataset;
   const ids = [...f.querySelectorAll('input[name=p]:checked')].map((i) => i.value);
   const id = idTurno(fecha, rol);
-  const undo = guardar([{ c: 'turnos', id, data: ids.length ? { equipoId: EQUIPO_CREATIVO, fecha, rolId: rol, personas: ids } : null }]);
+  const rolReg = todosLosRoles().find((r) => r.id === rol);
+  const avisos = opsAviso(nuevosEn(personasDeTurno(fecha, rol), ids), { tipo: 'turno', texto: `${quien()} te asignó un turno: ${rolReg?.nombre || 'Turno'} · ${(GRUPOS_TURNO[rolReg?.grupo] || {}).label || ''}, ${fechaLarga(fecha).toLowerCase()}`, ref: { c: 'turnos', id } });
+  const undo = guardar([{ c: 'turnos', id, data: ids.length ? { equipoId: EQUIPO_CREATIVO, fecha, rolId: rol, personas: ids } : null }, ...avisos]);
   cerrarHoja();
   toast(ids.length ? `Turno guardado: ${unir(ids.map(corto))}` : 'Turno vaciado', { accion: { texto: 'Deshacer', fn: undo } });
 }

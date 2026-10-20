@@ -2,6 +2,7 @@ import { guardar } from '../store.js';
 import { EQUIPO_CREATIVO, ESTADOS_TAREA, PRIORIDADES } from '../model.js';
 import { eventosOrdenados, nombreDe, personas, proyectos, tarea } from '../datos.js';
 import { extraerEnlaces, fechaCorta, html, hoy, icono, nuevoId, raw, sumarDias } from '../util.js';
+import { nuevosEn, opsAviso, opsAvisoLideres, quien } from './avisos.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
 export function formTarea({ base = null, fecha = '', eventoId = '', asignado = '', proyectoId = '' } = {}) {
@@ -59,7 +60,12 @@ function guardarTarea() {
     equipoId: EQUIPO_CREATIVO, titulo: d.titulo, detalle: d.detalle || '', asignados, inicio: d.inicio || '', vence: d.vence || '', prioridad: d.prioridad, estado: d.estado,
     eventoId: d.eventoId || '', proyectoId: d.proyectoId || '', creada: previa?.creada || hoy(), hechaEn: d.estado === 'hecha' ? previa?.hechaEn || hoy() : '',
   };
-  guardar([{ c: 'tareas', id: previa?.id || nuevoId('ta'), data }]);
+  const idTarea = previa?.id || nuevoId('ta');
+  const avisos = [
+    ...opsAviso(nuevosEn(previa?.asignados, asignados), { tipo: 'tarea', texto: `${quien()} te asignó una tarea: ${data.titulo}`, ref: { c: 'tareas', id: idTarea } }),
+    ...(d.estado === 'falta_info' && previa?.estado !== 'falta_info' ? opsAvisoLideres({ tipo: 'info', texto: `${quien()} marcó "Falta información" en la tarea: ${data.titulo}`, ref: { c: 'tareas', id: idTarea } }) : []),
+  ];
+  guardar([{ c: 'tareas', id: idTarea, data }, ...avisos]);
   cerrarHoja();
   toast(previa ? 'Tarea guardada' : asignados.length ? `Tarea asignada a ${asignados.map(nombreDe).join(', ')}` : 'Tarea creada');
 }
