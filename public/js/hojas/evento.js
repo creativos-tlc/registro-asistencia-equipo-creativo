@@ -1,7 +1,7 @@
 import { esLider, guardar, lista, tienePermiso } from '../store.js';
 import { EQUIPO_CREATIVO, NOTA_COLORES, PLANTILLA_SERVICIO, categoriasDisponibles, tipoDe } from '../model.js';
 import { citados, devocional, evento, eventosOrdenados, listaTomada, nombreDe, personas, pideLista, resumenAsistencia, tareas } from '../datos.js';
-import { fechaLarga, fechaRelativa, html, hoy, icono, nuevoId, raw, sumarDias, rangoHora, plural, poner } from '../util.js';
+import { enlazar, fechaLarga, fechaRelativa, html, hoy, icono, nuevoId, raw, sumarDias, rangoHora, plural, poner } from '../util.js';
 import { abrirHoja, actualizarHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast } from '../ui.js';
 
 // ---------- detalle ----------
@@ -47,8 +47,8 @@ export function verEvento(id) {
         ${tienePermiso('devocional') ? html`<button class="section__link" type="button" data-action="devocional-editar" data-id="${e.id}">${icono('edit', 'i--sm')} ${dv ? 'Editar' : 'Agregar'}</button>` : ''}</div>
       ${dv && (dv.lectura || dv.versiculos || dv.nota) ? html`<div class="panel" style="padding:var(--sp-4);display:flex;flex-direction:column;gap:var(--sp-3)">
         ${dv.lectura ? html`<div><span class="label">Leemos</span><p style="font-weight:700">${dv.lectura}</p></div>` : ''}
-        ${dv.versiculos ? html`<div><span class="label">Para aprender</span><p style="white-space:pre-wrap">${dv.versiculos}</p></div>` : ''}
-        ${dv.nota ? html`<p class="muted" style="white-space:pre-wrap">${dv.nota}</p>` : ''}</div>`
+        ${dv.versiculos ? html`<div><span class="label">Para aprender</span><p style="white-space:pre-wrap">${enlazar(dv.versiculos)}</p></div>` : ''}
+        ${dv.nota ? html`<p class="muted" style="white-space:pre-wrap">${enlazar(dv.nota)}</p>` : ''}</div>`
         : html`<p class="muted" style="font-size:var(--t-sm)">Aún no se ha publicado la lectura de este día.</p>`}
     </section>` : '';
 
@@ -75,7 +75,7 @@ export function verEvento(id) {
         </div>
         <div class="chips"><span class="tag tag--c" style="--c:${t.color}">${t.label}</span>${e.serieId ? html`<span class="tag">${icono('refresh', 'i--sm')} Se repite</span>` : ''}</div>
       </div>
-      ${e.notas ? html`<p class="muted" style="white-space:pre-wrap">${e.notas}</p>` : ''}
+      ${e.notas ? html`<p class="muted" style="white-space:pre-wrap">${enlazar(e.notas)}</p>` : ''}
       ${bloqueDevocional}
       ${bloqueAsistencia}
       ${bloquePrograma}

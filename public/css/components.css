@@ -292,3 +292,6 @@ button.row:hover, a.row:hover { background: var(--s2); }
 .fchip .num { color: var(--tx-2); font-weight: 700; }
 .fchip[aria-pressed="true"] { background: color-mix(in srgb, var(--c, var(--accent)) 18%, var(--s2)); border-color: color-mix(in srgb, var(--c, var(--accent)) 65%, transparent); color: var(--tx); }
 .fchip[aria-pressed="true"] .num { color: var(--tx); }
+
+/* vínculos dentro de textos (notas, detalles) */
+a.enlace { color: var(--accent-tx); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }

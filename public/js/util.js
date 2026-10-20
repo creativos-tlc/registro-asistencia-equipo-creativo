@@ -12,6 +12,11 @@ export function html(strings, ...vals) {
   return new Seguro(out);
 }
 export const raw = (s) => new Seguro(String(s));
+/** Texto del usuario con sus enlaces http(s) convertidos en vínculos tocables (el resto va escapado). */
+export function enlazar(texto) {
+  const partes = String(texto || '').split(/(https?:\/\/[^\s<>"')]+)/g);
+  return raw(partes.map((p, i) => (i % 2 ? `<a class="enlace" href="${esc(p)}" target="_blank" rel="noopener noreferrer">${esc(p.replace(/^https?:\/\/(www\.)?/, ''))}</a>` : esc(p))).join(''));
+}
 export const poner = (el, contenido) => { el.innerHTML = pintar(contenido); return el; };
 
 export const icono = (nombre, clase = '') => raw(`<svg class="i ${clase}" aria-hidden="true"><use href="#i-${nombre}"/></svg>`);

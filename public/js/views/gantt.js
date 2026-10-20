@@ -3,7 +3,7 @@
 import { esLider, guardar } from '../store.js';
 import { EQUIPO_CREATIVO, NOTA_COLORES } from '../model.js';
 import { nombreDe, personas, proyecto, proyectos, tarea, tareas, tareasDeProyecto } from '../datos.js';
-import { clamp, dif, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
+import { clamp, dif, enlazar, fechaCorta, fechaDiaMes, hoy, html, icono, inicioSemana, nuevoId, nombreMes, plural, raw, sumarDias } from '../util.js';
 import { abrirHoja, avatar, cerrarHoja, confirmar, leerForm, marcarError, registrarAcciones, toast, vacio } from '../ui.js';
 import { refrescar } from '../router.js';
 
@@ -204,7 +204,7 @@ function verProyecto(p) {
         <div class="field"><span class="label">Fechas</span><p>${fechaCorta(p.inicio)} → ${fechaCorta(p.fin)} · ${plural(dur(p), 'día', 'días')}</p><p class="gp__est ${e.tono ? `gp__est--${e.tono}` : ''}">${e.txt}</p></div>
         <div class="field"><span class="label">Responsables</span><p>${nombresDe(p).join(', ') || 'Sin responsable'}</p></div>
         ${listaTareas(p.id, false)}
-        ${p.detalle ? html`<div class="field"><span class="label">Detalle</span><p style="white-space:pre-wrap">${p.detalle}</p></div>` : ''}
+        ${p.detalle ? html`<div class="field"><span class="label">Detalle</span><p style="white-space:pre-wrap">${enlazar(p.detalle)}</p></div>` : ''}
       </div>`,
   });
 }
